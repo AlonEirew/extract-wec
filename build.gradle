@@ -30,6 +30,8 @@ dependencies {
     compile group: 'commons-io', name: 'commons-io', version: '2.6'
     // https://mvnrepository.com/artifact/edu.stanford.nlp/stanford-corenlp
     compile group: 'edu.stanford.nlp', name: 'stanford-corenlp', version: '3.9.2'
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-dbcp2
+    compile group: 'org.apache.commons', name: 'commons-dbcp2', version: '2.6.0'
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
 }

@@ -20,7 +20,7 @@ public class TestWikiLinksExtractor {
         String[] textLines = getText().split("\n");
         Map<String, List<WikiLinksMention>> finalResults = new HashMap<>();
         for (String line : textLines) {
-            final List<WikiLinksMention> extractMentions = WikilinksExtractor.extractFromLine("", line);
+            final List<WikiLinksMention> extractMentions = WikiLinksExtractor.extractFromLine("", line);
             for(WikiLinksMention mention : extractMentions) {
                 if(finalResults.containsKey(mention.getCorefChain())) {
                     finalResults.get(mention.getCorefChain()).add(mention);
