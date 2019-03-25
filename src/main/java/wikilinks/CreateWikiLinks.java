@@ -1,5 +1,6 @@
 package wikilinks;
 
+import com.google.common.collect.Iterables;
 import javafx.util.Pair;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.search.*;
@@ -12,10 +13,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import persistence.SQLApi;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
@@ -23,7 +21,7 @@ import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 public class CreateWikiLinks {
 
     private static final int INTERVAL = 1000;
-    private static final int EXTRACT_AMOUNT = 1000000;
+    private static final int EXTRACT_AMOUNT = 500000;
     private static final int TOTAL_DOCS = 18289732;
     private static final String ELASTIC_INDEX = "enwiki_v2";
     private static final String DB_NAME = "WikiLinks";
@@ -33,7 +31,12 @@ public class CreateWikiLinks {
     private static final Map<String, WikiLinksCoref> corefs = new HashMap<>();
 
     private final RestHighLevelClient elasticClient = new RestHighLevelClient(
-            RestClient.builder(new HttpHost("localhost", 9200, "http")));
+            RestClient.builder(new HttpHost("localhost", 9200, "http")).setRequestConfigCallback(
+                    requestConfigBuilder -> requestConfigBuilder
+                            .setConnectionRequestTimeout(60*60*1000)
+                            .setConnectTimeout(60*60*1000)
+                            .setSocketTimeout(60*60*1000))
+                    .setMaxRetryTimeoutMillis(60*60*1000));
 
     private final SQLApi sqlApi = new SQLApi();
 
@@ -44,7 +47,14 @@ public class CreateWikiLinks {
             return;
         }
 
-        ExecutorService pool = Executors.newFixedThreadPool(4);
+        RejectedExecutionHandler rejectedExecutionHandler = new ThreadPoolExecutor.CallerRunsPolicy();
+        ExecutorService pool = new ThreadPoolExecutor(
+                10,
+                20,
+                20,
+                TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(10),
+                rejectedExecutionHandler);
 
         final Scroll scroll = new Scroll(TimeValue.timeValueHours(5L));
         SearchResponse searchResponse = createElasticSearchResponse(scroll);
@@ -66,7 +76,7 @@ public class CreateWikiLinks {
                 }
             }
 
-            pool.submit(new ParseAndPersistDataRunner(pageTexts));
+            pool.execute(new ParseAndPersistDataRunner(pageTexts));
             System.out.println((TOTAL_DOCS - count) + " documents to go");
 
             if(count >= EXTRACT_AMOUNT) {
@@ -77,13 +87,20 @@ public class CreateWikiLinks {
             searchHits = searchResponse.getHits().getHits();
         }
 
+
         closeScroll(scrollId);
 
         pool.shutdown();
         closeExecuterService(pool);
 
-        List<WikiLinksCoref> corefList = new ArrayList(corefs.values());
-        sqlApi.insertRowsToTable(DB_NAME, TABLE_COREF, corefList);
+        final int corefsize = corefs.values().size();
+        int partition = corefsize / 100;
+
+        Iterator<List<WikiLinksCoref>> subSets = Iterables.partition(corefs.values(), partition).iterator();
+        while(subSets.hasNext()) {
+            List<WikiLinksCoref> sublist = subSets.next();
+            sqlApi.insertRowsToTable(DB_NAME, TABLE_COREF, sublist);
+        }
     }
 
     private boolean createWikiLinksTables() {
@@ -172,20 +189,24 @@ public class CreateWikiLinks {
         @Override
         public void run() {
             for(Pair<String, String> pair : this.texts) {
-                final List<WikiLinksMention> wikiLinksMentions = WikiLinksExtractor.extractFromFile(pair.getKey(), pair.getValue());
+                try {
+                    final List<WikiLinksMention> wikiLinksMentions = WikiLinksExtractor.extractFromFile(pair.getKey(), pair.getValue());
+                    for (WikiLinksMention mention : wikiLinksMentions) {
+                        if (corefs.containsKey(mention.getCorefChain())) {
+                            corefs.get(mention.getCorefChain()).incMentionsCount();
+                        } else {
+                            corefs.put(mention.getCorefChain(), new WikiLinksCoref(mention.getCorefChain()));
+                        }
 
-                for(WikiLinksMention mention : wikiLinksMentions) {
-                    if(corefs.containsKey(mention.getCorefChain())) {
-                        corefs.get(mention.getCorefChain()).incMentionsCount();
-                    } else {
-                        corefs.put(mention.getCorefChain(), new WikiLinksCoref(mention.getCorefChain()));
+                        mention.setCoreChainId(corefs.get(mention.getCorefChain()).getCorefId());
                     }
 
-                    mention.setCoreChainId(corefs.get(mention.getCorefChain()).getCorefId());
-                }
-
-                if(!sqlApi.insertRowsToTable(DB_NAME, TABLE_MENTIONS, wikiLinksMentions)) {
-                    System.out.println("Failed to insert Batch!!!!");
+                    if (!sqlApi.insertRowsToTable(DB_NAME, TABLE_MENTIONS, wikiLinksMentions)) {
+                        System.out.println("Failed to insert Batch!!!!");
+                    }
+                } catch (Exception e) {
+                    System.out.println("Failed to insert into DB with exception");
+                    e.printStackTrace();
                 }
             }
         }

@@ -4,6 +4,7 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.CoreDocument;
 import edu.stanford.nlp.pipeline.CoreSentence;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import org.apache.logging.log4j.core.Core;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -28,14 +29,17 @@ public class WikiLinksExtractor {
     public static List<WikiLinksMention> extractFromFile(String pageName, String text) {
         List<WikiLinksMention> finalResults = new ArrayList<>();
 
+        text = text.replaceAll("==.*?==\n", "\n");
+
         String relText = "";
         int firstSentenceStartIndex = text.indexOf("'''");
         if(firstSentenceStartIndex >= 0) {
             relText = text.substring(firstSentenceStartIndex);
-            String[] textLines = relText.split("\n");
+            String[] textLines = relText.split("\\.\n");
             for (String line : textLines) {
                 if(line != null && !line.isEmpty() && isValidLine(line)) {
                     line = line
+                            .replaceAll("\n", " ")
                             .replaceAll("\\(.*?\\)", "")
                             .replaceAll("\\{\\{.*?\\}\\}", "")
                             .replaceAll("<ref[\\s\\S]*?</ref>", "")
@@ -72,15 +76,16 @@ public class WikiLinksExtractor {
                     mention.setCorefChain(match2);
                 }
 
-                if(mention.isValid()) {
-                    mentions.add(mention);
-                }
+                mentions.add(mention);
             }
         }
 
         String context = linkMatcher
                 .replaceAll("$2")
                 .replaceAll("\\s+", " ").trim();
+        if(context.matches("'''(.*?)'''(.*?)")) {
+            context = context.replaceAll("'''(.*?)'''(.*?)", "$1");
+        }
 
         setMentionsContext(mentions, context);
         return mentions;
@@ -107,25 +112,31 @@ public class WikiLinksExtractor {
                 pipeline.annotate(mentionCoreDoc);
                 if (mentionCoreDoc.sentences().size() > 0) {
                     final List<CoreLabel> mentTokens = mentionCoreDoc.sentences().get(0).tokens();
+                    for(CoreLabel label : mentTokens) {
+                        mention.addMentionToken(label.originalText());
+                    }
+
                     for (int i = 0; i < mentContext.size(); i++) {
                         if (mentContext.get(i).equals(mentTokens.get(0).originalText())) {
                             mention.setTokenStart(i);
                             if (mentTokens.size() == 1) {
                                 mention.setTokenEnd(i);
-                                break;
                             }
                         } else if (mentContext.get(i).equals(mentTokens.get(mentTokens.size() - 1).originalText())) {
                             mention.setTokenEnd(i);
-                            break;
                         }
                     }
-                    if((mention.getTokenEnd() - mention.getTokenStart() + 1) != mentTokens.size()) {
+
+                    if(!mention.isValid()) {
                         iterator.remove();
                     }
+
                 } else {
                     iterator.remove();
                 }
             }
+        } else {
+            mentions.clear();
         }
     }
 

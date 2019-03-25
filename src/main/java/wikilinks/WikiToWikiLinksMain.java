@@ -1,10 +1,11 @@
 package wikilinks;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 public class WikiToWikiLinksMain {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, SQLException {
         CreateWikiLinks createWikiLinks = new CreateWikiLinks();
 
         long start = System.currentTimeMillis();

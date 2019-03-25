@@ -19,7 +19,8 @@ public class SQLApi {
         ds.setPassword(PASSWORD);
         ds.setMinIdle(5);
         ds.setMaxIdle(10);
-        ds.setMaxOpenPreparedStatements(100);
+        ds.setInitialSize(10);
+        ds.setMaxOpenPreparedStatements(50);
     }
 
     public static Connection getConnection() throws SQLException {
@@ -126,6 +127,34 @@ public class SQLApi {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public boolean insertRowsToTable(String dbName, String tableName, List<? extends SQLObject> insertRows, Connection con) {
+        if(insertRows != null && !insertRows.isEmpty()) {
+            try (PreparedStatement stmt = con.prepareStatement(insertRows.get(0).getPrepareInsertStatementQuery(tableName))) {
+
+                if (!isDbExists(dbName, con)) {
+                    System.out.println("No such data base exists");
+                    return false;
+                }
+
+                for (SQLObject sqlObject : insertRows) {
+                    sqlObject.setPrepareInsertStatementValues(stmt);
+                    stmt.addBatch();
+                }
+
+                stmt.executeBatch();
+                return true;
+            } catch (BatchUpdateException bue) {
+                bue.printStackTrace();
+                return false;
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public boolean insertRowsToTable(String dbName, String tableName, List<? extends SQLObject> insertRows) {

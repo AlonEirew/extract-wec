@@ -5,6 +5,7 @@ import persistence.SQLObject;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -20,6 +21,7 @@ public class WikiLinksMention implements SQLObject {
     private String corefChain = "";
     private int coreChainId = -1;
     private String extractedFromPage = "";
+    private List<String> mentinoTokens = new ArrayList<>();
     private List<String> context;
 
     public WikiLinksMention() {
@@ -99,10 +101,28 @@ public class WikiLinksMention implements SQLObject {
         this.coreChainId = coreChainId;
     }
 
+    public List<String> getMentinoTokens() {
+        return mentinoTokens;
+    }
+
+    public void addMentionToken(String token) {
+        if(token != null) {
+            mentinoTokens.add(token);
+        }
+    }
+
     public boolean isValid() {
         if(this.corefChain.isEmpty() ||
-            this.mentionText.length() <= 1 || this.corefChain.toLowerCase().startsWith("file:") ||
-                this.corefChain.toLowerCase().startsWith("wikipedia:")) {
+            this.mentionText.length() <= 1 ||
+                this.mentionText.startsWith("Category:") ||
+                this.corefChain.toLowerCase().startsWith("file:") ||
+                this.corefChain.toLowerCase().startsWith("wikipedia:") ||
+                this.tokenStart == -1 || this.tokenEnd == -1 ||
+                this.mentinoTokens.size() == 0 ||
+                ((this.tokenEnd - this.tokenStart + 1) != this.mentinoTokens.size()) ||
+                this.context.get(0).contains("#") ||
+                this.context.contains("{") ||
+                this.context.contains("}")) {
             return false;
         }
 
