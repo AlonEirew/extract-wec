@@ -18,8 +18,7 @@ public class WikiLinksMention implements SQLObject {
     private String mentionText = "";
     private int tokenStart = -1;
     private int tokenEnd = -1;
-    private String corefChain = "";
-    private int coreChainId = -1;
+    private WikiLinksCoref coreChain;
     private String extractedFromPage = "";
     private List<String> mentinoTokens = new ArrayList<>();
     private List<String> context;
@@ -27,18 +26,18 @@ public class WikiLinksMention implements SQLObject {
     public WikiLinksMention() {
     }
 
-    public WikiLinksMention(int coreChainId, String mentionText,
+    public WikiLinksMention(String extractedFromPage) {
+        this.extractedFromPage = extractedFromPage;
+    }
+
+    public WikiLinksMention(WikiLinksCoref coref, String mentionText,
                             int tokenStart, int tokenEnd, String extractedFromPage, List<String> context) {
-        this.coreChainId = coreChainId;
+        this.coreChain = coref;
         this.mentionText = mentionText;
         this.tokenStart = tokenStart;
         this.tokenEnd = tokenEnd;
         this.extractedFromPage = extractedFromPage;
         this.context = context;
-    }
-
-    public WikiLinksMention(String extractedFromPage) {
-        this.extractedFromPage = extractedFromPage;
     }
 
     public String getMentionText() {
@@ -65,12 +64,12 @@ public class WikiLinksMention implements SQLObject {
         this.tokenEnd = tokenEnd;
     }
 
-    public String getCorefChain() {
-        return corefChain;
+    public WikiLinksCoref getCorefChain() {
+        return this.coreChain;
     }
 
-    public void setCorefChain(String corefChain) {
-        this.corefChain = corefChain;
+    public void setCorefChain(String corefChainValue) {
+        this.coreChain = WikiLinksCoref.getCorefChain(corefChainValue);
     }
 
     public List<String> getContext() {
@@ -93,14 +92,6 @@ public class WikiLinksMention implements SQLObject {
         return mentionId;
     }
 
-    public int getCoreChainId() {
-        return coreChainId;
-    }
-
-    public void setCoreChainId(int coreChainId) {
-        this.coreChainId = coreChainId;
-    }
-
     public List<String> getMentinoTokens() {
         return mentinoTokens;
     }
@@ -112,11 +103,11 @@ public class WikiLinksMention implements SQLObject {
     }
 
     public boolean isValid() {
-        if(this.corefChain.isEmpty() ||
+        if(this.coreChain.getCorefValue().isEmpty() ||
             this.mentionText.length() <= 1 ||
                 this.mentionText.startsWith("Category:") ||
-                this.corefChain.toLowerCase().startsWith("file:") ||
-                this.corefChain.toLowerCase().startsWith("wikipedia:") ||
+                this.coreChain.getCorefValue().toLowerCase().startsWith("file:") ||
+                this.coreChain.getCorefValue().toLowerCase().startsWith("wikipedia:") ||
                 this.tokenStart == -1 || this.tokenEnd == -1 ||
                 this.mentinoTokens.size() == 0 ||
                 ((this.tokenEnd - this.tokenStart + 1) != this.mentinoTokens.size()) ||
@@ -154,7 +145,7 @@ public class WikiLinksMention implements SQLObject {
     @Override
     public String getValues() {
         return mentionId + "," +
-                coreChainId + "," +
+                this.coreChain.getCorefId() + "," +
                 "'" + mentionText + "'" + "," +
                 tokenStart + "," +
                 tokenEnd + "," +
@@ -165,7 +156,7 @@ public class WikiLinksMention implements SQLObject {
     @Override
     public void setPrepareInsertStatementValues(PreparedStatement preparedStatement) throws SQLException {
         preparedStatement.setLong(1, this.mentionId);
-        preparedStatement.setInt(2, this.coreChainId);
+        preparedStatement.setInt(2, this.coreChain.getCorefId());
         preparedStatement.setString(3, this.mentionText);
         preparedStatement.setInt(4, this.tokenStart);
         preparedStatement.setInt(5, this.tokenEnd);

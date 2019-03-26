@@ -1,15 +1,20 @@
 package persistence;
 
+import com.google.common.collect.Iterables;
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.commons.lang3.StringUtils;
+import wikilinks.WikiLinksCoref;
 
 import java.sql.*;
-import java.util.List;
+import java.util.*;
 
 public class SQLApi {
 
     private static final String CONNECTION_URL = "jdbc:sqlserver://localhost:1433;databaseName=WikiLinks;";
     private static final String USER = "wikilink";
     private static final String PASSWORD = "Pa5$W0rdA1#nE1r@w";
+
+    private static final int MAX_BULK_SIZE = 100;
 
     private static BasicDataSource ds = new BasicDataSource();
 
@@ -129,21 +134,26 @@ public class SQLApi {
         }
     }
 
-    public boolean insertRowsToTable(String dbName, String tableName, List<? extends SQLObject> insertRows, Connection con) {
+    public <T extends SQLObject> boolean insertRowsToTable(String dbName, String tableName, List<T> insertRows) {
         if(insertRows != null && !insertRows.isEmpty()) {
-            try (PreparedStatement stmt = con.prepareStatement(insertRows.get(0).getPrepareInsertStatementQuery(tableName))) {
+            try (Connection con = getConnection(); PreparedStatement stmt =
+                    con.prepareStatement(insertRows.get(0).getPrepareInsertStatementQuery(tableName))) {
 
                 if (!isDbExists(dbName, con)) {
                     System.out.println("No such data base exists");
                     return false;
                 }
 
-                for (SQLObject sqlObject : insertRows) {
-                    sqlObject.setPrepareInsertStatementValues(stmt);
-                    stmt.addBatch();
-                }
+                Iterator<List<T>> subSets = Iterables.partition(insertRows, MAX_BULK_SIZE).iterator();
+                while(subSets.hasNext()) {
+                    List<T> partRows = subSets.next();
+                    for (SQLObject sqlObject : partRows) {
+                        sqlObject.setPrepareInsertStatementValues(stmt);
+                        stmt.addBatch();
+                    }
 
-                stmt.executeBatch();
+                    stmt.executeBatch();
+                }
                 return true;
             } catch (BatchUpdateException bue) {
                 bue.printStackTrace();
@@ -157,30 +167,51 @@ public class SQLApi {
         return true;
     }
 
-    public boolean insertRowsToTable(String dbName, String tableName, List<? extends SQLObject> insertRows) {
-        if(insertRows != null && !insertRows.isEmpty()) {
-            try (Connection con = getConnection(); PreparedStatement stmt =
-                    con.prepareStatement(insertRows.get(0).getPrepareInsertStatementQuery(tableName))) {
+    public boolean updateCorefTable(String tableName, Map<Integer, WikiLinksCoref> corefs) {
+        String query = "Select * from CorefChains where corefid in";
+        try (Connection conn = getConnection();
+                Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
+            conn.setAutoCommit(false);
 
-                if (!isDbExists(dbName, con)) {
-                    System.out.println("No such data base exists");
-                    return false;
+            Iterator<List<Integer>> subSets = Iterables.partition(corefs.keySet(), MAX_BULK_SIZE).iterator();
+            Map<Integer, WikiLinksCoref> copyCoref = new HashMap<>(corefs);
+
+            while(subSets.hasNext()) {
+                final List<Integer> next = subSets.next();
+                ResultSet rs = stmt.executeQuery(query + " (" + StringUtils.join(next, ",") + ")");
+
+                while (rs.next()) {
+                    int corefId = rs.getInt("corefId");
+//                    String corefValue = rs.getString("corefValue");
+                    int count = rs.getInt("mentionsCount");
+
+                    int newCount = corefs.get(corefId).addAndGetMentionCount(count);
+                    rs.updateInt("mentionsCount", newCount);
+                    rs.updateRow();
+                    copyCoref.remove(corefId);
                 }
 
-                for (SQLObject sqlObject : insertRows) {
-                    sqlObject.setPrepareInsertStatementValues(stmt);
-                    stmt.addBatch();
-                }
-
-                stmt.executeBatch();
-                return true;
-            } catch (BatchUpdateException bue) {
-                bue.printStackTrace();
-                return false;
-            } catch (SQLException e) {
-                e.printStackTrace();
-                return false;
+                rs.close();
             }
+
+            conn.setAutoCommit(true);
+
+            WikiLinksCoref tmp = WikiLinksCoref.getCorefChain("####TEMP####");
+
+            if(!copyCoref.isEmpty()) {
+                try (PreparedStatement ps = conn.prepareStatement(tmp.getPrepareInsertStatementQuery(tableName))) {
+                    for (WikiLinksCoref remainCoref : copyCoref.values()) {
+                        remainCoref.setPrepareInsertStatementValues(ps);
+                        ps.addBatch();
+                    }
+
+                    ps.executeBatch();
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         }
 
         return true;

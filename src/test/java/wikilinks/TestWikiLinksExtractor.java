@@ -25,7 +25,7 @@ public class TestWikiLinksExtractor {
                 if(finalResults.containsKey(mention.getCorefChain())) {
                     finalResults.get(mention.getCorefChain()).add(mention);
                 } else {
-                    finalResults.put(mention.getCorefChain(), new ArrayList<>());
+                    finalResults.put(mention.getCorefChain().getCorefValue(), new ArrayList<>());
                     finalResults.get(mention.getCorefChain()).add(mention);
                 }
             }

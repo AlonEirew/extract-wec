@@ -4,20 +4,32 @@ import persistence.SQLObject;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class WikiLinksCoref implements SQLObject {
     private static volatile AtomicInteger runningId = new AtomicInteger();
+    private static final Map<String, WikiLinksCoref> globalCorefIds = new HashMap<>();
 
-    private int corefId = runningId.incrementAndGet();
+    private int corefId = runningId.incrementAndGet();;
     private String corefValue;
-    private AtomicInteger mentionsCount = new AtomicInteger(1);
+    private AtomicInteger mentionsCount = new AtomicInteger(0);
 
-    public WikiLinksCoref() {
+    private WikiLinksCoref(String corefValue) {
+        this.corefValue = corefValue;
     }
 
-    public WikiLinksCoref(String corefValue) {
-        this.corefValue = corefValue;
+    public static synchronized WikiLinksCoref getCorefChain(String corefValue) {
+        if(!globalCorefIds.containsKey(corefValue)) {
+            globalCorefIds.put(corefValue, new WikiLinksCoref(corefValue));
+        }
+
+        return globalCorefIds.get(corefValue);
+    }
+
+    public static Map<String, WikiLinksCoref> getGlobalCorefMap() {
+        return globalCorefIds;
     }
 
     public int getCorefId() {
@@ -30,6 +42,10 @@ public class WikiLinksCoref implements SQLObject {
 
     public void incMentionsCount() {
         this.mentionsCount.incrementAndGet();
+    }
+
+    public int addAndGetMentionCount(int delta) {
+        return this.mentionsCount.addAndGet(delta);
     }
 
     @Override
