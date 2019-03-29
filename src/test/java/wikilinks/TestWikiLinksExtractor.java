@@ -34,7 +34,7 @@ public class TestWikiLinksExtractor {
     }
 
     private String getText() {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("kit_kat.json");
+        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("Gridlock_band.json");
         JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
         return inputJsonNlp.get("text").getAsString();
     }

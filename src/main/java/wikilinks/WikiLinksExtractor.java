@@ -38,11 +38,12 @@ public class WikiLinksExtractor {
             for (String line : textLines) {
                 if(line != null && !line.isEmpty() && isValidLine(line)) {
                     line = line
+                            .replaceAll("\\*.*?\n", "")
                             .replaceAll("\n", " ")
-                            .replaceAll("\\(.*?\\)", "")
                             .replaceAll("\\{\\{.*?\\}\\}", "")
                             .replaceAll("<ref[\\s\\S]*?</ref>", "")
                             .replaceAll("<ref[\\s\\S]*?/>", "")
+                            .replaceAll("\\<.*?>","")
                             .replaceAll("\\s+", " ").trim();
 
                     String[] splitLineSentences = line.split("\\.");
@@ -140,7 +141,7 @@ public class WikiLinksExtractor {
     }
 
     static boolean isValidLine(String line) {
-        return !(line.startsWith("{{") || line.startsWith("}}") || line.startsWith("|") || line.startsWith("*") || line.startsWith("===") ||
+        return !(line.startsWith("{{") || line.startsWith("}}") || line.startsWith("|") || line.startsWith("*") || line.startsWith("=") ||
                 line.startsWith("[[Category") || line.startsWith("[[category"));
     }
 }

@@ -102,13 +102,15 @@ public class WikiLinksMention implements ISQLObject {
     public boolean isValid() {
         if(this.coreChain.getCorefValue().isEmpty() ||
             this.mentionText.length() <= 1 ||
-                this.mentionText.startsWith("Category:") ||
+                this.mentionText.toLowerCase().startsWith("category:") ||
                 this.coreChain.getCorefValue().toLowerCase().startsWith("file:") ||
                 this.coreChain.getCorefValue().toLowerCase().startsWith("wikipedia:") ||
+                this.coreChain.getCorefValue().toLowerCase().startsWith("category:") ||
                 this.tokenStart == -1 || this.tokenEnd == -1 ||
                 this.mentinoTokens.size() == 0 ||
                 ((this.tokenEnd - this.tokenStart + 1) != this.mentinoTokens.size()) ||
-                this.context.get(0).contains("#") ||
+                this.context.contains("#") ||
+                this.context.contains("jpg") ||
                 this.context.contains("{") ||
                 this.context.contains("}")) {
             return false;

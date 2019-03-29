@@ -8,7 +8,7 @@ import java.util.*;
 
 public class SQLQueryApi {
 
-    private static final int MAX_BULK_SIZE = 100;
+    private static final int MAX_BULK_SIZE = 250;
 
     private ISQLConnection sqlConnection;
 
