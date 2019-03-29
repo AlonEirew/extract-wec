@@ -1,17 +1,14 @@
-package wikilinks;
+package persistence;
 
-import persistence.SQLObject;
-
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class WikiLinksMention implements SQLObject {
+public class WikiLinksMention implements ISQLObject {
+    private static final String TABLE_MENTIONS = "Mentions";
+
     private static volatile AtomicInteger runningId = new AtomicInteger();
 
     private final long mentionId = runningId.incrementAndGet();
@@ -151,6 +148,11 @@ public class WikiLinksMention implements SQLObject {
                 tokenEnd + "," +
                 "'" + extractedFromPage + "'" +  "," +
                 "'" + getContextAsSQLBlob() + "'";
+    }
+
+    @Override
+    public String getTableName() {
+        return TABLE_MENTIONS;
     }
 
     @Override

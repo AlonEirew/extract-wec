@@ -1,16 +1,16 @@
-package wikilinks;
-
-import persistence.SQLObject;
+package persistence;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class WikiLinksCoref implements SQLObject {
+public class WikiLinksCoref implements ISQLObject {
+    private static final String TABLE_COREF = "CorefChains";
+
     private static volatile AtomicInteger runningId = new AtomicInteger();
-    private static final Map<String, WikiLinksCoref> globalCorefIds = new HashMap<>();
+    private static final ConcurrentHashMap<String, WikiLinksCoref> globalCorefIds = new ConcurrentHashMap<>();
 
     private int corefId = runningId.incrementAndGet();;
     private String corefValue;
@@ -26,6 +26,10 @@ public class WikiLinksCoref implements SQLObject {
         }
 
         return globalCorefIds.get(corefValue);
+    }
+
+    public static void removeKey(String keyToRemove) {
+        globalCorefIds.remove(keyToRemove);
     }
 
     public static Map<String, WikiLinksCoref> getGlobalCorefMap() {
@@ -48,6 +52,10 @@ public class WikiLinksCoref implements SQLObject {
         return this.mentionsCount.addAndGet(delta);
     }
 
+    public int getMentionsCount() {
+        return this.mentionsCount.get();
+    }
+
     @Override
     public String getColumnNames() {
         return "corefId, corefValue, mentionsCount";
@@ -67,6 +75,11 @@ public class WikiLinksCoref implements SQLObject {
         return corefId + "," +
                 "'" + corefValue + "'" +
                 "," + mentionsCount.get();
+    }
+
+    @Override
+    public String getTableName() {
+        return TABLE_COREF;
     }
 
     @Override

@@ -9,13 +9,13 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import persistence.SQLApi;
+import persistence.SQLQueryApi;
+import persistence.WikiLinksCoref;
+import persistence.WikiLinksMention;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.SQLException;
+import java.util.*;
 import java.util.concurrent.*;
 
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
@@ -23,12 +23,11 @@ import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 public class CreateWikiLinks {
 
     private static final int INTERVAL = 1000;
-    private static final int EXTRACT_AMOUNT = 10000;
+    private static final int EXTRACT_AMOUNT = 500000;
     private static final int TOTAL_DOCS = 18289732;
     private static final String ELASTIC_INDEX = "enwiki_v2";
-    private static final String DB_NAME = "WikiLinks";
-    private static final String TABLE_MENTIONS = "Mentions";
-    private static final String TABLE_COREF = "CorefChains";
+
+    private final SQLQueryApi sqlApi;
 
     private final RestHighLevelClient elasticClient = new RestHighLevelClient(
             RestClient.builder(new HttpHost("localhost", 9200, "http")).setRequestConfigCallback(
@@ -38,9 +37,11 @@ public class CreateWikiLinks {
                             .setSocketTimeout(60*60*1000))
                     .setMaxRetryTimeoutMillis(60*60*1000));
 
-    private final SQLApi sqlApi = new SQLApi();
+    public CreateWikiLinks(SQLQueryApi sqlApi) {
+        this.sqlApi = sqlApi;
+    }
 
-    public void readAllAndPerisist() throws IOException {
+    public void readAllAndPerisist() throws IOException, SQLException {
         System.out.println("Strating process, Reading all documents from wikipedia (elastic)");
         if(!createWikiLinksTables()) {
             System.out.println("Failed to create Database and tables, finishing process");
@@ -49,15 +50,17 @@ public class CreateWikiLinks {
 
         RejectedExecutionHandler rejectedExecutionHandler = new ThreadPoolExecutor.CallerRunsPolicy();
         ExecutorService pool = new ThreadPoolExecutor(
-                4,
-                4,
+                10,
+                20,
                 20,
                 TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(4),
+                new ArrayBlockingQueue<>(10),
                 rejectedExecutionHandler);
 
         final Scroll scroll = new Scroll(TimeValue.timeValueHours(5L));
         SearchResponse searchResponse = createElasticSearchResponse(scroll);
+
+        ParseListener listener = new ParseListener(this.sqlApi);
 
         String scrollId = searchResponse.getScrollId();
         SearchHit[] searchHits = searchResponse.getHits().getHits();
@@ -76,8 +79,8 @@ public class CreateWikiLinks {
                 }
             }
 
-//            new ParseAndPersistDataRunner(pageTexts).run();
-            pool.execute(new ParseAndPersistDataRunner(pageTexts));
+//            new ParseAndExtractMentions(pageTexts).run();
+            pool.submit(new ParseAndExtractMentions(pageTexts, listener));
             System.out.println((TOTAL_DOCS - count) + " documents to go");
 
             if(count >= EXTRACT_AMOUNT) {
@@ -94,16 +97,32 @@ public class CreateWikiLinks {
         pool.shutdown();
         closeExecuterService(pool);
 
+        System.out.println("Handling last mentions if exists");
+        listener.handle();
+
         System.out.println("Persisting corefs tables values");
-        if (!sqlApi.insertRowsToTable(DB_NAME, TABLE_COREF, new ArrayList<>(WikiLinksCoref.getGlobalCorefMap().values()))) {
-            System.out.println("Failed to insert Corefs!!!!");
+        final Collection<WikiLinksCoref> allCorefs = WikiLinksCoref.getGlobalCorefMap().values();
+        final Iterator<WikiLinksCoref> corefIterator = allCorefs.iterator();
+        while(corefIterator.hasNext()) {
+            final WikiLinksCoref wikiLinksCoref = corefIterator.next();
+            if(wikiLinksCoref.getMentionsCount() < 2) {
+                corefIterator.remove();
+            }
+        }
+
+        try {
+            if (!this.sqlApi.insertRowsToTable(new ArrayList<>(allCorefs))) {
+                System.out.println("Failed to insert Corefs!!!!");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
-    private boolean createWikiLinksTables() {
+    private boolean createWikiLinksTables() throws SQLException {
         System.out.println("Creating SQL Tables");
-        return sqlApi.createTable(DB_NAME, TABLE_MENTIONS, new WikiLinksMention()) &&
-                sqlApi.createTable(DB_NAME, TABLE_COREF, WikiLinksCoref.getCorefChain("####TEMP####"));
+        return this.sqlApi.createTable(new WikiLinksMention()) &&
+                this.sqlApi.createTable(WikiLinksCoref.getCorefChain("####TEMP####"));
     }
 
     private void closeScroll(String scrollId) throws IOException {
@@ -176,26 +195,22 @@ public class CreateWikiLinks {
         }
     }
 
-    class ParseAndPersistDataRunner implements Runnable {
+    class ParseAndExtractMentions implements Runnable {
         private List<Pair<String, String>> texts;
+        private ParseListener listener;
 
-        public ParseAndPersistDataRunner(List<Pair<String, String>> texts) {
+        public ParseAndExtractMentions(List<Pair<String, String>> texts, ParseListener listener) {
             this.texts = texts;
+            this.listener = listener;
         }
+
 
         @Override
         public void run() {
             for(Pair<String, String> pair : this.texts) {
-                try {
-                    final List<WikiLinksMention> wikiLinksMentions = WikiLinksExtractor.extractFromFile(pair.getKey(), pair.getValue());
-                    wikiLinksMentions.stream().forEach(wikiLinksMention -> wikiLinksMention.getCorefChain().incMentionsCount());
-                    if (!sqlApi.insertRowsToTable(DB_NAME, TABLE_MENTIONS, wikiLinksMentions)) {
-                        System.out.println("Failed to insert mentions Batch!!!!");
-                    }
-                } catch (Exception e) {
-                    System.out.println("Failed to insert into DB with exception");
-                    e.printStackTrace();
-                }
+                List<WikiLinksMention> wikiLinksMentions = WikiLinksExtractor.extractFromFile(pair.getKey(), pair.getValue());
+                wikiLinksMentions.stream().forEach(wikiLinksMention -> wikiLinksMention.getCorefChain().incMentionsCount());
+                this.listener.handle(wikiLinksMentions);
             }
         }
     }
