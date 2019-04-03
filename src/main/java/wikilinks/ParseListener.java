@@ -1,8 +1,8 @@
 package wikilinks;
 
 import persistence.SQLQueryApi;
-import persistence.WikiLinksCoref;
-import persistence.WikiLinksMention;
+import data.WikiLinksCoref;
+import data.WikiLinksMention;
 
 import java.sql.SQLException;
 import java.util.ArrayList;

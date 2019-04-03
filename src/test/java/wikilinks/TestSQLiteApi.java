@@ -4,7 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import persistence.SQLQueryApi;
 import persistence.SQLiteConnections;
-import persistence.WikiLinksMention;
+import data.WikiLinksMention;
 
 import java.sql.SQLException;
 

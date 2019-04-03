@@ -3,12 +3,9 @@ package wikilinks;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.CoreDocument;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
-import persistence.WikiLinksMention;
+import data.WikiLinksMention;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,6 +54,35 @@ public class WikiLinksExtractor {
         }
 
         return finalResults;
+    }
+
+    public static Set<String> extractTypes(String text) {
+        Set<String> finalResults = new HashSet<>();
+        String relText = "";
+        int firstSentenceStartIndex = text.indexOf("|type");
+        if(firstSentenceStartIndex >= 0) {
+            relText = text.substring(firstSentenceStartIndex);
+            relText = relText.substring(0, relText.indexOf("\n"));
+            Matcher linkMatcher = LINK_PATTERN_2.matcher(relText);
+            while (linkMatcher.find()) {
+                String match1 = linkMatcher.group(1);
+                String match2 = linkMatcher.group(2);
+                if (!match1.contains("#")) {
+                    if (!match1.isEmpty()) {
+                        finalResults.add(match1);
+                    }
+
+                    finalResults.add(match2);
+                }
+            }
+        }
+
+        return finalResults;
+    }
+
+    public static boolean isPersonPage(String text) {
+        return text.contains("| birth_name") || text.contains("| birth_date") ||
+                text.contains("birth_place");
     }
 
     static List<WikiLinksMention> extractFromLine(String pageName, String lineToExtractFrom) {

@@ -1,17 +1,18 @@
 package wikilinks;
 
+import data.WikiLinksCoref;
+import data.WikiLinksMention;
 import javafx.util.Pair;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.search.*;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import persistence.SQLQueryApi;
-import persistence.WikiLinksCoref;
-import persistence.WikiLinksMention;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -26,6 +27,7 @@ public class CreateWikiLinks {
     private static final int EXTRACT_AMOUNT = 500000;
     private static final int TOTAL_DOCS = 18289732;
     private static final String ELASTIC_INDEX = "enwiki_v2";
+    private static final String DOC_TYPE = "wikipage";
 
     private final SQLQueryApi sqlApi;
 
@@ -117,6 +119,26 @@ public class CreateWikiLinks {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    String getPageText(String pageTitle) throws IOException {
+        String pageText = null;
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+        sourceBuilder.query(QueryBuilders.matchPhraseQuery("title.keyword", pageTitle));
+        sourceBuilder.from(0);
+        sourceBuilder.size(5);
+        sourceBuilder.timeout(new TimeValue(60, TimeUnit.SECONDS));
+        SearchRequest searchRequest = new SearchRequest();
+        searchRequest.source(sourceBuilder);
+
+        final SearchResponse search = this.elasticClient.search(searchRequest);
+        final SearchHit[] hits = search.getHits().getHits();
+        if(hits.length > 0) {
+            final Pair<String, String> stringStringPair = extractFromHit(hits[0]);
+            pageText = stringStringPair.getValue();
+        }
+
+        return pageText;
     }
 
     private boolean createWikiLinksTables() throws SQLException {

@@ -1,5 +1,7 @@
 package wikilinks;
 
+import data.WikiLinksCoref;
+import data.WikiLinksMention;
 import org.junit.Assert;
 import org.junit.Test;
 import persistence.*;

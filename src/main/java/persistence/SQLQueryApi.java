@@ -1,6 +1,7 @@
 package persistence;
 
 import com.google.common.collect.Iterables;
+import data.WikiLinksCoref;
 import org.apache.commons.lang3.StringUtils;
 
 import java.sql.*;

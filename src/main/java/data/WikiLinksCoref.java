@@ -1,4 +1,6 @@
-package persistence;
+package data;
+
+import persistence.ISQLObject;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
