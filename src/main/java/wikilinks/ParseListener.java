@@ -15,9 +15,11 @@ public class ParseListener {
     private volatile List<WikiLinksMention> mentions = new ArrayList<>();
 
     private SQLQueryApi sqlApi;
+    private ICorefFilter filter;
 
-    public ParseListener(SQLQueryApi sqlApi) {
+    public ParseListener(SQLQueryApi sqlApi, ICorefFilter filter) {
         this.sqlApi = sqlApi;
+        this.filter = filter;
     }
 
     public synchronized void handle(List<WikiLinksMention> mentionsToAdd) {
@@ -33,7 +35,7 @@ public class ParseListener {
         final Iterator<WikiLinksMention> iterator = mentions.iterator();
         while(iterator.hasNext()) {
             WikiLinksMention ment = iterator.next();
-            if(ment.getCorefChain().getMentionsCount() == 1) {
+            if(this.filter.isConditionMet(ment)) {
                 iterator.remove();
                 WikiLinksCoref.removeKey(ment.getCorefChain().getCorefValue());
             }

@@ -69,10 +69,10 @@ public class WikiLinksExtractor {
                 String match2 = linkMatcher.group(2);
                 if (!match1.contains("#")) {
                     if (!match1.isEmpty()) {
-                        finalResults.add(match1);
+                        finalResults.add(match1.toLowerCase());
                     }
 
-                    finalResults.add(match2);
+                    finalResults.add(match2.toLowerCase());
                 }
             }
         }

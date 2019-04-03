@@ -27,7 +27,6 @@ public class CreateWikiLinks {
     private static final int EXTRACT_AMOUNT = 500000;
     private static final int TOTAL_DOCS = 18289732;
     private static final String ELASTIC_INDEX = "enwiki_v2";
-    private static final String DOC_TYPE = "wikipage";
 
     private final SQLQueryApi sqlApi;
 
@@ -62,7 +61,8 @@ public class CreateWikiLinks {
         final Scroll scroll = new Scroll(TimeValue.timeValueHours(5L));
         SearchResponse searchResponse = createElasticSearchResponse(scroll);
 
-        ParseListener listener = new ParseListener(this.sqlApi);
+//        ParseListener listener = new ParseListener(this.sqlApi, (ICorefFilter<WikiLinksMention>) input -> input.getCorefChain().getMentionsCount() == 1);
+        ParseListener listener = new ParseListener(this.sqlApi, new PersonOrEventFilter(this));
 
         String scrollId = searchResponse.getScrollId();
         SearchHit[] searchHits = searchResponse.getHits().getHits();

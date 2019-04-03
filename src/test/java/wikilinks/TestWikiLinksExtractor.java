@@ -58,6 +58,20 @@ public class TestWikiLinksExtractor {
         Assert.assertTrue(!WikiLinksExtractor.extractTypes(sep_11).isEmpty());
     }
 
+    @Test
+    public void testPersonOrEventFilter() {
+        PersonOrEventFilter filter = new PersonOrEventFilter(new CreateWikiLinks(null));
+        final WikiLinksMention input = new WikiLinksMention();
+        input.setCorefChain("Alan Turing");
+        Assert.assertTrue(filter.isConditionMet(input));
+
+        input.setCorefChain("September 11 attacks");
+        Assert.assertTrue(filter.isConditionMet(input));
+
+        input.setCorefChain("Kit Kat");
+        Assert.assertFalse(filter.isConditionMet(input));
+    }
+
     private String getText() {
         InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("september_11_attacks.json");
         JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
