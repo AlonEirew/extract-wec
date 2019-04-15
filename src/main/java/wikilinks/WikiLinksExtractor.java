@@ -14,6 +14,10 @@ public class WikiLinksExtractor {
     private static final String LINK_REGEX_2 = "\\[\\[([^\\[]*?)\\|?([^\\|]*?)\\]\\]";
     private static final Pattern LINK_PATTERN_2 = Pattern.compile(LINK_REGEX_2);
 
+//    private static final String[] INFOBOX_TYPES = {
+//            "{{Infobox football match",
+//            "{{Infobox historical event"};
+
     private static StanfordCoreNLP pipeline;
 
     static {
@@ -56,13 +60,45 @@ public class WikiLinksExtractor {
         return finalResults;
     }
 
+    public static String extractPageInfoBox(String pageText) {
+        String text = pageText.toLowerCase().replaceAll(" ", "");
+
+        Pattern patternStart = Pattern.compile("\\{\\{infobox");
+        Matcher matcherStart = patternStart.matcher(text);
+
+        Pattern patternEnd = Pattern.compile("\n\\}\\}\n|\\}\\}\n\n|\n\\}\\}'''|footnotes=");
+
+        String infoBox = null;
+        // Check all occurrences
+        if (matcherStart.find()) {
+            final int infoStart = matcherStart.start();
+            Matcher matcherEnd = patternEnd.matcher(text.substring(infoStart));
+            if (matcherEnd.find()) {
+                final int infoEnd = matcherEnd.end() + infoStart;
+                if (infoStart < infoEnd && infoStart != -1 && infoEnd != -1) {
+                    infoBox = text.substring(infoStart, infoEnd);
+                }
+            }
+        }
+
+        return infoBox;
+    }
+
     public static Set<String> extractTypes(String text) {
         Set<String> finalResults = new HashSet<>();
         String relText = "";
         int firstSentenceStartIndex = text.indexOf("|type");
+        if(firstSentenceStartIndex < 0) {
+            firstSentenceStartIndex = text.indexOf("| type");
+        }
+
         if(firstSentenceStartIndex >= 0) {
             relText = text.substring(firstSentenceStartIndex);
-            relText = relText.substring(0, relText.indexOf("\n"));
+            final int endIndex = relText.indexOf("\n");
+            if(endIndex != -1) {
+                relText = relText.substring(0, endIndex);
+            }
+
             Matcher linkMatcher = LINK_PATTERN_2.matcher(relText);
             while (linkMatcher.find()) {
                 String match1 = linkMatcher.group(1);
@@ -81,8 +117,46 @@ public class WikiLinksExtractor {
     }
 
     public static boolean isPersonPage(String text) {
-        return text.contains("| birth_name") || text.contains("| birth_date") ||
+        return text.contains("birth_name") || text.contains("birth_date") ||
                 text.contains("birth_place");
+    }
+
+    public static boolean isElection(String infoBox) {
+        if(infoBox.contains("\n|election_name=") && infoBox.contains("\n|election_date=")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static boolean hasDateAndLocation(String infoBox) {
+        if(infoBox != null) {
+            String dateLine = null;
+            String locationLine = null;
+            for (String line : infoBox.split("\n")) {
+                if (line.startsWith("|date=")) {
+                    final String[] split = line.split("=");
+                    if (split.length > 1) {
+                        dateLine = split[1].trim();
+                        if (dateLine.split("-").length != 1) {
+                            dateLine = null;
+                        }
+                    }
+                } else if (line.startsWith("|location=")) {
+                    final String[] split = line.split("=");
+                    if (split.length > 1) {
+                        locationLine = split[1].trim();
+                    }
+                }
+            }
+
+            return locationLine != null && !locationLine.isEmpty()
+                    && dateLine != null && !dateLine.isEmpty()
+                    && !dateLine.contains("{{startandenddates")
+                    && !dateLine.contains("startdate|yyyy|mm|dd");
+        }
+
+        return false;
     }
 
     static List<WikiLinksMention> extractFromLine(String pageName, String lineToExtractFrom) {

@@ -1,13 +1,19 @@
 package wikilinks;
 
+import data.RowElasticResult;
 import data.WikiLinksCoref;
 import data.WikiLinksMention;
 import javafx.util.Pair;
 import org.apache.http.HttpHost;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.get.MultiGetRequest;
+import org.elasticsearch.action.get.MultiGetResponse;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.*;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
@@ -73,16 +79,16 @@ public class CreateWikiLinks {
             searchResponse = elasticClient.searchScroll(scrollRequest);
             scrollId = searchResponse.getScrollId();
 
-            List<Pair<String, String>> pageTexts = new ArrayList<>();
+            List<RowElasticResult> rowElasticResults = new ArrayList<>();
             for (SearchHit hit : searchHits) {
-                Pair<String, String> hitResult = extractFromHit(hit);
+                RowElasticResult hitResult = extractFromHit(hit);
                 if(hitResult != null) {
-                    pageTexts.add(hitResult);
+                    rowElasticResults.add(hitResult);
                 }
             }
 
 //            new ParseAndExtractMentions(pageTexts).run();
-            pool.submit(new ParseAndExtractMentions(pageTexts, listener));
+            pool.submit(new ParseAndExtractMentions(rowElasticResults, listener));
             System.out.println((TOTAL_DOCS - count) + " documents to go");
 
             if(count >= EXTRACT_AMOUNT) {
@@ -134,11 +140,39 @@ public class CreateWikiLinks {
         final SearchResponse search = this.elasticClient.search(searchRequest);
         final SearchHit[] hits = search.getHits().getHits();
         if(hits.length > 0) {
-            final Pair<String, String> stringStringPair = extractFromHit(hits[0]);
-            pageText = stringStringPair.getValue();
+            final RowElasticResult rowElasticResult = extractFromHit(hits[0]);
+            if(rowElasticResult != null) {
+                pageText = rowElasticResult.getText();
+            }
         }
 
         return pageText;
+    }
+
+    Map<String, String> getAllPagesText(Set<String> pagesTitles) throws IOException {
+        Map<String, String> pagesResults = new HashMap<>();
+
+        MultiSearchRequest request = new MultiSearchRequest();
+        for(String page : pagesTitles) {
+            SearchRequest firstSearchRequest = new SearchRequest();
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            searchSourceBuilder.query(QueryBuilders.matchPhraseQuery("title.keyword", page));
+            firstSearchRequest.source(searchSourceBuilder);
+            request.add(firstSearchRequest);
+        }
+
+        MultiSearchResponse response = this.elasticClient.multiSearch(request);
+        for(MultiSearchResponse.Item item : response.getResponses()) {
+            final SearchHit[] hits = item.getResponse().getHits().getHits();
+            if(hits.length > 0) {
+                final RowElasticResult rowElasticResult = extractFromHit(hits[0]);
+                if(rowElasticResult != null) {
+                    pagesResults.put(rowElasticResult.getTitle(), rowElasticResult.getText());
+                }
+            }
+        }
+
+        return pagesResults;
     }
 
     private boolean createWikiLinksTables() throws SQLException {
@@ -157,7 +191,8 @@ public class CreateWikiLinks {
         }
     }
 
-    private Pair<String, String> extractFromHit(SearchHit hit) {
+    private RowElasticResult extractFromHit(SearchHit hit) {
+        final String id = hit.getId();
         final Map map = hit.getSourceAsMap();
         final String text = (String)map.get("text");
         final String title = (String)map.get("title");
@@ -170,7 +205,7 @@ public class CreateWikiLinks {
                 title.toLowerCase().startsWith("wikipedia:")) {
             return null;
         }
-        return new Pair<>(title, text);
+        return new RowElasticResult(id, title, text);
     }
 
     private SearchResponse createElasticSearchResponse(Scroll scroll) throws IOException {
@@ -218,19 +253,19 @@ public class CreateWikiLinks {
     }
 
     class ParseAndExtractMentions implements Runnable {
-        private List<Pair<String, String>> texts;
+        private List<RowElasticResult> rowElasticResults;
         private ParseListener listener;
 
-        public ParseAndExtractMentions(List<Pair<String, String>> texts, ParseListener listener) {
-            this.texts = texts;
+        public ParseAndExtractMentions(List<RowElasticResult> rowElasticResults, ParseListener listener) {
+            this.rowElasticResults = rowElasticResults;
             this.listener = listener;
         }
 
 
         @Override
         public void run() {
-            for(Pair<String, String> pair : this.texts) {
-                List<WikiLinksMention> wikiLinksMentions = WikiLinksExtractor.extractFromFile(pair.getKey(), pair.getValue());
+            for(RowElasticResult rowResult : this.rowElasticResults) {
+                List<WikiLinksMention> wikiLinksMentions = WikiLinksExtractor.extractFromFile(rowResult.getTitle(), rowResult.getText());
                 wikiLinksMentions.stream().forEach(wikiLinksMention -> wikiLinksMention.getCorefChain().incMentionsCount());
                 this.listener.handle(wikiLinksMentions);
             }

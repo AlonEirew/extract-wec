@@ -17,6 +17,7 @@ public class WikiLinksCoref implements ISQLObject {
     private int corefId = runningId.incrementAndGet();;
     private String corefValue;
     private AtomicInteger mentionsCount = new AtomicInteger(0);
+    private CorefType corefType = CorefType.NA;
 
     private WikiLinksCoref(String corefValue) {
         this.corefValue = corefValue;
@@ -58,9 +59,17 @@ public class WikiLinksCoref implements ISQLObject {
         return this.mentionsCount.get();
     }
 
+    public CorefType getCorefType() {
+        return corefType;
+    }
+
+    public void setCorefType(CorefType corefType) {
+        this.corefType = corefType;
+    }
+
     @Override
     public String getColumnNames() {
-        return "corefId, corefValue, mentionsCount";
+        return "corefId, corefValue, mentionsCount, corefType";
     }
 
     @Override
@@ -69,6 +78,7 @@ public class WikiLinksCoref implements ISQLObject {
                 "corefId BIGINT," +
                 "corefValue VARCHAR(500), " +
                 "mentionsCount INT," +
+                "corefType INT," +
                 "PRIMARY KEY (corefId)";
     }
 
@@ -76,7 +86,8 @@ public class WikiLinksCoref implements ISQLObject {
     public String getValues() {
         return corefId + "," +
                 "'" + corefValue + "'" +
-                "," + mentionsCount.get();
+                "," + mentionsCount.get() +
+                "," + corefType.ordinal();
     }
 
     @Override
@@ -89,6 +100,7 @@ public class WikiLinksCoref implements ISQLObject {
         preparedStatement.setInt(1, this.corefId);
         preparedStatement.setString(2, this.corefValue);
         preparedStatement.setInt(3, this.mentionsCount.get());
+        preparedStatement.setInt(4, this.corefType.ordinal());
     }
 
     @Override
@@ -98,7 +110,7 @@ public class WikiLinksCoref implements ISQLObject {
                 .append(tableName).append(" ")
                 .append("(").append(getColumnNames()).append(")").append(" ")
                 .append("VALUES").append(" ")
-                .append("(?,?,?)")
+                .append("(?,?,?,?)")
                 .append(";");
 
         return query.toString();
