@@ -18,12 +18,13 @@ public class WikiLinksCoref implements ISQLObject {
     private String corefValue;
     private AtomicInteger mentionsCount = new AtomicInteger(0);
     private CorefType corefType = CorefType.NA;
+    private boolean markedForRemoval = false;
 
     private WikiLinksCoref(String corefValue) {
         this.corefValue = corefValue;
     }
 
-    public static synchronized WikiLinksCoref getCorefChain(String corefValue) {
+    public static synchronized WikiLinksCoref getAndSetIfNotExistCorefChain(String corefValue) {
         if(!globalCorefIds.containsKey(corefValue)) {
             globalCorefIds.put(corefValue, new WikiLinksCoref(corefValue));
         }
@@ -32,7 +33,9 @@ public class WikiLinksCoref implements ISQLObject {
     }
 
     public static void removeKey(String keyToRemove) {
-        globalCorefIds.remove(keyToRemove);
+        if(globalCorefIds.contains(keyToRemove)) {
+            globalCorefIds.remove(keyToRemove);
+        }
     }
 
     public static Map<String, WikiLinksCoref> getGlobalCorefMap() {
@@ -65,6 +68,14 @@ public class WikiLinksCoref implements ISQLObject {
 
     public void setCorefType(CorefType corefType) {
         this.corefType = corefType;
+    }
+
+    public boolean isMarkedForRemoval() {
+        return markedForRemoval;
+    }
+
+    public void setMarkedForRemoval(boolean markedForRemoval) {
+        this.markedForRemoval = markedForRemoval;
     }
 
     @Override

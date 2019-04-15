@@ -66,7 +66,7 @@ public class WikiLinksExtractor {
         Pattern patternStart = Pattern.compile("\\{\\{infobox");
         Matcher matcherStart = patternStart.matcher(text);
 
-        Pattern patternEnd = Pattern.compile("\n\\}\\}\n|\\}\\}\n\n|\n\\}\\}'''|footnotes=");
+        Pattern patternEnd = Pattern.compile("'''|footnotes=");
 
         String infoBox = null;
         // Check all occurrences
@@ -116,13 +116,62 @@ public class WikiLinksExtractor {
         return finalResults;
     }
 
-    public static boolean isPersonPage(String text) {
+    public static boolean isPerson(String text) {
         return text.contains("birth_name") || text.contains("birth_date") ||
                 text.contains("birth_place");
     }
 
     public static boolean isElection(String infoBox) {
         if(infoBox.contains("\n|election_name=") && infoBox.contains("\n|election_date=")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static boolean isCivilAttack(String infoBox) {
+        if(infoBox.contains("{{infoboxcivilianattack") || infoBox.contains("{{infoboxterroristattack")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static boolean isAccident(String infoBox) {
+        if(infoBox.contains("{{infoboxaircraftoccurrence") || infoBox.contains("{{infoboxrailaccident")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static boolean isDisaster(String infoBox) {
+        if(infoBox.contains("{{infoboxearthquake") || infoBox.contains("{{infoboxhurricane")
+                || infoBox.contains("{{infoboxwildfire")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static boolean isGeneralEvent(String infoBox) {
+        if(infoBox.contains("{{infoboxevent")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static boolean isHistoricalEvent(String infoBox) {
+        if(infoBox.contains("{{infoboxhistoricalevent")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static boolean isNewsEvent(String infoBox) {
+        if(infoBox.contains("{{infoboxnewsevent")) {
             return true;
         }
 

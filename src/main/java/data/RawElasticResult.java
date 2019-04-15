@@ -1,15 +1,19 @@
 package data;
 
-public class RowElasticResult {
+public class RawElasticResult {
 
-    private String id;
+    private String id = "-1";
     private String title;
     private String text;
 
-    public RowElasticResult(String id, String title, String text) {
-        this.id = id;
+    public RawElasticResult(String title, String text) {
         this.title = title;
         this.text = text;
+    }
+
+    public RawElasticResult(String id, String title, String text) {
+        this(title, text);
+        this.id = id;
     }
 
     public String getId() {

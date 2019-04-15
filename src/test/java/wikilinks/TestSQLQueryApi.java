@@ -34,7 +34,7 @@ public class TestSQLQueryApi {
         List<ISQLObject> objList = new ArrayList<>();
         String[] context = { "bolb", "bolo", "blogb", "blob"};
         objList.add(new WikiLinksMention(
-                WikiLinksCoref.getCorefChain("test1"),
+                WikiLinksCoref.getAndSetIfNotExistCorefChain("test1"),
                 "test",
                 0,
                 1,
@@ -42,7 +42,7 @@ public class TestSQLQueryApi {
                 Arrays.asList(context)));
 
         objList.add(new WikiLinksMention(
-                WikiLinksCoref.getCorefChain("test1"),
+                WikiLinksCoref.getAndSetIfNotExistCorefChain("test1"),
                 "test",
                 0,
                 1,

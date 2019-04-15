@@ -2,6 +2,7 @@ package wikilinks;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import data.RawElasticResult;
 import org.junit.Assert;
 import org.junit.Test;
 import data.WikiLinksMention;
@@ -41,9 +42,9 @@ public class TestWikiLinksExtractor {
 
     @Test
     public void testIsPerson() {
-        String pageText = get911Text();
-        boolean ret = WikiLinksExtractor.isPersonPage(pageText);
-        System.out.println();
+        String pageText = getAlenTuringText();
+        boolean ret = WikiLinksExtractor.isPerson(pageText);
+        Assert.assertTrue(ret);
     }
 
     @Test
@@ -74,7 +75,7 @@ public class TestWikiLinksExtractor {
         ret = WikiLinksExtractor.hasDateAndLocation(infoBox);
         Assert.assertFalse(ret);
 
-        pageText = getKitKat();
+        pageText = getKitKatText();
         infoBox = WikiLinksExtractor.extractPageInfoBox(pageText);
         ret = WikiLinksExtractor.hasDateAndLocation(infoBox);
         Assert.assertFalse(ret);
@@ -86,14 +87,14 @@ public class TestWikiLinksExtractor {
         Set<String> pagesList = new HashSet<>();
         pagesList.add("Alan Turing");
         pagesList.add("September 11 attacks");
-        final Map<String, String> allPagesText = wikiLinks.getAllPagesText(pagesList);
+        final Map<String, String> allPagesText = wikiLinks.getAllPagesTitleAndText(pagesList);
 
         final String alan_turing = WikiLinksExtractor.extractPageInfoBox(allPagesText.get("Alan Turing"));
-        Assert.assertTrue(WikiLinksExtractor.isPersonPage(alan_turing));
+        Assert.assertTrue(WikiLinksExtractor.isPerson(alan_turing));
         Assert.assertTrue(WikiLinksExtractor.extractTypes(alan_turing).isEmpty());
 
         final String sep_11 = WikiLinksExtractor.extractPageInfoBox(allPagesText.get("September 11 attacks"));
-        Assert.assertFalse(WikiLinksExtractor.isPersonPage(sep_11));
+        Assert.assertFalse(WikiLinksExtractor.isPerson(sep_11));
         Assert.assertTrue(!WikiLinksExtractor.extractTypes(sep_11).isEmpty());
     }
 
@@ -102,11 +103,11 @@ public class TestWikiLinksExtractor {
         CreateWikiLinks wikiLinks = new CreateWikiLinks(null);
         final String alan_turing = wikiLinks.getPageText("Alan Turing");
         final String infoBox = WikiLinksExtractor.extractPageInfoBox(alan_turing);
-        Assert.assertTrue(WikiLinksExtractor.isPersonPage(infoBox));
+        Assert.assertTrue(WikiLinksExtractor.isPerson(infoBox));
         Assert.assertTrue(WikiLinksExtractor.extractTypes(infoBox).isEmpty());
 
         final String sep_11 = wikiLinks.getPageText("September 11 attacks");
-        Assert.assertFalse(WikiLinksExtractor.isPersonPage(sep_11));
+        Assert.assertFalse(WikiLinksExtractor.isPerson(sep_11));
         Assert.assertTrue(!WikiLinksExtractor.extractTypes(sep_11).isEmpty());
     }
 
@@ -119,17 +120,56 @@ public class TestWikiLinksExtractor {
     }
 
     @Test
+    public void testAccident() {
+        String pageText = getPilotErrorText();
+        String infoBox = WikiLinksExtractor.extractPageInfoBox(pageText);
+        boolean ret = WikiLinksExtractor.isAccident(infoBox);
+        Assert.assertTrue(ret);
+    }
+
+    @Test
+    public void testIsDisaster() {
+        String infoBox = WikiLinksExtractor.extractPageInfoBox(getEarthquake1Text());
+        boolean ret = WikiLinksExtractor.isDisaster(infoBox);
+        Assert.assertTrue(ret);
+
+        infoBox = WikiLinksExtractor.extractPageInfoBox(get911Text());
+        ret = WikiLinksExtractor.isDisaster(infoBox);
+        Assert.assertFalse(ret);
+    }
+
+    @Test
     public void testPersonOrEventFilter() {
-        PersonOrEventFilter filter = new PersonOrEventFilter(new CreateWikiLinks(null));
-        final WikiLinksMention input = new WikiLinksMention();
-        input.setCorefChain("Alan Turing");
+        PersonOrEventFilter filter = new PersonOrEventFilter();
+        RawElasticResult input = new RawElasticResult("Alan Turing", WikiLinksExtractor.extractPageInfoBox(getAlenTuringText()));
         Assert.assertFalse(filter.isConditionMet(input));
 
-        input.setCorefChain("September 11 attacks");
+        input = new RawElasticResult("September 11 attacks", WikiLinksExtractor.extractPageInfoBox(get911Text()));
         Assert.assertFalse(filter.isConditionMet(input));
 
-        input.setCorefChain("Kit Kat");
+        input = new RawElasticResult("Charlie Hebdo", WikiLinksExtractor.extractPageInfoBox(getCharlieHabdoText()));
+        Assert.assertFalse(filter.isConditionMet(input));
+
+        input = new RawElasticResult("Pilot Error", WikiLinksExtractor.extractPageInfoBox(getPilotErrorText()));
+        Assert.assertFalse(filter.isConditionMet(input));
+
+        input = new RawElasticResult("Tsunami", WikiLinksExtractor.extractPageInfoBox(getTsunamiText()));
+        Assert.assertFalse(filter.isConditionMet(input));
+
+        input = new RawElasticResult("Kit Kat", WikiLinksExtractor.extractPageInfoBox(getKitKatText()));
         Assert.assertTrue(filter.isConditionMet(input));
+    }
+
+    private String getEarthquake1Text() {
+        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("earthquake1.json");
+        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
+        return inputJsonNlp.get("text").getAsString();
+    }
+
+    private String getTsunamiText() {
+        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("tsunami.json");
+        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
+        return inputJsonNlp.get("text").getAsString();
     }
 
     private String get911Text() {
@@ -156,7 +196,7 @@ public class TestWikiLinksExtractor {
         return inputJsonNlp.get("text").getAsString();
     }
 
-    private String getKitKat() {
+    private String getKitKatText() {
         InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("kit_kat.json");
         JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
         return inputJsonNlp.get("text").getAsString();
@@ -164,6 +204,12 @@ public class TestWikiLinksExtractor {
 
     private String getElection1() {
         InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("election_1.json");
+        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
+        return inputJsonNlp.get("text").getAsString();
+    }
+
+    private String getPilotErrorText() {
+        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("pilot_error.json");
         JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
         return inputJsonNlp.get("text").getAsString();
     }

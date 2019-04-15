@@ -1,25 +1,28 @@
 package wikilinks;
 
+import data.CorefType;
+import data.RawElasticResult;
 import persistence.SQLQueryApi;
 import data.WikiLinksCoref;
 import data.WikiLinksMention;
 
+import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class ParseListener {
-    private static final int MAX_SIZE = 1000000;
+    private static final int MAX_SIZE = 500000;
 
     private volatile List<WikiLinksMention> mentions = new ArrayList<>();
 
     private SQLQueryApi sqlApi;
+    private CreateWikiLinks wikiLinks;
     private ICorefFilter filter;
 
-    public ParseListener(SQLQueryApi sqlApi, ICorefFilter filter) {
+    public ParseListener(SQLQueryApi sqlApi, CreateWikiLinks wikiLinks, ICorefFilter filter) {
         this.sqlApi = sqlApi;
         this.filter = filter;
+        this.wikiLinks = wikiLinks;
     }
 
     public synchronized void handle(List<WikiLinksMention> mentionsToAdd) {
@@ -32,21 +35,39 @@ public class ParseListener {
     }
 
     public synchronized void handle() {
-        final Iterator<WikiLinksMention> iterator = mentions.iterator();
-        while(iterator.hasNext()) {
-            WikiLinksMention ment = iterator.next();
-            if(this.filter.isConditionMet(ment)) {
-                iterator.remove();
-                WikiLinksCoref.removeKey(ment.getCorefChain().getCorefValue());
-            }
+        Set<String> corefTitleSet = new HashSet<>();
+        for(WikiLinksMention mention : mentions) {
+            corefTitleSet.add(mention.getCorefChain().getCorefValue());
         }
 
+        Map<String, String> allPagesText = null;
         try {
-            if (!this.sqlApi.insertRowsToTable(this.mentions)) {
-                System.out.println("Failed to insert mentions Batch!!!!");
-            }
-        } catch (SQLException e) {
+            allPagesText = this.wikiLinks.getAllPagesTitleAndText(corefTitleSet);
+        } catch (IOException e) {
             e.printStackTrace();
+        }
+
+        if(allPagesText != null) {
+            final Iterator<WikiLinksMention> iterator = mentions.iterator();
+            while (iterator.hasNext()) {
+                WikiLinksMention ment = iterator.next();
+                final String corefValue = ment.getCorefChain().getCorefValue();
+                final String pageText = allPagesText.get(corefValue);
+                RawElasticResult rawElasticResult = new RawElasticResult(corefValue, pageText);
+
+                if (ment.getCorefChain().isMarkedForRemoval() || this.filter.isConditionMet(rawElasticResult)) {
+                    iterator.remove();
+                    ment.getCorefChain().setMarkedForRemoval(true);
+                }
+            }
+
+            try {
+                if (!this.sqlApi.insertRowsToTable(this.mentions)) {
+                    System.out.println("Failed to insert mentions Batch!!!!");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
 
         this.mentions.clear();

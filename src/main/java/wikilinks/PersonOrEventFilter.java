@@ -1,69 +1,63 @@
 package wikilinks;
 
 import data.CorefType;
+import data.RawElasticResult;
 import data.WikiLinksCoref;
-import data.WikiLinksMention;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Set;
+public class PersonOrEventFilter implements ICorefFilter<RawElasticResult> {
 
-public class PersonOrEventFilter implements ICorefFilter<WikiLinksMention> {
+//    private static final String[] EVENT_TYPES = {
+//            "massmurder",
+//            "stabbing",
+//            "aircrafthijackings",
+//            "suicideattack",
+//            "terrorism",
+//            "cyberattack",
+//            "massshooting",
+//            "runwaycollision",
+//            "mid-aircollision",
+//            "piloterror"};
 
-    private CreateWikiLinks wikiLinks;
-
-    private static final String[] EVENT_TYPES = {
-            "mass murder",
-            "stabbing",
-            "aircraft hijackings",
-            "suicide attack",
-            "terrorism",
-            "cyberattack",
-            "mass shooting",
-            "runway collision",
-            "mid-air collision",
-            "pilot error",
-            "fault (geology)",
-            "megathrust earthquake",
-            "hurricane"};
-
-    public PersonOrEventFilter(CreateWikiLinks wikiLinks) {
-        this.wikiLinks = wikiLinks;
-    }
 
     @Override
-    public boolean isConditionMet(WikiLinksMention input) {
+    public boolean isConditionMet(RawElasticResult result) {
         boolean retCond = false;
 
-        try {
-            if(WikiLinksCoref.getGlobalCorefMap().containsKey(input.getCorefChain().getCorefValue())) {
-                final String pageText = this.wikiLinks.getPageText(input.getCorefChain().getCorefValue());
-                if (pageText != null && !pageText.isEmpty()) {
-                    final String infoBox = WikiLinksExtractor.extractPageInfoBox(pageText);
-                    final boolean isPerson = WikiLinksExtractor.isPersonPage(infoBox);
-                    final boolean isElection = WikiLinksExtractor.isElection(infoBox);
-                    final Set<String> extractTypes = WikiLinksExtractor.extractTypes(infoBox);
-                    final boolean isEventType = !Collections.disjoint(extractTypes, Arrays.asList(EVENT_TYPES));
-                    final boolean isInfoBoxEvent = WikiLinksExtractor.hasDateAndLocation(infoBox);
+        if (result != null && result.getText() != null && !result.getText().isEmpty()) {
+            final boolean isPerson = WikiLinksExtractor.isPerson(result.getText());
+            final boolean isDisaster = WikiLinksExtractor.isDisaster(result.getText());
+            final boolean isElection = WikiLinksExtractor.isElection(result.getText());
+            final boolean isCivilAttack = WikiLinksExtractor.isCivilAttack(result.getText());
+            final boolean isAccident = WikiLinksExtractor.isAccident(result.getText());
+            final boolean isNewsEvent = WikiLinksExtractor.isNewsEvent(result.getText());
+            final boolean isGeneralEvent = WikiLinksExtractor.isGeneralEvent(result.getText());
+            final boolean isHistoricalEvent = WikiLinksExtractor.isHistoricalEvent(result.getText());
+            final boolean isInfoBoxEvent = WikiLinksExtractor.hasDateAndLocation(result.getText());
+//            final Set<String> extractTypes = WikiLinksExtractor.extractTypes(result.getText());
+//            final boolean isEventType = !Collections.disjoint(extractTypes, Arrays.asList(EVENT_TYPES));
 
-                    if(isPerson && isEventType) {
-                        WikiLinksCoref.getCorefChain(input.getCorefChain().getCorefValue()).setCorefType(CorefType.PERSON_AND_EVENT);
-                    } else if(isPerson) {
-                        WikiLinksCoref.getCorefChain(input.getCorefChain().getCorefValue()).setCorefType(CorefType.PERSON);
-                    } else if(isEventType) {
-                        WikiLinksCoref.getCorefChain(input.getCorefChain().getCorefValue()).setCorefType(CorefType.EVENT_TERROR);
-                    } else if(isElection) {
-                        WikiLinksCoref.getCorefChain(input.getCorefChain().getCorefValue()).setCorefType(CorefType.EVENT_ELECTION);
-                    } else if(isInfoBoxEvent) {
-                        WikiLinksCoref.getCorefChain(input.getCorefChain().getCorefValue()).setCorefType(CorefType.UNK_EVENT);
-                    }
-
-                    retCond = isPerson || isEventType || isElection || isInfoBoxEvent;
-                }
+            if (isPerson) {
+                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.PERSON);
+            } else if (isDisaster) {
+                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.DISASTER_EVENT);
+            } else if (isElection) {
+                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.ELECTION_EVENT);
+            } else if (isCivilAttack) {
+                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.CIVIL_ATTACK_EVENT);
+            } else if (isAccident) {
+                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.ACCIDENT_EVENT);
+            } else if (isNewsEvent) {
+                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.NEWS_EVENT);
+            } else if (isGeneralEvent) {
+                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.GENERAL_EVENT);
+            } else if (isHistoricalEvent) {
+                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.HISTORICAL_EVENT);
+            } else if (isInfoBoxEvent) {
+                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.EVENT_UNK);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+
+            retCond = isPerson || isDisaster || isElection || isCivilAttack || isAccident || isNewsEvent
+                    || isGeneralEvent || isHistoricalEvent || isInfoBoxEvent;
         }
 
         return !retCond;

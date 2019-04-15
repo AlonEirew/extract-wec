@@ -1,19 +1,14 @@
 package wikilinks;
 
-import data.RowElasticResult;
+import data.CorefType;
+import data.RawElasticResult;
 import data.WikiLinksCoref;
 import data.WikiLinksMention;
-import javafx.util.Pair;
 import org.apache.http.HttpHost;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.get.MultiGetRequest;
-import org.elasticsearch.action.get.MultiGetResponse;
-import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.*;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
@@ -30,7 +25,7 @@ import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 public class CreateWikiLinks {
 
     private static final int INTERVAL = 1000;
-    private static final int EXTRACT_AMOUNT = 500000;
+    private static final int EXTRACT_AMOUNT = 50000;
     private static final int TOTAL_DOCS = 18289732;
     private static final String ELASTIC_INDEX = "enwiki_v2";
 
@@ -67,8 +62,8 @@ public class CreateWikiLinks {
         final Scroll scroll = new Scroll(TimeValue.timeValueHours(5L));
         SearchResponse searchResponse = createElasticSearchResponse(scroll);
 
-//        ParseListener listener = new ParseListener(this.sqlApi, (ICorefFilter<WikiLinksMention>) input -> input.getCorefChain().getMentionsCount() == 1);
-        ParseListener listener = new ParseListener(this.sqlApi, new PersonOrEventFilter(this));
+//        ParseListener listener = new ParseListener(this.sqlApi, (ICorefFilter<WikiLinksMention>) input -> input.getAndSetIfNotExistCorefChain().getMentionsCount() == 1);
+        ParseListener listener = new ParseListener(this.sqlApi, this, new PersonOrEventFilter());
 
         String scrollId = searchResponse.getScrollId();
         SearchHit[] searchHits = searchResponse.getHits().getHits();
@@ -79,16 +74,16 @@ public class CreateWikiLinks {
             searchResponse = elasticClient.searchScroll(scrollRequest);
             scrollId = searchResponse.getScrollId();
 
-            List<RowElasticResult> rowElasticResults = new ArrayList<>();
+            List<RawElasticResult> rawElasticResults = new ArrayList<>();
             for (SearchHit hit : searchHits) {
-                RowElasticResult hitResult = extractFromHit(hit);
+                RawElasticResult hitResult = extractFromHit(hit);
                 if(hitResult != null) {
-                    rowElasticResults.add(hitResult);
+                    rawElasticResults.add(hitResult);
                 }
             }
 
 //            new ParseAndExtractMentions(pageTexts).run();
-            pool.submit(new ParseAndExtractMentions(rowElasticResults, listener));
+            pool.submit(new ParseAndExtractMentions(rawElasticResults, listener));
             System.out.println((TOTAL_DOCS - count) + " documents to go");
 
             if(count >= EXTRACT_AMOUNT) {
@@ -113,7 +108,8 @@ public class CreateWikiLinks {
         final Iterator<WikiLinksCoref> corefIterator = allCorefs.iterator();
         while(corefIterator.hasNext()) {
             final WikiLinksCoref wikiLinksCoref = corefIterator.next();
-            if(wikiLinksCoref.getMentionsCount() < 2) {
+            if(wikiLinksCoref.getMentionsCount() < 2 || wikiLinksCoref.getCorefType() == CorefType.NA ||
+                    wikiLinksCoref.isMarkedForRemoval()) {
                 corefIterator.remove();
             }
         }
@@ -140,45 +136,57 @@ public class CreateWikiLinks {
         final SearchResponse search = this.elasticClient.search(searchRequest);
         final SearchHit[] hits = search.getHits().getHits();
         if(hits.length > 0) {
-            final RowElasticResult rowElasticResult = extractFromHit(hits[0]);
-            if(rowElasticResult != null) {
-                pageText = rowElasticResult.getText();
+            final RawElasticResult rawElasticResult = extractFromHit(hits[0]);
+            if(rawElasticResult != null) {
+                pageText = rawElasticResult.getText();
             }
         }
 
         return pageText;
     }
 
-    Map<String, String> getAllPagesText(Set<String> pagesTitles) throws IOException {
+    Map<String, String> getAllPagesTitleAndText(Set<String> pagesTitles) throws IOException {
         Map<String, String> pagesResults = new HashMap<>();
-
-        MultiSearchRequest request = new MultiSearchRequest();
+        System.out.println("Got total of-" + pagesTitles.size() + " coref pages to extract from elastic");
+        MultiSearchRequest multiSearchRequest = new MultiSearchRequest();
+        int index = 0;
         for(String page : pagesTitles) {
-            SearchRequest firstSearchRequest = new SearchRequest();
+            SearchRequest searchRequest = new SearchRequest();
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             searchSourceBuilder.query(QueryBuilders.matchPhraseQuery("title.keyword", page));
-            firstSearchRequest.source(searchSourceBuilder);
-            request.add(firstSearchRequest);
+            searchRequest.source(searchSourceBuilder);
+            multiSearchRequest.add(searchRequest);
+
+            index ++;
+            if(index % 1000 == 0) {
+                extractResults(pagesResults, multiSearchRequest);
+                multiSearchRequest = new MultiSearchRequest();
+                System.out.println("Done extracting " + index + " coref pages");
+            }
         }
 
+        extractResults(pagesResults, multiSearchRequest);
+        return pagesResults;
+    }
+
+    private void extractResults(Map<String, String> pagesResults, MultiSearchRequest request) throws IOException {
         MultiSearchResponse response = this.elasticClient.multiSearch(request);
         for(MultiSearchResponse.Item item : response.getResponses()) {
             final SearchHit[] hits = item.getResponse().getHits().getHits();
             if(hits.length > 0) {
-                final RowElasticResult rowElasticResult = extractFromHit(hits[0]);
-                if(rowElasticResult != null) {
-                    pagesResults.put(rowElasticResult.getTitle(), rowElasticResult.getText());
+                final RawElasticResult rawElasticResult = extractFromHit(hits[0]);
+                if(rawElasticResult != null) {
+                    final String infoBox = WikiLinksExtractor.extractPageInfoBox(rawElasticResult.getText());
+                    pagesResults.put(rawElasticResult.getTitle(), infoBox);
                 }
             }
         }
-
-        return pagesResults;
     }
 
     private boolean createWikiLinksTables() throws SQLException {
         System.out.println("Creating SQL Tables");
         return this.sqlApi.createTable(new WikiLinksMention()) &&
-                this.sqlApi.createTable(WikiLinksCoref.getCorefChain("####TEMP####"));
+                this.sqlApi.createTable(WikiLinksCoref.getAndSetIfNotExistCorefChain("####TEMP####"));
     }
 
     private void closeScroll(String scrollId) throws IOException {
@@ -191,7 +199,7 @@ public class CreateWikiLinks {
         }
     }
 
-    private RowElasticResult extractFromHit(SearchHit hit) {
+    private RawElasticResult extractFromHit(SearchHit hit) {
         final String id = hit.getId();
         final Map map = hit.getSourceAsMap();
         final String text = (String)map.get("text");
@@ -205,7 +213,7 @@ public class CreateWikiLinks {
                 title.toLowerCase().startsWith("wikipedia:")) {
             return null;
         }
-        return new RowElasticResult(id, title, text);
+        return new RawElasticResult(id, title, text);
     }
 
     private SearchResponse createElasticSearchResponse(Scroll scroll) throws IOException {
@@ -253,18 +261,18 @@ public class CreateWikiLinks {
     }
 
     class ParseAndExtractMentions implements Runnable {
-        private List<RowElasticResult> rowElasticResults;
+        private List<RawElasticResult> rawElasticResults;
         private ParseListener listener;
 
-        public ParseAndExtractMentions(List<RowElasticResult> rowElasticResults, ParseListener listener) {
-            this.rowElasticResults = rowElasticResults;
+        public ParseAndExtractMentions(List<RawElasticResult> rawElasticResults, ParseListener listener) {
+            this.rawElasticResults = rawElasticResults;
             this.listener = listener;
         }
 
 
         @Override
         public void run() {
-            for(RowElasticResult rowResult : this.rowElasticResults) {
+            for(RawElasticResult rowResult : this.rawElasticResults) {
                 List<WikiLinksMention> wikiLinksMentions = WikiLinksExtractor.extractFromFile(rowResult.getTitle(), rowResult.getText());
                 wikiLinksMentions.stream().forEach(wikiLinksMention -> wikiLinksMention.getCorefChain().incMentionsCount());
                 this.listener.handle(wikiLinksMentions);

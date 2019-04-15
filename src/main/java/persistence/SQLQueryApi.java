@@ -154,7 +154,7 @@ public class SQLQueryApi {
 
             conn.setAutoCommit(true);
 
-            WikiLinksCoref tmp = WikiLinksCoref.getCorefChain("####TEMP####");
+            WikiLinksCoref tmp = WikiLinksCoref.getAndSetIfNotExistCorefChain("####TEMP####");
 
             if(!copyCoref.isEmpty()) {
                 try (PreparedStatement ps = conn.prepareStatement(tmp.getPrepareInsertStatementQuery(tableName))) {
