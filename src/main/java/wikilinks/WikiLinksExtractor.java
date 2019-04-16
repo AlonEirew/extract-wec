@@ -13,6 +13,9 @@ public class WikiLinksExtractor {
 
     private static final String LINK_REGEX_2 = "\\[\\[([^\\[]*?)\\|?([^\\|]*?)\\]\\]";
     private static final Pattern LINK_PATTERN_2 = Pattern.compile(LINK_REGEX_2);
+    private static final Pattern SPORT_PATTERN = Pattern.compile(
+            "\\{\\{infobox[\\w\\|]*(match|draft|racereport|championships|athleticscompetition)");
+    private static final Pattern AWARD_PATTERN = Pattern.compile("\\{\\{infobox[\\w\\|]*(award)");
 
 //    private static final String[] INFOBOX_TYPES = {
 //            "{{Infobox football match",
@@ -130,7 +133,8 @@ public class WikiLinksExtractor {
     }
 
     public static boolean isCivilAttack(String infoBox) {
-        if(infoBox.contains("{{infoboxcivilianattack") || infoBox.contains("{{infoboxterroristattack")) {
+        if(infoBox.contains("{{infoboxcivilianattack") || infoBox.contains("{{infoboxterroristattack")
+            || infoBox.contains("{{infoboxmilitaryattack")) {
             return true;
         }
 
@@ -172,6 +176,27 @@ public class WikiLinksExtractor {
 
     public static boolean isNewsEvent(String infoBox) {
         if(infoBox.contains("{{infoboxnewsevent")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static boolean isSportEvent(String infoBox) {
+        Matcher linkMatcher = SPORT_PATTERN.matcher(infoBox);
+        if (linkMatcher.find()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static boolean isAwardEvent(String infoBox, String title) {
+        Pattern titlePattern = Pattern.compile("(.*\\s?\\d\\d?th\\s.*|.*[12][90][0-9][0-9].*)");
+
+        Matcher titleMatcher = titlePattern.matcher(title);
+        Matcher awardMatcher = AWARD_PATTERN.matcher(infoBox);
+        if (awardMatcher.find() && titleMatcher.find()) {
             return true;
         }
 

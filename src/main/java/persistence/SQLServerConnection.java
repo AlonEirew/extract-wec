@@ -5,6 +5,7 @@ import org.apache.commons.dbcp2.BasicDataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+@Deprecated(since = "Using local SQLite instead of docker SQLServer which crashes all the time")
 public class SQLServerConnection implements ISQLConnection {
 
     private static final String CONNECTION_URL = "jdbc:sqlserver://localhost:1433;databaseName=WikiLinks;";

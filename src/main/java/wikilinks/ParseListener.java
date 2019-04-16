@@ -1,10 +1,8 @@
 package wikilinks;
 
-import data.CorefType;
 import data.RawElasticResult;
-import persistence.SQLQueryApi;
-import data.WikiLinksCoref;
 import data.WikiLinksMention;
+import persistence.SQLQueryApi;
 
 import java.io.IOException;
 import java.sql.SQLException;

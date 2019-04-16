@@ -7,8 +7,10 @@ public enum CorefType {
     DISASTER_EVENT, //3
     ACCIDENT_EVENT, //4
     ELECTION_EVENT, //5
-    NEWS_EVENT, //6
-    GENERAL_EVENT, //7
-    HISTORICAL_EVENT, //8
-    EVENT_UNK //9
+    SPORT_EVENT, //6
+    AWARD_EVENT, //7
+    NEWS_EVENT, //8
+    GENERAL_EVENT, //9
+    HISTORICAL_EVENT, //10
+    EVENT_UNK //11
 }

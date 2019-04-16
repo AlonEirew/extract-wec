@@ -1,7 +1,6 @@
 package wikilinks;
 
 import persistence.SQLQueryApi;
-import persistence.SQLServerConnection;
 import persistence.SQLiteConnections;
 
 import java.io.IOException;

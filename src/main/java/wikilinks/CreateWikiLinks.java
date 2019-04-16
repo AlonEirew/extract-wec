@@ -25,7 +25,7 @@ import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 public class CreateWikiLinks {
 
     private static final int INTERVAL = 1000;
-    private static final int EXTRACT_AMOUNT = 50000;
+    private static final int EXTRACT_AMOUNT = 10000;
     private static final int TOTAL_DOCS = 18289732;
     private static final String ELASTIC_INDEX = "enwiki_v2";
 

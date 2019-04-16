@@ -128,6 +128,21 @@ public class TestWikiLinksExtractor {
     }
 
     @Test
+    public void testSport() {
+        boolean ret = WikiLinksExtractor.isSportEvent(WikiLinksExtractor.extractPageInfoBox(getSportDraftText()));
+        Assert.assertTrue(ret);
+
+        ret = WikiLinksExtractor.isSportEvent(WikiLinksExtractor.extractPageInfoBox(getSportMatchText()));
+        Assert.assertTrue(ret);
+
+        ret = WikiLinksExtractor.isSportEvent(WikiLinksExtractor.extractPageInfoBox(getChampText()));
+        Assert.assertTrue(ret);
+
+        ret = WikiLinksExtractor.isSportEvent(WikiLinksExtractor.extractPageInfoBox(get911Text()));
+        Assert.assertFalse(ret);
+    }
+
+    @Test
     public void testIsDisaster() {
         String infoBox = WikiLinksExtractor.extractPageInfoBox(getEarthquake1Text());
         boolean ret = WikiLinksExtractor.isDisaster(infoBox);
@@ -158,6 +173,24 @@ public class TestWikiLinksExtractor {
 
         input = new RawElasticResult("Kit Kat", WikiLinksExtractor.extractPageInfoBox(getKitKatText()));
         Assert.assertTrue(filter.isConditionMet(input));
+    }
+
+    private String getChampText() {
+        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("championships.json");
+        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
+        return inputJsonNlp.get("text").getAsString();
+    }
+
+    private String getSportMatchText() {
+        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("sport_match.json");
+        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
+        return inputJsonNlp.get("text").getAsString();
+    }
+
+    private String getSportDraftText() {
+        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("sport_draft.json");
+        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
+        return inputJsonNlp.get("text").getAsString();
     }
 
     private String getEarthquake1Text() {
