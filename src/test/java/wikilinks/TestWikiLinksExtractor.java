@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 public class TestWikiLinksExtractor {
 
@@ -82,7 +84,7 @@ public class TestWikiLinksExtractor {
     }
 
     @Test
-    public void testGetAllPagesTexts() throws IOException {
+    public void testGetAllPagesTexts() throws InterruptedException, ExecutionException, TimeoutException {
         CreateWikiLinks wikiLinks = new CreateWikiLinks(null);
         Set<String> pagesList = new HashSet<>();
         pagesList.add("Alan Turing");
@@ -124,6 +126,13 @@ public class TestWikiLinksExtractor {
         String pageText = getPilotErrorText();
         String infoBox = WikiLinksExtractor.extractPageInfoBox(pageText);
         boolean ret = WikiLinksExtractor.isAccident(infoBox);
+        Assert.assertTrue(ret);
+    }
+
+    @Test
+    public void testSmallCompany() {
+        String infoBox = WikiLinksExtractor.extractPageInfoBox(getSmallCompanyText());
+        boolean ret = WikiLinksExtractor.isSmallCompanyEvent(infoBox);
         Assert.assertTrue(ret);
     }
 
@@ -173,6 +182,12 @@ public class TestWikiLinksExtractor {
 
         input = new RawElasticResult("Kit Kat", WikiLinksExtractor.extractPageInfoBox(getKitKatText()));
         Assert.assertTrue(filter.isConditionMet(input));
+    }
+
+    private String getSmallCompanyText() {
+        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("mobileye.json");
+        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
+        return inputJsonNlp.get("text").getAsString();
     }
 
     private String getChampText() {

@@ -25,11 +25,13 @@ import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 public class CreateWikiLinks {
 
     private static final int INTERVAL = 1000;
-    private static final int EXTRACT_AMOUNT = 10000;
+    private static final int EXTRACT_AMOUNT = 50000;
     private static final int TOTAL_DOCS = 18289732;
     private static final String ELASTIC_INDEX = "enwiki_v2";
 
     private final SQLQueryApi sqlApi;
+
+    private RejectedExecutionHandler rejectedExecutionHandler = new ThreadPoolExecutor.CallerRunsPolicy();
 
     private final RestHighLevelClient elasticClient = new RestHighLevelClient(
             RestClient.builder(new HttpHost("localhost", 9200, "http")).setRequestConfigCallback(
@@ -50,8 +52,7 @@ public class CreateWikiLinks {
             return;
         }
 
-        RejectedExecutionHandler rejectedExecutionHandler = new ThreadPoolExecutor.CallerRunsPolicy();
-        ExecutorService pool = new ThreadPoolExecutor(
+        ExecutorService parsePool = new ThreadPoolExecutor(
                 10,
                 20,
                 20,
@@ -83,7 +84,7 @@ public class CreateWikiLinks {
             }
 
 //            new ParseAndExtractMentions(pageTexts).run();
-            pool.submit(new ParseAndExtractMentions(rawElasticResults, listener));
+            parsePool.submit(new ParseAndExtractMentions(rawElasticResults, listener));
             System.out.println((TOTAL_DOCS - count) + " documents to go");
 
             if(count >= EXTRACT_AMOUNT) {
@@ -97,8 +98,8 @@ public class CreateWikiLinks {
 
         closeScroll(scrollId);
 
-        pool.shutdown();
-        closeExecuterService(pool);
+        parsePool.shutdown();
+        closeExecuterService(parsePool);
 
         System.out.println("Handling last mentions if exists");
         listener.handle();
@@ -145,9 +146,19 @@ public class CreateWikiLinks {
         return pageText;
     }
 
-    Map<String, String> getAllPagesTitleAndText(Set<String> pagesTitles) throws IOException {
-        Map<String, String> pagesResults = new HashMap<>();
+    Map<String, String> getAllPagesTitleAndText(Set<String> pagesTitles) throws InterruptedException, ExecutionException, TimeoutException {
         System.out.println("Got total of-" + pagesTitles.size() + " coref pages to extract from elastic");
+
+        ExecutorService elasticSearchPool = new ThreadPoolExecutor(
+                10,
+                20,
+                20,
+                TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(10),
+                rejectedExecutionHandler);
+
+        List<Future<List<RawElasticResult>>> futureList = new ArrayList<>();
+
         MultiSearchRequest multiSearchRequest = new MultiSearchRequest();
         int index = 0;
         for(String page : pagesTitles) {
@@ -159,28 +170,25 @@ public class CreateWikiLinks {
 
             index ++;
             if(index % 1000 == 0) {
-                extractResults(pagesResults, multiSearchRequest);
+                futureList.add(elasticSearchPool.submit(new ElasticSearchCallRequest(multiSearchRequest)));
                 multiSearchRequest = new MultiSearchRequest();
                 System.out.println("Done extracting " + index + " coref pages");
             }
         }
 
-        extractResults(pagesResults, multiSearchRequest);
-        return pagesResults;
-    }
+        futureList.add(elasticSearchPool.submit(new ElasticSearchCallRequest(multiSearchRequest)));
+        elasticSearchPool.shutdown();
 
-    private void extractResults(Map<String, String> pagesResults, MultiSearchRequest request) throws IOException {
-        MultiSearchResponse response = this.elasticClient.multiSearch(request);
-        for(MultiSearchResponse.Item item : response.getResponses()) {
-            final SearchHit[] hits = item.getResponse().getHits().getHits();
-            if(hits.length > 0) {
-                final RawElasticResult rawElasticResult = extractFromHit(hits[0]);
-                if(rawElasticResult != null) {
-                    final String infoBox = WikiLinksExtractor.extractPageInfoBox(rawElasticResult.getText());
-                    pagesResults.put(rawElasticResult.getTitle(), infoBox);
-                }
+        Map<String, String> pagesResults = new HashMap<>();
+        for(Future<List<RawElasticResult>> future : futureList) {
+            final List<RawElasticResult> rawElasticResults = future.get(1000, TimeUnit.SECONDS);
+            for(RawElasticResult result : rawElasticResults) {
+                pagesResults.put(result.getTitle(), result.getText());
             }
         }
+
+        closeExecuterService(elasticSearchPool);
+        return pagesResults;
     }
 
     private boolean createWikiLinksTables() throws SQLException {
@@ -243,20 +251,30 @@ public class CreateWikiLinks {
         }
     }
 
-    private void validateAllFutureDone(List<Future<?>> returnFutures) {
-        List<WikiLinksMention> mentions = new ArrayList<>();
-        if(returnFutures != null) {
-            for (Future<?> future : returnFutures) {
-                try {
-                    future.get(10, TimeUnit.MINUTES);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
-                } catch (TimeoutException e) {
-                    e.printStackTrace();
+    class ElasticSearchCallRequest implements Callable<List<RawElasticResult>> {
+
+        private MultiSearchRequest request;
+
+        public ElasticSearchCallRequest(MultiSearchRequest request) {
+            this.request = request;
+        }
+
+        @Override
+        public List<RawElasticResult> call() throws Exception {
+            List<RawElasticResult> rawResults = new ArrayList<>();
+            MultiSearchResponse response = elasticClient.multiSearch(request);
+            for(MultiSearchResponse.Item item : response.getResponses()) {
+                final SearchHit[] hits = item.getResponse().getHits().getHits();
+                if(hits.length > 0) {
+                    final RawElasticResult rawElasticResult = extractFromHit(hits[0]);
+                    if(rawElasticResult != null) {
+                        final String infoBox = WikiLinksExtractor.extractPageInfoBox(rawElasticResult.getText());
+                        rawResults.add(new RawElasticResult(rawElasticResult.getTitle(), infoBox));
+                    }
                 }
             }
+
+            return rawResults;
         }
     }
 

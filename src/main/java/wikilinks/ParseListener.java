@@ -4,7 +4,6 @@ import data.RawElasticResult;
 import data.WikiLinksMention;
 import persistence.SQLQueryApi;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -41,7 +40,7 @@ public class ParseListener {
         Map<String, String> allPagesText = null;
         try {
             allPagesText = this.wikiLinks.getAllPagesTitleAndText(corefTitleSet);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 

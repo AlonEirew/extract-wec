@@ -11,6 +11,8 @@ import java.util.regex.Pattern;
 
 public class WikiLinksExtractor {
 
+    private static final int MAX_EMPLOYEES = 1000;
+
     private static final String LINK_REGEX_2 = "\\[\\[([^\\[]*?)\\|?([^\\|]*?)\\]\\]";
     private static final Pattern LINK_PATTERN_2 = Pattern.compile(LINK_REGEX_2);
     private static final Pattern SPORT_PATTERN = Pattern.compile(
@@ -177,6 +179,26 @@ public class WikiLinksExtractor {
     public static boolean isNewsEvent(String infoBox) {
         if(infoBox.contains("{{infoboxnewsevent")) {
             return true;
+        }
+
+        return false;
+    }
+
+    public static boolean isSmallCompanyEvent(String infoBox) {
+        if(infoBox.contains("{{infoboxcompany")) {
+            for (String line : infoBox.split("\n")) {
+                if(line.startsWith("|num_employees=")) {
+                    final String[] numEmpSplit = line.split("=");
+                    if(numEmpSplit.length == 2) {
+                        try {
+                            int empAmount = Integer.parseInt(numEmpSplit[1]);
+                            if (empAmount <= MAX_EMPLOYEES) {
+                                return true;
+                            }
+                        } catch (NumberFormatException e) { }
+                    }
+                }
+            }
         }
 
         return false;
