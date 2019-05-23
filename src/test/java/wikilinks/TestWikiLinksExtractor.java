@@ -3,10 +3,12 @@ package wikilinks;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import data.RawElasticResult;
+import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import data.WikiLinksMention;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -21,7 +23,7 @@ public class TestWikiLinksExtractor {
     @Test
     public void testExtract() {
         Map<String, List<WikiLinksMention>> finalResults = new HashMap<>();
-        String pageText = get911Text();
+        String pageText = getPresidentsList();
         final List<WikiLinksMention> extractMentions = WikiLinksExtractor.extractFromFile("na", pageText);
         for (WikiLinksMention mention : extractMentions) {
             if(finalResults.containsKey(mention.getCorefChain())) {
@@ -84,8 +86,10 @@ public class TestWikiLinksExtractor {
     }
 
     @Test
-    public void testGetAllPagesTexts() throws InterruptedException, ExecutionException, TimeoutException {
-        CreateWikiLinks wikiLinks = new CreateWikiLinks(null);
+    public void testGetAllPagesTexts() throws InterruptedException, ExecutionException, TimeoutException, IOException {
+        Map<String, String> config = getConfigFile();
+
+        CreateWikiLinks wikiLinks = new CreateWikiLinks(null, config);
         Set<String> pagesList = new HashSet<>();
         pagesList.add("Alan Turing");
         pagesList.add("September 11 attacks");
@@ -102,7 +106,9 @@ public class TestWikiLinksExtractor {
 
     @Test
     public void testGetPageText() throws IOException {
-        CreateWikiLinks wikiLinks = new CreateWikiLinks(null);
+        Map<String, String> config = getConfigFile();
+
+        CreateWikiLinks wikiLinks = new CreateWikiLinks(null, config);
         final String alan_turing = wikiLinks.getPageText("Alan Turing");
         final String infoBox = WikiLinksExtractor.extractPageInfoBox(alan_turing);
         Assert.assertTrue(WikiLinksExtractor.isPerson(infoBox));
@@ -184,87 +190,83 @@ public class TestWikiLinksExtractor {
         Assert.assertTrue(filter.isConditionMet(input));
     }
 
-    private String getSmallCompanyText() {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("mobileye.json");
+    private Map<String, String> getConfigFile() throws IOException {
+        final String property = System.getProperty("user.dir");
+
+        Map<String, String> config = gson.fromJson(FileUtils.readFileToString(
+                new File(property + "/config.json"), "UTF-8"),
+                Map.class);
+
+        return config;
+    }
+
+    private String getText(String fileNme) {
+        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream(fileNme);
         JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
         return inputJsonNlp.get("text").getAsString();
+    }
+
+    private String getSmallCompanyText() {
+        return getText("mobileye.json");
     }
 
     private String getChampText() {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("championships.json");
-        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
-        return inputJsonNlp.get("text").getAsString();
+        return getText("championships.json");
     }
 
     private String getSportMatchText() {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("sport_match.json");
-        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
-        return inputJsonNlp.get("text").getAsString();
+        return getText("sport_match.json");
     }
 
     private String getSportDraftText() {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("sport_draft.json");
-        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
-        return inputJsonNlp.get("text").getAsString();
+        return getText("sport_draft.json");
     }
 
     private String getEarthquake1Text() {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("earthquake1.json");
-        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
-        return inputJsonNlp.get("text").getAsString();
+        return getText("earthquake1.json");
     }
 
     private String getTsunamiText() {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("tsunami.json");
-        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
-        return inputJsonNlp.get("text").getAsString();
+        return getText("tsunami.json");
     }
 
     private String get911Text() {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("september_11_attacks.json");
-        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
-        return inputJsonNlp.get("text").getAsString();
+        return getText("september_11_attacks.json");
     }
 
     private String getAlenTuringText() {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("alan_turing.json");
-        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
-        return inputJsonNlp.get("text").getAsString();
+        return getText("alan_turing.json");
     }
 
     private String getCharlieHabdoText() {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("charlie_hebdo_shooting.json");
-        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
-        return inputJsonNlp.get("text").getAsString();
+        return getText("charlie_hebdo_shooting.json");
     }
 
     private String getWeddingText() {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("wedding.json");
-        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
-        return inputJsonNlp.get("text").getAsString();
+        return getText("wedding.json");
     }
 
     private String getKitKatText() {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("kit_kat.json");
-        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
-        return inputJsonNlp.get("text").getAsString();
+        return getText("kit_kat.json");
     }
 
     private String getElection1() {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("election_1.json");
-        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
-        return inputJsonNlp.get("text").getAsString();
+        return getText("election_1.json");
     }
 
     private String getPilotErrorText() {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("pilot_error.json");
-        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
-        return inputJsonNlp.get("text").getAsString();
+        return getText("pilot_error.json");
+    }
+
+    private String getFilmList() {
+        return getText("list_of_films.json");
+    }
+
+    private String getPresidentsList() {
+        return getText("list_of_presidents.json");
     }
 
     private String getTmp() {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream("tmp.json");
-        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
-        return inputJsonNlp.get("text").getAsString();
+        return getText("tmp.json");
     }
 }

@@ -6,18 +6,6 @@ import data.WikiLinksCoref;
 
 public class PersonOrEventFilter implements ICorefFilter<RawElasticResult> {
 
-//    private static final String[] EVENT_TYPES = {
-//            "massmurder",
-//            "stabbing",
-//            "aircrafthijackings",
-//            "suicideattack",
-//            "terrorism",
-//            "cyberattack",
-//            "massshooting",
-//            "runwaycollision",
-//            "mid-aircollision",
-//            "piloterror"};
-
 
     @Override
     public boolean isConditionMet(RawElasticResult result) {
@@ -35,8 +23,6 @@ public class PersonOrEventFilter implements ICorefFilter<RawElasticResult> {
             final boolean isGeneralEvent = WikiLinksExtractor.isGeneralEvent(result.getText());
             final boolean isHistoricalEvent = WikiLinksExtractor.isHistoricalEvent(result.getText());
             final boolean isInfoBoxEvent = WikiLinksExtractor.hasDateAndLocation(result.getText());
-//            final Set<String> extractTypes = WikiLinksExtractor.extractTypes(result.getText());
-//            final boolean isEventType = !Collections.disjoint(extractTypes, Arrays.asList(EVENT_TYPES));
 
             if (isPerson) {
                 WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.PERSON);

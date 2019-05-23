@@ -11,7 +11,7 @@ import java.util.*;
 
 public class TestSQLQueryApi {
 
-    @Test
+//    @Test
     public void testSQLServerApi() throws SQLException {
         SQLQueryApi api = new SQLQueryApi(new SQLServerConnection());
         testInsertToTable(api);

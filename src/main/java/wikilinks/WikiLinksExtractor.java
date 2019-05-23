@@ -1,9 +1,9 @@
 package wikilinks;
 
+import data.WikiLinksMention;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.CoreDocument;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
-import data.WikiLinksMention;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -35,6 +35,8 @@ public class WikiLinksExtractor {
         List<WikiLinksMention> finalResults = new ArrayList<>();
 
         text = text.replaceAll("==.*?==\n", "\n");
+        text = text.replaceAll("(?s)\\{\\|\\s?class=\\\"wikitable\\\".*?\\|\\}", "");
+        text = text.replaceAll("(?s)\\{\\{\\s?notelist.*?\\}\\}\n\\}\\}", "");
 
         String relText = "";
         int firstSentenceStartIndex = text.indexOf("'''");

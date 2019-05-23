@@ -5,9 +5,16 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class SQLiteConnections implements ISQLConnection {
-    private static final String CONNECTION_URL = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEvent_v4.db";
+
+    private String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksTestDB.db";
+
+    public SQLiteConnections() { }
+
+    public SQLiteConnections(String connectionUrl) {
+        this.connectionUrl = connectionUrl;
+    }
 
     public Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(CONNECTION_URL);
+        return DriverManager.getConnection(this.connectionUrl);
     }
 }

@@ -14,6 +14,9 @@ plugins {
     id 'application'
 }
 
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
 repositories {
     // Use jcenter for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
@@ -31,9 +34,10 @@ dependencies {
     compile group: 'edu.stanford.nlp', name: 'stanford-corenlp', version: '3.9.2'
     compile group: 'org.apache.commons', name: 'commons-dbcp2', version: '2.6.0'
     compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.27.2.1'
+
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
 }
 
 // Define the main class for the application
-mainClassName = 'wikilinks.App'
+mainClassName = "wikilinks.WikiToWikiLinksMain"

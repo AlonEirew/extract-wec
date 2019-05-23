@@ -24,25 +24,24 @@ import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
 public class CreateWikiLinks {
 
-    private static final int INTERVAL = 1000;
-    private static final int EXTRACT_AMOUNT = 50000;
-    private static final int TOTAL_DOCS = 18289732;
-    private static final String ELASTIC_INDEX = "enwiki_v2";
-
     private final SQLQueryApi sqlApi;
+    private final Map<String, String> config;
 
     private RejectedExecutionHandler rejectedExecutionHandler = new ThreadPoolExecutor.CallerRunsPolicy();
 
-    private final RestHighLevelClient elasticClient = new RestHighLevelClient(
-            RestClient.builder(new HttpHost("localhost", 9200, "http")).setRequestConfigCallback(
-                    requestConfigBuilder -> requestConfigBuilder
-                            .setConnectionRequestTimeout(60*60*1000)
-                            .setConnectTimeout(60*60*1000)
-                            .setSocketTimeout(60*60*1000))
-                    .setMaxRetryTimeoutMillis(60*60*1000));
+    private final RestHighLevelClient elasticClient;
 
-    public CreateWikiLinks(SQLQueryApi sqlApi) {
+    public CreateWikiLinks(SQLQueryApi sqlApi, Map<String, String> configuration) {
         this.sqlApi = sqlApi;
+        this.config = configuration;
+        this.elasticClient = new RestHighLevelClient(
+                RestClient.builder(new HttpHost(this.config.get("elastic_host"),
+                        Integer.parseInt(this.config.get("elastic_port")), "http")).setRequestConfigCallback(
+                        requestConfigBuilder -> requestConfigBuilder
+                                .setConnectionRequestTimeout(60*60*1000)
+                                .setConnectTimeout(60*60*1000)
+                                .setSocketTimeout(60*60*1000))
+                        .setMaxRetryTimeoutMillis(60*60*1000));
     }
 
     public void readAllAndPerisist() throws IOException, SQLException {
@@ -52,13 +51,16 @@ public class CreateWikiLinks {
             return;
         }
 
+        final int pool_size = Integer.parseInt(this.config.get("pool_size"));
         ExecutorService parsePool = new ThreadPoolExecutor(
-                10,
-                20,
+                pool_size,
+                2 * pool_size,
                 20,
                 TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(10),
                 rejectedExecutionHandler);
+
+        long totalDocsCount = getTotalDocsCount();
 
         final Scroll scroll = new Scroll(TimeValue.timeValueHours(5L));
         SearchResponse searchResponse = createElasticSearchResponse(scroll);
@@ -72,7 +74,7 @@ public class CreateWikiLinks {
         while (searchHits != null && searchHits.length > 0) {
             SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
             scrollRequest.scroll(scroll);
-            searchResponse = elasticClient.searchScroll(scrollRequest);
+            searchResponse = this.elasticClient.searchScroll(scrollRequest);
             scrollId = searchResponse.getScrollId();
 
             List<RawElasticResult> rawElasticResults = new ArrayList<>();
@@ -85,9 +87,9 @@ public class CreateWikiLinks {
 
 //            new ParseAndExtractMentions(pageTexts).run();
             parsePool.submit(new ParseAndExtractMentions(rawElasticResults, listener));
-            System.out.println((TOTAL_DOCS - count) + " documents to go");
+            System.out.println((totalDocsCount - count) + " documents to go");
 
-            if(count >= EXTRACT_AMOUNT) {
+            if(count >= Integer.parseInt(this.config.get("total_amount_to_extract"))) {
                 break;
             }
 
@@ -122,6 +124,19 @@ public class CreateWikiLinks {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    long getTotalDocsCount() throws IOException {
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+        sourceBuilder.query(QueryBuilders.matchAllQuery());
+        sourceBuilder.size(0);
+        sourceBuilder.timeout(new TimeValue(60, TimeUnit.SECONDS));
+        SearchRequest searchRequest = new SearchRequest();
+        searchRequest.source(sourceBuilder);
+
+        final SearchResponse search = this.elasticClient.search(searchRequest);
+        final long hitsCount = search.getHits().getTotalHits();
+        return hitsCount;
     }
 
     String getPageText(String pageTitle) throws IOException {
@@ -225,10 +240,10 @@ public class CreateWikiLinks {
     }
 
     private SearchResponse createElasticSearchResponse(Scroll scroll) throws IOException {
-        final SearchRequest searchRequest = new SearchRequest(ELASTIC_INDEX);
+        final SearchRequest searchRequest = new SearchRequest(this.config.get("elastic_wiki_index"));
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(matchAllQuery());
-        searchSourceBuilder.size(INTERVAL);
+        searchSourceBuilder.size(Integer.parseInt(this.config.get("elastic_search_interval")));
         searchRequest.source(searchSourceBuilder);
         searchRequest.scroll(scroll);
         return elasticClient.search(searchRequest);
