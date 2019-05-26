@@ -19,10 +19,6 @@ public class WikiLinksExtractor {
             "\\{\\{infobox[\\w\\|]*(match|draft|racereport|championships|athleticscompetition)");
     private static final Pattern AWARD_PATTERN = Pattern.compile("\\{\\{infobox[\\w\\|]*(award)");
 
-//    private static final String[] INFOBOX_TYPES = {
-//            "{{Infobox football match",
-//            "{{Infobox historical event"};
-
     private static StanfordCoreNLP pipeline;
 
     static {
@@ -35,32 +31,37 @@ public class WikiLinksExtractor {
         List<WikiLinksMention> finalResults = new ArrayList<>();
 
         text = text.replaceAll("==.*?==\n", "\n");
-        text = text.replaceAll("(?s)\\{\\|\\s?class=\\\"wikitable\\\".*?\\|\\}", "");
+        text = text.replaceAll("\\{\\{.*?\\}\\}", "");
+        text = text.replaceAll("<ref[\\s\\S]*?/>", "");
+        text = text.replaceAll("(?s)\\{\\|\\s?class=\\\"?wikitable.*?\n\\|\\}", "");
         text = text.replaceAll("(?s)\\{\\{\\s?notelist.*?\\}\\}\n\\}\\}", "");
+        text = text.replaceAll("(?s)<gallery.*?</gallery>", "");
+        text = text.replaceAll("(?s)<timeline.*?</timeline>", "");
+        text = text.replaceAll("(?s)\\{\\{\\s?(bar\\sbox|reflist|[Ss]uccession\\sbox|[Ii]nfobox|s-bef|s-ttl|s-aft|columns-list)+.*?\n\\}\\}", "");
+        text = text.replaceAll("(?s)\\{\\{\\s?.*box\\|.*?\\}\\}\n\\}\\}", "");
+        text = text.replaceAll("(?s)<ref[\\s\\S]*?</ref>", "");
 
         String relText = "";
         int firstSentenceStartIndex = text.indexOf("'''");
         if(firstSentenceStartIndex >= 0) {
             relText = text.substring(firstSentenceStartIndex);
-            String[] textLines = relText.split("\\.\n");
-            for (String line : textLines) {
-                if(line != null && !line.isEmpty() && isValidLine(line)) {
-                    line = line
-                            .replaceAll("\\*.*?\n", "")
-                            .replaceAll("\n", " ")
-                            .replaceAll("\\{\\{.*?\\}\\}", "")
-                            .replaceAll("<ref[\\s\\S]*?</ref>", "")
-                            .replaceAll("<ref[\\s\\S]*?/>", "")
-                            .replaceAll("\\<.*?>","")
-                            .replaceAll("\\s+", " ").trim();
-
-                    String[] splitLineSentences = line.split("\\.");
-                    for (String sentence : splitLineSentences) {
-                        if(!sentence.isEmpty()) {
-                            finalResults.addAll(extractFromLine(pageName, sentence));
-                        }
+            String[] textLines = relText.split("\\.\n\n");
+            for (String context : textLines) {
+                String[] contextLines = context.split("\n");
+                for (int i = 0 ; i < contextLines.length ; i++) {
+                    if(contextLines[i] != null && !contextLines[i].isEmpty() && isValidLine(contextLines[i])) {
+                        contextLines[i] = contextLines[i]
+                                .replaceAll("\\*.*?\n", "")
+                                .replaceAll("\n", " ")
+                                .replaceAll("\\<.*?>", "")
+                                .replaceAll("\\s+", " ").trim();
+                    } else {
+                        contextLines[i] = "";
                     }
                 }
+
+                String fixedContext = String.join("\n", contextLines);
+                finalResults.addAll(extractFromLine(pageName, fixedContext));
             }
         }
 
@@ -339,7 +340,11 @@ public class WikiLinksExtractor {
     }
 
     static boolean isValidLine(String line) {
-        return !(line.startsWith("{{") || line.startsWith("}}") || line.startsWith("|") || line.startsWith("*") || line.startsWith("=") ||
-                line.startsWith("[[Category") || line.startsWith("[[category"));
+        line = line.toLowerCase();
+        return !(line.startsWith("{{") || line.startsWith("}}") || line.startsWith("|") ||
+                line.startsWith("*") || line.startsWith("=") || line.startsWith("#") ||
+                line.startsWith(";") || line.startsWith(":") || line.startsWith("[[file") ||
+                line.startsWith("[[category") || line.startsWith("[[image") ||
+                (line.startsWith("'''") && line.endsWith("'''")));
     }
 }

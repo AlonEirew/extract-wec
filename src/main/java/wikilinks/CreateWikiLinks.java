@@ -61,6 +61,7 @@ public class CreateWikiLinks {
                 rejectedExecutionHandler);
 
         long totalDocsCount = getTotalDocsCount();
+        final int totalAmountToExtract = Integer.parseInt(this.config.get("total_amount_to_extract"));
 
         final Scroll scroll = new Scroll(TimeValue.timeValueHours(5L));
         SearchResponse searchResponse = createElasticSearchResponse(scroll);
@@ -89,7 +90,7 @@ public class CreateWikiLinks {
             parsePool.submit(new ParseAndExtractMentions(rawElasticResults, listener));
             System.out.println((totalDocsCount - count) + " documents to go");
 
-            if(count >= Integer.parseInt(this.config.get("total_amount_to_extract"))) {
+            if(count >= totalAmountToExtract) {
                 break;
             }
 

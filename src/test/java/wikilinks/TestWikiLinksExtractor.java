@@ -23,7 +23,7 @@ public class TestWikiLinksExtractor {
     @Test
     public void testExtract() {
         Map<String, List<WikiLinksMention>> finalResults = new HashMap<>();
-        String pageText = getPresidentsList();
+        String pageText = getFilmList();
         final List<WikiLinksMention> extractMentions = WikiLinksExtractor.extractFromFile("na", pageText);
         for (WikiLinksMention mention : extractMentions) {
             if(finalResults.containsKey(mention.getCorefChain())) {

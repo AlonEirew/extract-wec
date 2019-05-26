@@ -23,9 +23,9 @@ public class ParseListener {
     }
 
     public synchronized void handle(List<WikiLinksMention> mentionsToAdd) {
-        mentions.addAll(mentionsToAdd);
+        this.mentions.addAll(mentionsToAdd);
 
-        if(mentions.size() >= MAX_SIZE) {
+        if(this.mentions.size() >= MAX_SIZE) {
             System.out.println("Limit reached starting to process-" + this.mentions.size() + " mentions");
             this.handle();
         }
