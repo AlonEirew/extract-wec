@@ -36,7 +36,7 @@ public class SQLQueryApi {
         if(dbName != null && !dbName.isEmpty()) {
             try (Connection con = this.sqlConnection.getConnection(); Statement stmt = con.createStatement()) {
 
-                if (isDbExists(dbName, con)) {
+                if (isDbExists(dbName)) {
                     System.out.println("Database already exists");
                     result = true;
                 }
@@ -55,7 +55,7 @@ public class SQLQueryApi {
     public boolean deleteDataBase(String dbName) throws SQLException {
         try (Connection con = this.sqlConnection.getConnection(); Statement stmt = con.createStatement()) {
 
-            if (!isDbExists(dbName, con)) {
+            if (!isDbExists(dbName)) {
                 System.out.println("No such data base exists");
             }
 
@@ -69,7 +69,7 @@ public class SQLQueryApi {
 
     public <T extends ISQLObject> boolean createTable(T objectRep) throws SQLException {
         try (Connection con = this.sqlConnection.getConnection(); Statement stmt = con.createStatement()) {
-            if(!isTableExists(objectRep, con)) {
+            if(!isTableExists(objectRep)) {
                 StringBuilder createTableSql = new StringBuilder();
                 createTableSql.append("CREATE TABLE " + objectRep.getTableName() + " (").append(objectRep.getColumnNamesAndValues()).append(")");
                 createTableSql.delete(createTableSql.length() - 1, createTableSql.length());
@@ -86,7 +86,7 @@ public class SQLQueryApi {
 
     public <T extends ISQLObject> boolean deleteTable(T repObject) throws SQLException {
         try (Connection con = this.sqlConnection.getConnection(); Statement stmt = con.createStatement()) {
-            if(isTableExists(repObject, con)) {
+            if(isTableExists(repObject)) {
                 String deleteTableSql = "DROP TABLE " + repObject.getTableName();
                 stmt.executeUpdate(deleteTableSql);
                 System.out.println("Table deleted successfully...");
@@ -175,10 +175,11 @@ public class SQLQueryApi {
         return true;
     }
 
-    public boolean isDbExists(String dbName, Connection con) throws SQLException {
+    public boolean isDbExists(String dbName) throws SQLException {
         boolean result = false;
 
-        try (ResultSet resultSet = con.getMetaData().getCatalogs()) {
+        try (Connection conn = this.sqlConnection.getConnection();
+             ResultSet resultSet = conn.getMetaData().getCatalogs()) {
             while (resultSet.next()) {
                 String curDbName = resultSet.getString(1);
                 if (curDbName.equalsIgnoreCase(dbName)) {
@@ -190,10 +191,11 @@ public class SQLQueryApi {
         return result;
     }
 
-    public <T extends ISQLObject> boolean isTableExists(T objectRep, Connection con) throws SQLException {
+    public <T extends ISQLObject> boolean isTableExists(T objectRep) throws SQLException {
         boolean result = false;
 
-        try(ResultSet resultSet = con.getMetaData().getTables(null, null, "%", null)) {
+        try(Connection conn = this.sqlConnection.getConnection();
+                ResultSet resultSet = conn.getMetaData().getTables(null, null, "%", null)) {
             while (resultSet.next()) {
                 String curTableName = resultSet.getString(3);
                 if (curTableName.equalsIgnoreCase(objectRep.getTableName())) {

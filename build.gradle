@@ -33,6 +33,7 @@ dependencies {
     compile group: 'commons-io', name: 'commons-io', version: '2.6'
     compile group: 'edu.stanford.nlp', name: 'stanford-corenlp', version: '3.9.2'
     compile group: 'org.apache.commons', name: 'commons-dbcp2', version: '2.6.0'
+    compile group: 'org.apache.commons', name: 'commons-text', version: '1.6'
     compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.27.2.1'
 
     // Use JUnit test framework
