@@ -171,7 +171,7 @@ public class CreateWikiLinks {
                 20,
                 TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(10),
-                rejectedExecutionHandler);
+                this.rejectedExecutionHandler);
 
         List<Future<List<RawElasticResult>>> futureList = new ArrayList<>();
 

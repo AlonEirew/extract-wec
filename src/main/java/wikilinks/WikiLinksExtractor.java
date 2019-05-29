@@ -3,6 +3,7 @@ package wikilinks;
 import data.WikiLinksMention;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.CoreDocument;
+import edu.stanford.nlp.pipeline.CoreSentence;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 
 import java.util.*;
@@ -258,7 +259,7 @@ public class WikiLinksExtractor {
         return false;
     }
 
-    static List<WikiLinksMention> extractFromLine(String pageName, String lineToExtractFrom) {
+    static List<WikiLinksMention>  extractFromLine(String pageName, String lineToExtractFrom) {
         List<WikiLinksMention> mentions = new ArrayList<>();
 
         Matcher linkMatcher = LINK_PATTERN_2.matcher(lineToExtractFrom);
@@ -274,7 +275,7 @@ public class WikiLinksExtractor {
                     mention.setMentionText(match2);
                     mention.setCorefChain(match2);
                 }
-
+                
                 mentions.add(mention);
             }
         }
@@ -295,14 +296,17 @@ public class WikiLinksExtractor {
         CoreDocument doc = new CoreDocument(context);
         pipeline.annotate(doc);
         if(doc.sentences().size() > 0) {
-            final List<CoreLabel> tokens = doc.sentences().get(0).tokens();
-            for (CoreLabel token : tokens) {
-                if(token.originalText().matches("[|\\[\\]\\*^\\+]")) {
-                    continue;
+            for(CoreSentence sentence : doc.sentences()) {
+                final List<CoreLabel> tokens = sentence.tokens();
+                for (CoreLabel token : tokens) {
+                    if (token.originalText().matches("[|\\[\\]\\*^\\+]")) {
+                        continue;
+                    }
+                    mentContext.add(token.originalText());
                 }
-                mentContext.add(token.originalText());
             }
 
+            Set<Integer> usedStartIndexes = new HashSet<>();
             Iterator<WikiLinksMention> iterator = mentions.iterator();
             while (iterator.hasNext()) {
                 final WikiLinksMention mention = iterator.next();
@@ -316,13 +320,18 @@ public class WikiLinksExtractor {
                     }
 
                     for (int i = 0; i < mentContext.size(); i++) {
-                        if (mentContext.get(i).equals(mentTokens.get(0).originalText())) {
-                            mention.setTokenStart(i);
-                            if (mentTokens.size() == 1) {
+                        if(!usedStartIndexes.contains(i)) {
+                            if (mentContext.get(i).equals(mentTokens.get(0).originalText())) {
+                                mention.setTokenStart(i);
+                                usedStartIndexes.add(i);
+                                if (mentTokens.size() == 1) {
+                                    mention.setTokenEnd(i);
+                                    break;
+                                }
+                            } else if (mention.getTokenStart() != -1 && mentContext.get(i).equals(mentTokens.get(mentTokens.size() - 1).originalText())) {
                                 mention.setTokenEnd(i);
+                                break;
                             }
-                        } else if (mentContext.get(i).equals(mentTokens.get(mentTokens.size() - 1).originalText())) {
-                            mention.setTokenEnd(i);
                         }
                     }
 
