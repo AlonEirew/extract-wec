@@ -9,6 +9,7 @@ public class MentionResultSet {
     private int tokenStart;
     private int tokenEnd;
     private String context;
+    private boolean markedForDelete = false;
 
     public MentionResultSet(int corefId, String mentionString, String extractedFromPage,
                             int tokenStart, int tokenEnd, String context) {
@@ -18,7 +19,15 @@ public class MentionResultSet {
         this.tokenStart = tokenStart;
         this.tokenEnd = tokenEnd;
         this.context = context;
+    }
 
+    public MentionResultSet(MentionResultSet mention) {
+        this.corefId = mention.corefId;
+        this.mentionString = mention.mentionString;
+        this.extractedFromPage = mention.extractedFromPage;
+        this.tokenStart = mention.tokenStart;
+        this.tokenEnd = mention.tokenEnd;
+        this.context = mention.context;
     }
 
     public String getMentionString() {
@@ -31,6 +40,26 @@ public class MentionResultSet {
 
     public String getContext() {
         return context;
+    }
+
+    public int getCorefId() {
+        return corefId;
+    }
+
+    public int getTokenStart() {
+        return tokenStart;
+    }
+
+    public int getTokenEnd() {
+        return tokenEnd;
+    }
+
+    public boolean isMarkedForDelete() {
+        return markedForDelete;
+    }
+
+    public void setMarkedForDelete(boolean markedForDelete) {
+        this.markedForDelete = markedForDelete;
     }
 
     @Override

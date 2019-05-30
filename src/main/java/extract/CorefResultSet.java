@@ -1,5 +1,7 @@
 package extract;
 
+import org.apache.commons.text.similarity.LevenshteinDistance;
+
 import java.util.*;
 
 public class CorefResultSet {
@@ -12,6 +14,21 @@ public class CorefResultSet {
 
     public void addMention(MentionResultSet mention) {
         this.mentions.add(mention);
+    }
+
+    public void addMentionCopy(MentionResultSet mention) {
+        MentionResultSet newMention = new MentionResultSet(mention);
+        this.mentions.add(newMention);
+    }
+
+    public void addMentionsCollection(Collection<MentionResultSet> mentColl) {
+        this.mentions.addAll(mentColl);
+    }
+
+    public void addMentionsCopyCollection(Collection<MentionResultSet> mentColl) {
+        for(MentionResultSet mention : mentColl) {
+            addMentionCopy(mention);
+        }
     }
 
     public List<MentionResultSet> getMentions() {
@@ -36,22 +53,78 @@ public class CorefResultSet {
         return corefId;
     }
 
-    public List<String> getMentionsAsStringList() {
-        List<String> clusterMentionsAsString = new ArrayList<>();
-        for(MentionResultSet mentionResultSet : this.mentions) {
-            clusterMentionsAsString.add(mentionResultSet.getMentionString());
-        }
-
-        return clusterMentionsAsString;
-    }
-
-    public Set<String> getMentionsAsSet() {
+    public CorefResultSet getMentionsOnlyUniques() {
+        CorefResultSet retResultSet = new CorefResultSet(this.corefId);
         Set<String> clusterMentionsAsString = new HashSet<>();
         for(MentionResultSet mentionResultSet : this.mentions) {
-            clusterMentionsAsString.add(mentionResultSet.getMentionString());
+            if(clusterMentionsAsString.add(mentionResultSet.getMentionString())) {
+                retResultSet.addMentionCopy(mentionResultSet);
+            }
         }
 
-        return clusterMentionsAsString;
+        return retResultSet;
+    }
+
+    public CorefResultSet getLevenshteinDistanceMentions() {
+        CorefResultSet retResultSet = new CorefResultSet(this.corefId);
+        if(this.mentions.size() == 1) {
+            retResultSet.addMentionCopy(this.mentions.get(0));
+        } else {
+            retResultSet.addMentionsCopyCollection(this.mentions);
+            for (int x = 0; x < retResultSet.mentions.size(); x++) {
+                for (int y = x + 1; y < retResultSet.mentions.size(); y++) {
+                    if(!retResultSet.mentions.get(y).isMarkedForDelete()) {
+                        final Integer apply = LevenshteinDistance.getDefaultInstance()
+                                .apply(retResultSet.mentions.get(x).getMentionString(),
+                                        retResultSet.mentions.get(y).getMentionString());
+
+                        if (apply <= 2) {
+                            retResultSet.mentions.get(y).setMarkedForDelete(true);
+                        }
+                    }
+                }
+            }
+        }
+
+        retResultSet.cleanMentionsMarkedForDeletion();
+        return retResultSet;
+    }
+
+    public CorefResultSet getNonIntersectingMentions() {
+        CorefResultSet retResultSet = new CorefResultSet(this.corefId);
+        if(this.mentions.size() == 1) {
+            retResultSet.addMentionCopy(this.mentions.get(0));
+        } else {
+            retResultSet.addMentionsCopyCollection(this.mentions);
+            for (int x = 0; x < retResultSet.mentions.size(); x++) {
+                for (int y = x + 1; y < retResultSet.mentions.size(); y++) {
+                    if(!retResultSet.mentions.get(y).isMarkedForDelete()) {
+                        List<String> m1 = new ArrayList<>(Arrays.asList(retResultSet.mentions.get(x)
+                                .getMentionString().split("\\s")));
+                        List<String> m2 = new ArrayList<>(Arrays.asList(retResultSet.mentions.get(y)
+                                .getMentionString().split("\\s")));
+
+                        m1.retainAll(m2);
+                        if (m1.size() >= 1) {
+                            retResultSet.mentions.get(y).setMarkedForDelete(true);
+                        }
+                    }
+                }
+            }
+        }
+
+        retResultSet.cleanMentionsMarkedForDeletion();
+        return retResultSet;
+    }
+
+    public void cleanMentionsMarkedForDeletion() {
+        final Iterator<MentionResultSet> iterator = this.mentions.iterator();
+        while(iterator.hasNext()) {
+            final MentionResultSet next = iterator.next();
+            if(next.isMarkedForDelete()) {
+                iterator.remove();
+            }
+        }
     }
 
     public List<MentionResultSet> countDuplicates() {

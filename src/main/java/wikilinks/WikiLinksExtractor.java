@@ -275,7 +275,7 @@ public class WikiLinksExtractor {
                     mention.setMentionText(match2);
                     mention.setCorefChain(match2);
                 }
-                
+
                 mentions.add(mention);
             }
         }
