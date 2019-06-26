@@ -16,7 +16,7 @@ public class Experiment {
     private static Gson gson = new Gson();
 
     public static void main(String[] args) throws SQLException {
-        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v3.db";
+        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEvent_v5.db";
         SQLiteConnections sqLiteConnections = new SQLiteConnections(connectionUrl);
 
         final List<Map<Integer, CorefResultSet>> countPerType = countClustersString(sqLiteConnections);
@@ -47,7 +47,7 @@ public class Experiment {
     }
 
     private static void printResults(List<Map<Integer, CorefResultSet>> resultsToPrint, String message) {
-        int[] mentionsCountList = countMentions6_30Plus(resultsToPrint);
+        int[] mentionsCountList = countMentions1_30Plus(resultsToPrint);
         int[][] tableResult = createResultTable(resultsToPrint);
 
         countWithinDocMentions(resultsToPrint);
@@ -62,10 +62,10 @@ public class Experiment {
             int wdCount = 0;
             for(CorefResultSet coreResultSet : corefResultSetMap.values()) {
                 final Map<String, List<MentionResultSet>> withinDocCoref = coreResultSet.getWithinDocCoref();
-                final List<MentionResultSet> duplicates = coreResultSet.countDuplicates();
-                if(duplicates.size() > 0) {
-                    System.out.println(gson.toJson(duplicates));
-                }
+//                final List<MentionResultSet> duplicates = coreResultSet.countDuplicates();
+//                if(duplicates.size() > 0) {
+//                    System.out.println(gson.toJson(duplicates));
+//                }
                 for(List<MentionResultSet> wdCorefs : withinDocCoref.values()) {
                     if(wdCorefs.size() > 1) {
                         wdCount += wdCorefs.size();
@@ -115,14 +115,14 @@ public class Experiment {
         return clusterByTypeLevenCount;
     }
 
-    private static int[] countMentions6_30Plus(final List<Map<Integer, CorefResultSet>> countPerType) {
+    private static int[] countMentions1_30Plus(final List<Map<Integer, CorefResultSet>> countPerType) {
         int[] mentionCountsList = new int[TYPES_END];
         for(int i = 0 ; i < countPerType.size() ; i++) {
             Map<Integer, CorefResultSet> thisTypeCount = countPerType.get(i);
             int clusterMentionCount = 0;
             for(CorefResultSet coref : thisTypeCount.values()) {
                 int corefSize = coref.getMentions().size();
-                if(corefSize >= 6) {
+                if(corefSize >= 3) {
                     clusterMentionCount += corefSize;
                 }
             }

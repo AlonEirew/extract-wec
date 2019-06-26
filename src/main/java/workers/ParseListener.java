@@ -1,8 +1,10 @@
-package wikilinks;
+package workers;
 
 import data.RawElasticResult;
 import data.WikiLinksMention;
+import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
+import wikilinks.ICorefFilter;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -13,13 +15,13 @@ public class ParseListener {
     private volatile List<WikiLinksMention> mentions = new ArrayList<>();
 
     private SQLQueryApi sqlApi;
-    private CreateWikiLinks wikiLinks;
+    private ElasticQueryApi elasticApi;
     private ICorefFilter filter;
 
-    public ParseListener(SQLQueryApi sqlApi, CreateWikiLinks wikiLinks, ICorefFilter filter) {
+    public ParseListener(SQLQueryApi sqlApi, ElasticQueryApi elasticApi, ICorefFilter filter) {
         this.sqlApi = sqlApi;
+        this.elasticApi = elasticApi;
         this.filter = filter;
-        this.wikiLinks = wikiLinks;
     }
 
     public synchronized void handle(List<WikiLinksMention> mentionsToAdd) {
@@ -39,7 +41,7 @@ public class ParseListener {
 
         Map<String, String> allPagesText = null;
         try {
-            allPagesText = this.wikiLinks.getAllPagesTitleAndText(corefTitleSet);
+            allPagesText = this.elasticApi.getAllWikiPagesTitleAndText(corefTitleSet);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -7,6 +7,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import data.WikiLinksMention;
+import persistence.ElasticQueryApi;
 
 import java.io.File;
 import java.io.IOException;
@@ -89,11 +90,11 @@ public class TestWikiLinksExtractor {
     public void testGetAllPagesTexts() throws InterruptedException, ExecutionException, TimeoutException, IOException {
         Map<String, String> config = getConfigFile();
 
-        CreateWikiLinks wikiLinks = new CreateWikiLinks(null, config);
+        ElasticQueryApi elasticQueryApi = new ElasticQueryApi(config);
         Set<String> pagesList = new HashSet<>();
         pagesList.add("Alan Turing");
         pagesList.add("September 11 attacks");
-        final Map<String, String> allPagesText = wikiLinks.getAllPagesTitleAndText(pagesList);
+        final Map<String, String> allPagesText = elasticQueryApi.getAllWikiPagesTitleAndText(pagesList);
 
         final String alan_turing = WikiLinksExtractor.extractPageInfoBox(allPagesText.get("Alan Turing"));
         Assert.assertTrue(WikiLinksExtractor.isPerson(alan_turing));
@@ -108,13 +109,13 @@ public class TestWikiLinksExtractor {
     public void testGetPageText() throws IOException {
         Map<String, String> config = getConfigFile();
 
-        CreateWikiLinks wikiLinks = new CreateWikiLinks(null, config);
-        final String alan_turing = wikiLinks.getPageText("Alan Turing");
+        ElasticQueryApi elasticQueryApi = new ElasticQueryApi(config);
+        final String alan_turing = elasticQueryApi.getPageText("Alan Turing");
         final String infoBox = WikiLinksExtractor.extractPageInfoBox(alan_turing);
         Assert.assertTrue(WikiLinksExtractor.isPerson(infoBox));
         Assert.assertTrue(WikiLinksExtractor.extractTypes(infoBox).isEmpty());
 
-        final String sep_11 = wikiLinks.getPageText("September 11 attacks");
+        final String sep_11 = elasticQueryApi.getPageText("September 11 attacks");
         Assert.assertFalse(WikiLinksExtractor.isPerson(sep_11));
         Assert.assertTrue(!WikiLinksExtractor.extractTypes(sep_11).isEmpty());
     }

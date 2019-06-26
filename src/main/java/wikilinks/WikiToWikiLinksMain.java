@@ -2,8 +2,10 @@ package wikilinks;
 
 import com.google.gson.Gson;
 import org.apache.commons.io.FileUtils;
+import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
 import persistence.SQLiteConnections;
+import workers.ParseAndExtractWorkerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,11 +24,12 @@ public class WikiToWikiLinksMain {
                 new File(property + "/config.json"), "UTF-8"),
                 Map.class);
 
-        CreateWikiLinks createWikiLinks = new CreateWikiLinks(
-                new SQLQueryApi(new SQLiteConnections(config.get("sql_connection_url"))), config);
+        SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections(config.get("sql_connection_url")));
+        ElasticQueryApi elasticApi = new ElasticQueryApi(config);
+        CreateWikiLinks createWikiLinks = new CreateWikiLinks(sqlApi, elasticApi, config, new ParseAndExtractWorkerFactory(sqlApi, elasticApi));
 
         long start = System.currentTimeMillis();
-        createWikiLinks.readAllAndPerisist();
+        createWikiLinks.readAllWikiPagesAndProcess();
         long end = System.currentTimeMillis();
         System.out.println("Process Done, took-" + (end - start) + "ms to run");
     }
