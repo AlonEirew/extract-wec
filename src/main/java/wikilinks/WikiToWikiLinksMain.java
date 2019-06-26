@@ -5,7 +5,7 @@ import org.apache.commons.io.FileUtils;
 import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
 import persistence.SQLiteConnections;
-import workers.ParseAndExtractWorkerFactory;
+import workers.ParseAndExtractWorkersFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +26,7 @@ public class WikiToWikiLinksMain {
 
         SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections(config.get("sql_connection_url")));
         ElasticQueryApi elasticApi = new ElasticQueryApi(config);
-        CreateWikiLinks createWikiLinks = new CreateWikiLinks(sqlApi, elasticApi, config, new ParseAndExtractWorkerFactory(sqlApi, elasticApi));
+        CreateWikiLinks createWikiLinks = new CreateWikiLinks(sqlApi, elasticApi, config, new ParseAndExtractWorkersFactory(sqlApi, elasticApi));
 
         long start = System.currentTimeMillis();
         createWikiLinks.readAllWikiPagesAndProcess();

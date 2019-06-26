@@ -7,17 +7,17 @@ import wikilinks.PersonOrEventFilter;
 
 import java.util.List;
 
-public class ParseAndExtractWorkerFactory implements IWorkerFactory {
+public class ParseAndExtractWorkersFactory implements IWorkerFactory {
 
     private ParseListener listener;
 
-    public ParseAndExtractWorkerFactory(SQLQueryApi sqlApi, ElasticQueryApi elasticApi) {
+    public ParseAndExtractWorkersFactory(SQLQueryApi sqlApi, ElasticQueryApi elasticApi) {
         this.listener = new ParseListener(sqlApi, elasticApi, new PersonOrEventFilter());
     }
 
     @Override
     public AWorker createNewWorker(List<RawElasticResult> rawElasticResults) {
-        return new ParseAndHandleMentions(rawElasticResults, this.listener);
+        return new ParseAndExtractMentionsWorker(rawElasticResults, this.listener);
     }
 
     @Override

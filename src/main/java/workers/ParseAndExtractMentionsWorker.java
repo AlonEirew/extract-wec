@@ -6,10 +6,13 @@ import wikilinks.WikiLinksExtractor;
 
 import java.util.List;
 
-class ParseAndHandleMentions extends AWorker {
+class ParseAndExtractMentionsWorker extends AWorker {
 
-    public ParseAndHandleMentions(List<RawElasticResult> rawElasticResults, ParseListener listener) {
-        super(rawElasticResults, listener);
+    private ParseListener listener;
+
+    public ParseAndExtractMentionsWorker(List<RawElasticResult> rawElasticResults, ParseListener listener) {
+        super(rawElasticResults);
+        this.listener = listener;
     }
 
     @Override
