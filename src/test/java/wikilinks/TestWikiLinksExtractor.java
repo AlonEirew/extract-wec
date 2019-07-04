@@ -8,6 +8,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import data.WikiLinksMention;
 import persistence.ElasticQueryApi;
+import workers.ReadInfoBoxWorker;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,6 +51,14 @@ public class TestWikiLinksExtractor {
         String pageText = getAlenTuringText();
         boolean ret = WikiLinksExtractor.isPerson(pageText);
         Assert.assertTrue(ret);
+    }
+
+    @Test
+    public void testInfoBoxExtract() {
+        String pageText = getInfoBoxs();
+        ReadInfoBoxWorker worker = new ReadInfoBoxWorker();
+        final String infoBoxs = worker.extractPageInfoBox(pageText);
+        System.out.println(infoBoxs);
     }
 
     @Test
@@ -269,5 +278,9 @@ public class TestWikiLinksExtractor {
 
     private String getTmp() {
         return getText("tmp.json");
+    }
+
+    private String getInfoBoxs() {
+        return getText("many_infobox.json");
     }
 }

@@ -132,12 +132,7 @@ public class ElasticQueryApi {
         return new RawElasticResult(id, title, text);
     }
 
-    public List<RawElasticResult> getNextScrollResults(String scrollId, Scroll scroll, SearchHit[] searchHits) throws IOException {
-        SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
-        scrollRequest.scroll(scroll);
-        SearchResponse searchResponse = this.elasticClient.searchScroll(scrollRequest);
-        scrollId = searchResponse.getScrollId();
-
+    public List<RawElasticResult> getNextScrollResults(SearchHit[] searchHits) throws IOException {
         List<RawElasticResult> rawElasticResults = new ArrayList<>();
         for (SearchHit hit : searchHits) {
             RawElasticResult hitResult = extractFromHit(hit);
@@ -147,6 +142,10 @@ public class ElasticQueryApi {
         }
 
         return rawElasticResults;
+    }
+
+    public SearchResponse getSearchScroll(SearchScrollRequest scrollRequest) throws IOException {
+        return this.elasticClient.searchScroll(scrollRequest);
     }
 
     public SearchResponse createElasticSearchResponse(Scroll scroll) throws IOException {

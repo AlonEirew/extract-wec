@@ -1,6 +1,8 @@
 package wikilinks;
 
 import com.google.gson.Gson;
+import data.WikiLinksCoref;
+import data.WikiLinksMention;
 import org.apache.commons.io.FileUtils;
 import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
@@ -29,8 +31,22 @@ public class WikiToWikiLinksMain {
         CreateWikiLinks createWikiLinks = new CreateWikiLinks(sqlApi, elasticApi, config, new ParseAndExtractWorkersFactory(sqlApi, elasticApi));
 
         long start = System.currentTimeMillis();
+
+        if(!createSQLWikiLinksTables(sqlApi)) {
+            System.out.println("Failed to create Database and tables, finishing process");
+            return;
+        }
+
         createWikiLinks.readAllWikiPagesAndProcess();
+        createWikiLinks.persistAllCorefs();
+
         long end = System.currentTimeMillis();
         System.out.println("Process Done, took-" + (end - start) + "ms to run");
+    }
+
+    private static boolean createSQLWikiLinksTables(SQLQueryApi sqlApi) throws SQLException {
+        System.out.println("Creating SQL Tables");
+        return sqlApi.createTable(new WikiLinksMention()) &&
+                sqlApi.createTable(WikiLinksCoref.getAndSetIfNotExistCorefChain("####TEMP####"));
     }
 }

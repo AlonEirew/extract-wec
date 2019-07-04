@@ -5,6 +5,7 @@ import data.RawElasticResult;
 import data.WikiLinksCoref;
 import data.WikiLinksMention;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
@@ -32,13 +33,8 @@ public class CreateWikiLinks {
         this.workerFactory = workerFactory;
     }
 
-    public void readAllWikiPagesAndProcess() throws IOException, SQLException {
+    public void readAllWikiPagesAndProcess() throws IOException {
         System.out.println("Strating process, Reading all documents from wikipedia (elastic)");
-
-        if(!createSQLWikiLinksTables()) {
-            System.out.println("Failed to create Database and tables, finishing process");
-            return;
-        }
 
         final int poolSize = Integer.parseInt(this.config.get("pool_size"));
         ExecutorService parsePool = ExecutorServiceFactory.getExecutorService(poolSize);
@@ -54,7 +50,12 @@ public class CreateWikiLinks {
 
         int count = 0;
         while (searchHits != null && searchHits.length > 0) {
-            List<RawElasticResult> rawElasticResults = this.elasticApi.getNextScrollResults(scrollId, scroll, searchHits);
+            SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
+            scrollRequest.scroll(scroll);
+            searchResponse = elasticApi.getSearchScroll(scrollRequest);
+            scrollId = searchResponse.getScrollId();
+
+            List<RawElasticResult> rawElasticResults = this.elasticApi.getNextScrollResults(searchHits);
             parsePool.submit(this.workerFactory.createNewWorker(rawElasticResults));
             System.out.println((totalDocsCount - count) + " documents to go");
 
@@ -74,7 +75,9 @@ public class CreateWikiLinks {
 
         System.out.println("Handling last mentions if exists");
         this.workerFactory.finalizeIfNeeded();
+    }
 
+    public void persistAllCorefs() {
         System.out.println("Persisting corefs tables values");
         final Collection<WikiLinksCoref> allCorefs = WikiLinksCoref.getGlobalCorefMap().values();
         final Iterator<WikiLinksCoref> corefIterator = allCorefs.iterator();
@@ -94,11 +97,5 @@ public class CreateWikiLinks {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    private boolean createSQLWikiLinksTables() throws SQLException {
-        System.out.println("Creating SQL Tables");
-        return this.sqlApi.createTable(new WikiLinksMention()) &&
-                this.sqlApi.createTable(WikiLinksCoref.getAndSetIfNotExistCorefChain("####TEMP####"));
     }
 }
