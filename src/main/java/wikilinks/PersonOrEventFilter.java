@@ -19,7 +19,7 @@ public class PersonOrEventFilter implements ICorefFilter<RawElasticResult> {
             final boolean isAccidentEvent = WikiLinksExtractor.isAccident(result.getText());
             final boolean isSportEvent = WikiLinksExtractor.isSportEvent(result.getText());
             final boolean isAwardEvent = WikiLinksExtractor.isAwardEvent(result.getText(), result.getTitle());
-            final boolean isNewsEvent = WikiLinksExtractor.isNewsEvent(result.getText());
+            final boolean isConcreteGeneralEvent = WikiLinksExtractor.isConcreteGeneralEvent(result.getText(), result.getTitle());
             final boolean isGeneralEvent = WikiLinksExtractor.isGeneralEvent(result.getText());
             final boolean isHistoricalEvent = WikiLinksExtractor.isHistoricalEvent(result.getText());
             final boolean isInfoBoxEvent = WikiLinksExtractor.hasDateAndLocation(result.getText());
@@ -38,18 +38,16 @@ public class PersonOrEventFilter implements ICorefFilter<RawElasticResult> {
                 WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.SPORT_EVENT);
             } else if (isAwardEvent) {
                 WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.AWARD_EVENT);
-            } else if (isNewsEvent) {
-                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.NEWS_EVENT);
-            } else if (isGeneralEvent) {
-                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.GENERAL_EVENT);
+            } else if (isConcreteGeneralEvent) {
+                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.CONCRETE_GENERAL_EVENT);
             } else if (isHistoricalEvent) {
                 WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.HISTORICAL_EVENT);
-            } else if (isInfoBoxEvent) {
+            } else if (isGeneralEvent || isInfoBoxEvent) {
                 WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.EVENT_UNK);
             }
 
             retCond = isPerson || isDisaster || isElection || isCivilAttack || isAccidentEvent || isSportEvent
-                    || isAwardEvent || isNewsEvent || isGeneralEvent || isHistoricalEvent || isInfoBoxEvent;
+                    || isAwardEvent || isConcreteGeneralEvent || isGeneralEvent || isHistoricalEvent || isInfoBoxEvent;
         }
 
         return !retCond;

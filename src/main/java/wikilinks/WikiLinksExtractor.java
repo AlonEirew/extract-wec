@@ -17,8 +17,14 @@ public class WikiLinksExtractor {
     private static final String LINK_REGEX_2 = "\\[\\[([^\\[]*?)\\|?([^\\|]*?)\\]\\]";
     private static final Pattern LINK_PATTERN_2 = Pattern.compile(LINK_REGEX_2);
     private static final Pattern SPORT_PATTERN = Pattern.compile(
-            "\\{\\{infobox[\\w\\|]*(match|draft|racereport|championships|athleticscompetition)");
-    private static final Pattern AWARD_PATTERN = Pattern.compile("\\{\\{infobox[\\w\\|]*(award)");
+            "\\{\\{infobox[\\w\\|]*(match|draft|racereport|indy500|championships|athleticscompetition|sailingcompetition" +
+                    "|tennisevent|swimmingevent|all-stargame|grandprixevent|wrestlingevent" +
+                    "|cupfinal|ncaabasketballsinglegame|baseballgame|nflgame|nflchamp|aflchamp|basketballgame|motorrace" +
+                    "|singlegame|hockeygame|yearlygame|outdoorgame|frcgame|boatrace|horserace|olympicevent|mmaevent|daytona500)");
+
+    private static final Pattern AWARD_PATTERN = Pattern.compile("\\{\\{infobox[\\w\\|]*(award|awards|contest|beautypageant)");
+
+    private static final Pattern ELECTION_PATTERN = Pattern.compile("\\{\\{infobox[\\w\\|]*(election)");
 
     private static StanfordCoreNLP pipeline;
 
@@ -75,7 +81,7 @@ public class WikiLinksExtractor {
         Pattern patternStart = Pattern.compile("\\{\\{infobox");
         Matcher matcherStart = patternStart.matcher(text);
 
-        Pattern patternEnd = Pattern.compile("'''|footnotes=");
+        Pattern patternEnd = Pattern.compile("'''|footnotes=|==");
 
         String infoBox = null;
         // Check all occurrences
@@ -131,7 +137,8 @@ public class WikiLinksExtractor {
     }
 
     public static boolean isElection(String infoBox) {
-        if(infoBox.contains("\n|election_name=") && infoBox.contains("\n|election_date=")) {
+        Matcher linkMatcher = ELECTION_PATTERN.matcher(infoBox);
+        if (linkMatcher.find()) {
             return true;
         }
 
@@ -140,7 +147,7 @@ public class WikiLinksExtractor {
 
     public static boolean isCivilAttack(String infoBox) {
         if(infoBox.contains("{{infoboxcivilianattack") || infoBox.contains("{{infoboxterroristattack")
-            || infoBox.contains("{{infoboxmilitaryattack")) {
+            || infoBox.contains("{{infoboxmilitaryattack") || infoBox.contains("{{infoboxcivilconflict")) {
             return true;
         }
 
@@ -148,7 +155,10 @@ public class WikiLinksExtractor {
     }
 
     public static boolean isAccident(String infoBox) {
-        if(infoBox.contains("{{infoboxaircraftoccurrence") || infoBox.contains("{{infoboxrailaccident")) {
+        if(infoBox.contains("{{infoboxaircraftoccurrence") || infoBox.contains("{{infoboxairlinerincident") ||
+                infoBox.contains("{{infoboxrailaccident") || infoBox.contains("{{infoboxairlineraccident") ||
+                infoBox.contains("{{infoboxbusaccident") || infoBox.contains("{{infoboxaircraftcrash")
+                || infoBox.contains("{{infoboxaircraftaccident") || infoBox.contains("{{infoboxaircraftincident")) {
             return true;
         }
 
@@ -157,7 +167,9 @@ public class WikiLinksExtractor {
 
     public static boolean isDisaster(String infoBox) {
         if(infoBox.contains("{{infoboxearthquake") || infoBox.contains("{{infoboxhurricane")
-                || infoBox.contains("{{infoboxwildfire")) {
+                || infoBox.contains("{{infoboxwildfire") || infoBox.contains("infoboxstorm/sandbox") ||
+                    infoBox.contains("infoboxflood") || infoBox.contains("infoboxoilspill")
+                || infoBox.contains("infoboxstorm") || infoBox.contains("infoboxeruption")) {
             return true;
         }
 
@@ -180,8 +192,19 @@ public class WikiLinksExtractor {
         return false;
     }
 
-    public static boolean isNewsEvent(String infoBox) {
-        if(infoBox.contains("{{infoboxnewsevent")) {
+    public static boolean isConcreteGeneralEvent(String infoBox, String title) {
+        Pattern concreteEvent = Pattern.compile("\\{\\{infobox[\\w\\|]*(solareclipse|newsevent|concert|weaponstest|explosivetest)");
+        Matcher concreteMatcher = concreteEvent.matcher(infoBox);
+        if (concreteMatcher.find()) {
+            return true;
+        }
+
+        Pattern titlePattern = Pattern.compile("(.*\\s?\\d\\d?th\\s.*|.*[12][90][0-9][0-9].*)");
+        Pattern newsEvent = Pattern.compile("\\{\\{infobox[\\w\\|]*(summit|convention|conference|summitmeeting|festival)");
+
+        Matcher titleMatcher = titlePattern.matcher(title);
+        Matcher newsMatcher = newsEvent.matcher(infoBox);
+        if (newsMatcher.find() && titleMatcher.find()) {
             return true;
         }
 
@@ -259,7 +282,7 @@ public class WikiLinksExtractor {
         return false;
     }
 
-    static List<WikiLinksMention>  extractFromLine(String pageName, String lineToExtractFrom) {
+    static List<WikiLinksMention> extractFromLine(String pageName, String lineToExtractFrom) {
         List<WikiLinksMention> mentions = new ArrayList<>();
 
         Matcher linkMatcher = LINK_PATTERN_2.matcher(lineToExtractFrom);

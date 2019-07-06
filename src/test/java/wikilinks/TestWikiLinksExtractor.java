@@ -1,8 +1,11 @@
 package wikilinks;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import data.RawElasticResult;
+import javafx.util.Pair;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -41,16 +44,11 @@ public class TestWikiLinksExtractor {
 
     @Test
     public void testExtractTypes() {
-        String pageText = get911Text();
-        final Set<String> extractMentions = WikiLinksExtractor.extractTypes(pageText);
-        System.out.println();
-    }
-
-    @Test
-    public void testIsPerson() {
-        String pageText = getAlenTuringText();
-        boolean ret = WikiLinksExtractor.isPerson(pageText);
-        Assert.assertTrue(ret);
+        List<String> pageTexts = getCivilAttack();
+        for(String text : pageTexts) {
+            final Set<String> extractMentions = WikiLinksExtractor.extractTypes(text);
+            System.out.println();
+        }
     }
 
     @Test
@@ -63,24 +61,18 @@ public class TestWikiLinksExtractor {
 
     @Test
     public void testHasDateAndLocation() {
-        String pageText = getTmp();
+
+        List<String> pageTexts = getCivilAttack();
+        for(String text : pageTexts) {
+            String infoBox = WikiLinksExtractor.extractPageInfoBox(text);
+            boolean ret = WikiLinksExtractor.hasDateAndLocation(infoBox);
+            Assert.assertTrue(ret);
+            break;
+        }
+
+        String pageText = getWeddingText();
         String infoBox = WikiLinksExtractor.extractPageInfoBox(pageText);
         boolean ret = WikiLinksExtractor.hasDateAndLocation(infoBox);
-        Assert.assertFalse(ret);
-
-        pageText = getCharlieHabdoText();
-        infoBox = WikiLinksExtractor.extractPageInfoBox(pageText);
-        ret = WikiLinksExtractor.hasDateAndLocation(infoBox);
-        Assert.assertTrue(ret);
-
-        pageText = get911Text();
-        infoBox = WikiLinksExtractor.extractPageInfoBox(pageText);
-        ret = WikiLinksExtractor.hasDateAndLocation(infoBox);
-        Assert.assertTrue(ret);
-
-        pageText = getWeddingText();
-        infoBox = WikiLinksExtractor.extractPageInfoBox(pageText);
-        ret = WikiLinksExtractor.hasDateAndLocation(infoBox);
         Assert.assertTrue(ret);
         System.out.println();
 
@@ -130,19 +122,54 @@ public class TestWikiLinksExtractor {
     }
 
     @Test
-    public void testIsElection() {
-        String pageText = getElection1();
-        String infoBox = WikiLinksExtractor.extractPageInfoBox(pageText);
-        boolean ret = WikiLinksExtractor.isElection(infoBox);
+    public void testIsPerson() {
+        String pageText = getAlenTuringText();
+        boolean ret = WikiLinksExtractor.isPerson(pageText);
         Assert.assertTrue(ret);
     }
 
     @Test
+    public void testIsElection() {
+        List<String> pageText = getElectionText();
+        for(String text : pageText) {
+            String infoBox = WikiLinksExtractor.extractPageInfoBox(text);
+            boolean ret = WikiLinksExtractor.isElection(infoBox);
+            Assert.assertTrue(ret);
+        }
+
+        List<String> other = getAccidentText();
+        other.addAll(getCivilAttack());
+        other.addAll(getDisasterText());
+        other.addAll(getSportText());
+//        other.addAll(getElectionText());
+
+        for(String text : other) {
+            String infoBox = WikiLinksExtractor.extractPageInfoBox(text);
+            boolean ret = WikiLinksExtractor.isElection(infoBox);
+            Assert.assertFalse(ret);
+        }
+    }
+
+    @Test
     public void testAccident() {
-        String pageText = getPilotErrorText();
-        String infoBox = WikiLinksExtractor.extractPageInfoBox(pageText);
-        boolean ret = WikiLinksExtractor.isAccident(infoBox);
-        Assert.assertTrue(ret);
+        List<String> pageTexts = getAccidentText();
+        for(String text : pageTexts) {
+            String infoBox = WikiLinksExtractor.extractPageInfoBox(text);
+            boolean ret = WikiLinksExtractor.isAccident(infoBox);
+            Assert.assertTrue(ret);
+        }
+
+        List<String> other = new ArrayList<>();
+        other.addAll(getCivilAttack());
+        other.addAll(getDisasterText());
+        other.addAll(getSportText());
+        other.addAll(getElectionText());
+
+        for(String text : other) {
+            String infoBox = WikiLinksExtractor.extractPageInfoBox(text);
+            boolean ret = WikiLinksExtractor.isAccident(infoBox);
+            Assert.assertFalse(ret);
+        }
     }
 
     @Test
@@ -154,28 +181,86 @@ public class TestWikiLinksExtractor {
 
     @Test
     public void testSport() {
-        boolean ret = WikiLinksExtractor.isSportEvent(WikiLinksExtractor.extractPageInfoBox(getSportDraftText()));
-        Assert.assertTrue(ret);
 
-        ret = WikiLinksExtractor.isSportEvent(WikiLinksExtractor.extractPageInfoBox(getSportMatchText()));
-        Assert.assertTrue(ret);
+        final List<String> sportText = getSportText();
+        for(String text : sportText) {
+            boolean ret = WikiLinksExtractor.isSportEvent(WikiLinksExtractor.extractPageInfoBox(text));
+            Assert.assertTrue(ret);
+        }
 
-        ret = WikiLinksExtractor.isSportEvent(WikiLinksExtractor.extractPageInfoBox(getChampText()));
-        Assert.assertTrue(ret);
+        List<String> other = getAccidentText();
+        other.addAll(getCivilAttack());
+        other.addAll(getDisasterText());
+//        other.addAll(getSportText());
+        other.addAll(getElectionText());
 
-        ret = WikiLinksExtractor.isSportEvent(WikiLinksExtractor.extractPageInfoBox(get911Text()));
-        Assert.assertFalse(ret);
+        for(String text : other) {
+            String infoBox = WikiLinksExtractor.extractPageInfoBox(text);
+            boolean ret = WikiLinksExtractor.isSportEvent(infoBox);
+            Assert.assertFalse(ret);
+        }
+    }
+
+    @Test
+    public void testIsAward() {
+
+        final List<Pair<String, String>> awardPair = getAwards();
+        for(Pair<String, String> pair : awardPair) {
+            boolean ret = WikiLinksExtractor.isAwardEvent(WikiLinksExtractor.extractPageInfoBox(pair.getValue()),
+                    pair.getKey());
+
+            Assert.assertTrue(ret);
+        }
+
+        final List<Pair<String, String>> newsPair = getConcreteGeneralTexts();
+        for(Pair<String, String> pair : newsPair) {
+            boolean ret = WikiLinksExtractor.isAwardEvent(WikiLinksExtractor.extractPageInfoBox(pair.getValue()),
+                    pair.getKey());
+
+            Assert.assertFalse(ret);
+        }
+    }
+
+    @Test
+    public void testIsConcreteGeneralEvent() {
+
+        final List<Pair<String, String>> newsPair = getConcreteGeneralTexts();
+        for(Pair<String, String> pair : newsPair) {
+            boolean ret = WikiLinksExtractor.isConcreteGeneralEvent(WikiLinksExtractor.extractPageInfoBox(pair.getValue()),
+                    pair.getKey());
+
+            Assert.assertTrue(ret);
+        }
+
+        final List<Pair<String, String>> awardPair = getAwards();
+        for(Pair<String, String> pair : awardPair) {
+            boolean ret = WikiLinksExtractor.isConcreteGeneralEvent(WikiLinksExtractor.extractPageInfoBox(pair.getValue()),
+                    pair.getKey());
+
+            Assert.assertFalse(ret);
+        }
     }
 
     @Test
     public void testIsDisaster() {
-        String infoBox = WikiLinksExtractor.extractPageInfoBox(getEarthquake1Text());
-        boolean ret = WikiLinksExtractor.isDisaster(infoBox);
-        Assert.assertTrue(ret);
+        final List<String> disasterText = getDisasterText();
+        for(String text : disasterText) {
+            String infoBox = WikiLinksExtractor.extractPageInfoBox(text);
+            boolean ret = WikiLinksExtractor.isDisaster(infoBox);
+            Assert.assertTrue(ret);
+        }
 
-        infoBox = WikiLinksExtractor.extractPageInfoBox(get911Text());
-        ret = WikiLinksExtractor.isDisaster(infoBox);
-        Assert.assertFalse(ret);
+        List<String> other = new ArrayList<>();
+        other.addAll(getCivilAttack());
+//        other.addAll(getDisasterText());
+        other.addAll(getSportText());
+        other.addAll(getElectionText());
+
+        for(String text : other) {
+            String infoBox = WikiLinksExtractor.extractPageInfoBox(text);
+            boolean ret = WikiLinksExtractor.isDisaster(infoBox);
+            Assert.assertFalse(ret);
+        }
     }
 
     @Test
@@ -184,17 +269,23 @@ public class TestWikiLinksExtractor {
         RawElasticResult input = new RawElasticResult("Alan Turing", WikiLinksExtractor.extractPageInfoBox(getAlenTuringText()));
         Assert.assertFalse(filter.isConditionMet(input));
 
-        input = new RawElasticResult("September 11 attacks", WikiLinksExtractor.extractPageInfoBox(get911Text()));
-        Assert.assertFalse(filter.isConditionMet(input));
+        final List<String> stringList = getCivilAttack();
+        for(String text : stringList) {
+            input = new RawElasticResult("September 11 attacks", WikiLinksExtractor.extractPageInfoBox(text));
+            Assert.assertFalse(filter.isConditionMet(input));
+        }
 
-        input = new RawElasticResult("Charlie Hebdo", WikiLinksExtractor.extractPageInfoBox(getCharlieHabdoText()));
-        Assert.assertFalse(filter.isConditionMet(input));
+        final List<String> accidentText = getAccidentText();
+        for(String text : accidentText) {
+            input = new RawElasticResult("Pilot Error", WikiLinksExtractor.extractPageInfoBox(text));
+            Assert.assertFalse(filter.isConditionMet(input));
+        }
 
-        input = new RawElasticResult("Pilot Error", WikiLinksExtractor.extractPageInfoBox(getPilotErrorText()));
-        Assert.assertFalse(filter.isConditionMet(input));
-
-        input = new RawElasticResult("Tsunami", WikiLinksExtractor.extractPageInfoBox(getTsunamiText()));
-        Assert.assertFalse(filter.isConditionMet(input));
+        final List<String> disasterText = getDisasterText();
+        for(String text : disasterText) {
+            input = new RawElasticResult("Tsunami", WikiLinksExtractor.extractPageInfoBox(text));
+            Assert.assertFalse(filter.isConditionMet(input));
+        }
 
         input = new RawElasticResult("Kit Kat", WikiLinksExtractor.extractPageInfoBox(getKitKatText()));
         Assert.assertTrue(filter.isConditionMet(input));
@@ -216,40 +307,50 @@ public class TestWikiLinksExtractor {
         return inputJsonNlp.get("text").getAsString();
     }
 
+    private List<String> getTexts(String fileNme) {
+        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream(fileNme);
+        JsonArray inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonArray.class);
+
+        List<String> retTexts = new ArrayList<>();
+        for(JsonElement jsonObj : inputJsonNlp) {
+            retTexts.add(jsonObj.getAsJsonObject().get("text").getAsString());
+        }
+
+        return retTexts;
+    }
+
+    private List<Pair<String, String>> getTextAndTitle(String fileName) {
+        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream(fileName);
+        JsonArray inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonArray.class);
+
+        List<Pair<String, String>> retTexts = new ArrayList<>();
+        for(JsonElement jsonObj : inputJsonNlp) {
+            Pair<String, String> pair = new Pair<>(jsonObj.getAsJsonObject().get("title").getAsString(),
+                    jsonObj.getAsJsonObject().get("text").getAsString());
+            retTexts.add(pair);
+        }
+
+        return retTexts;
+    }
+
     private String getSmallCompanyText() {
         return getText("mobileye.json");
     }
 
-    private String getChampText() {
-        return getText("championships.json");
+    private List<String> getSportText() {
+        return getTexts("sport.json");
     }
 
-    private String getSportMatchText() {
-        return getText("sport_match.json");
+    private List<String> getDisasterText() {
+        return getTexts("disaster.json");
     }
 
-    private String getSportDraftText() {
-        return getText("sport_draft.json");
-    }
-
-    private String getEarthquake1Text() {
-        return getText("earthquake1.json");
-    }
-
-    private String getTsunamiText() {
-        return getText("tsunami.json");
-    }
-
-    private String get911Text() {
-        return getText("september_11_attacks.json");
+    private List<String> getCivilAttack() {
+        return getTexts("civil_attack.json");
     }
 
     private String getAlenTuringText() {
         return getText("alan_turing.json");
-    }
-
-    private String getCharlieHabdoText() {
-        return getText("charlie_hebdo_shooting.json");
     }
 
     private String getWeddingText() {
@@ -260,24 +361,28 @@ public class TestWikiLinksExtractor {
         return getText("kit_kat.json");
     }
 
-    private String getElection1() {
-        return getText("election_1.json");
+    private List<String> getElectionText() {
+        return getTexts("election.json");
     }
 
-    private String getPilotErrorText() {
-        return getText("pilot_error.json");
+    private List<String> getAccidentText() {
+        return getTexts("accident.json");
     }
 
     private String getFilmList() {
         return getText("list_of_films.json");
     }
 
-    private String getPresidentsList() {
-        return getText("list_of_presidents.json");
+    private List<Pair<String, String>> getAwards() {
+        return getTextAndTitle("award.json");
     }
 
-    private String getTmp() {
-        return getText("tmp.json");
+    private List<Pair<String, String>> getConcreteGeneralTexts() {
+        return getTextAndTitle("concrete_general.json");
+    }
+
+    private String getPresidentsList() {
+        return getText("list_of_presidents.json");
     }
 
     private String getInfoBoxs() {
