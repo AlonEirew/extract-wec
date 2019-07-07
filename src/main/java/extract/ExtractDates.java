@@ -7,13 +7,15 @@ import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
 import persistence.SQLiteConnections;
 import wikilinks.CreateWikiLinks;
+import workers.ReadDateWorkerFactory;
 import workers.ReadInfoBoxWorkerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
-public class ExtractInfoBoxs {
+public class ExtractDates {
 
     private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
@@ -28,14 +30,14 @@ public class ExtractInfoBoxs {
         SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections(config.get("sql_connection_url")));
         ElasticQueryApi elasticApi = new ElasticQueryApi(config);
 
-        ReadInfoBoxWorkerFactory readInfoBoxWorkerFactory = new ReadInfoBoxWorkerFactory();
-        CreateWikiLinks createWikiLinks = new CreateWikiLinks(sqlApi, elasticApi, config, readInfoBoxWorkerFactory);
+        ReadDateWorkerFactory readDateWorkerFactory = new ReadDateWorkerFactory();
+        CreateWikiLinks createWikiLinks = new CreateWikiLinks(sqlApi, elasticApi, config, readDateWorkerFactory);
         createWikiLinks.readAllWikiPagesAndProcess();
-        final Map<String, String> infoBoxes = readInfoBoxWorkerFactory.getInfoBoxes();
+        final List<String> datesSchemas = readDateWorkerFactory.getDatesSchemas();
 
-        System.out.println(infoBoxes.size());
+        System.out.println(datesSchemas.size());
 //        System.out.println(gson.toJson(infoBoxes));
 
-        FileUtils.write(new File(property + "/infoboxes.json"), gson.toJson(infoBoxes), "UTF-8");
+        FileUtils.writeLines(new File(property + "/dates.json"), datesSchemas, "\n");
     }
 }

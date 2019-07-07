@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ReadWorkerFactory implements IWorkerFactory {
+public class ReadInfoBoxWorkerFactory implements IWorkerFactory {
 
     protected Map<String, String> infoBoxes = new HashMap<>();
 

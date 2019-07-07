@@ -14,7 +14,7 @@ public class PersonOrEventFilter implements ICorefFilter<RawElasticResult> {
         if (result != null && result.getText() != null && !result.getText().isEmpty()) {
             final boolean isPerson = WikiLinksExtractor.isPerson(result.getText());
             final boolean isDisaster = WikiLinksExtractor.isDisaster(result.getText());
-            final boolean isElection = WikiLinksExtractor.isElection(result.getText());
+            final boolean isElection = WikiLinksExtractor.isElection(result.getText(), result.getTitle());
             final boolean isCivilAttack = WikiLinksExtractor.isCivilAttack(result.getText());
             final boolean isAccidentEvent = WikiLinksExtractor.isAccident(result.getText());
             final boolean isSportEvent = WikiLinksExtractor.isSportEvent(result.getText());
