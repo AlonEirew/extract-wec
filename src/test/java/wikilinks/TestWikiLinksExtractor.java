@@ -190,7 +190,7 @@ public class TestWikiLinksExtractor {
         final List<Pair<String, String>> sportText = getSportText();
         for(Pair<String, String> text : sportText) {
             boolean ret = WikiLinksExtractor.isSportEvent(WikiLinksExtractor.extractPageInfoBox(text.getValue()));
-            Assert.assertTrue(ret);
+            Assert.assertTrue(text.getKey(), ret);
         }
 
         List<Pair<String, String>> other = new ArrayList<>();
@@ -205,7 +205,7 @@ public class TestWikiLinksExtractor {
         for(Pair<String, String> text : other) {
             String infoBox = WikiLinksExtractor.extractPageInfoBox(text.getValue());
             boolean ret = WikiLinksExtractor.isSportEvent(infoBox);
-            Assert.assertFalse(ret);
+            Assert.assertFalse(text.getKey(), ret);
         }
     }
 
@@ -322,25 +322,25 @@ public class TestWikiLinksExtractor {
             String infoBox = WikiLinksExtractor.extractPageInfoBox(pair.getValue());
 
             boolean ret = WikiLinksExtractor.isDisaster(infoBox);
-            Assert.assertFalse(ret);
+            Assert.assertFalse(pair.getKey(), ret);
 
             ret = WikiLinksExtractor.isAwardEvent(infoBox, pair.getKey());
-            Assert.assertFalse(ret);
+            Assert.assertFalse(pair.getKey(), ret);
 
             ret = WikiLinksExtractor.isConcreteGeneralEvent(infoBox, pair.getKey());
-            Assert.assertFalse(ret);
+            Assert.assertFalse(pair.getKey(), ret);
 
             ret = WikiLinksExtractor.isAccident(infoBox);
-            Assert.assertFalse(ret);
+            Assert.assertFalse(pair.getKey(), ret);
 
             ret = WikiLinksExtractor.isSportEvent(infoBox);
-            Assert.assertFalse(ret);
+            Assert.assertFalse(pair.getKey(), ret);
 
             ret = WikiLinksExtractor.isCivilAttack(infoBox);
-            Assert.assertFalse(ret);
+            Assert.assertFalse(pair.getKey(), ret);
 
             ret = WikiLinksExtractor.isElection(infoBox, pair.getKey());
-            Assert.assertFalse(ret);
+            Assert.assertFalse(pair.getKey(), ret);
         }
     }
 

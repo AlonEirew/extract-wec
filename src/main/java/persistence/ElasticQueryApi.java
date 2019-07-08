@@ -35,6 +35,14 @@ public class ElasticQueryApi {
                         .setMaxRetryTimeoutMillis(60*60*1000));
     }
 
+    public void closeElasticQueryApi() {
+        try {
+            this.elasticClient.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public long getTotalDocsCount() throws IOException {
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         sourceBuilder.query(QueryBuilders.matchAllQuery());

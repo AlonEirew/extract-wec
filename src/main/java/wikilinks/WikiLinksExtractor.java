@@ -18,13 +18,16 @@ public class WikiLinksExtractor {
     private static final Pattern LINK_PATTERN_2 = Pattern.compile(LINK_REGEX_2);
     private static final Pattern SPORT_PATTERN = Pattern.compile(
             "\\{\\{infobox[\\w\\|]*?(match|draft|racereport|indy500|championships|athleticscompetition|sailingcompetition" +
-                    "|tennisevent|swimmingevent|all-stargame|grandprixevent|wrestlingevent" +
-                    "|cupfinal|ncaabasketballsinglegame|baseballgame|nflgame|nflchamp|aflchamp|basketballgame|motorrace" +
-                    "|singlegame|hockeygame|yearlygame|outdoorgame|frcgame|boatrace|horserace|olympicevent|mmaevent|daytona500)");
+                    "|competitionevent|paralympicevent|tennisevent|grandslamevent|tournamentevent|swimmingevent|all-stargame|grandprixevent|wrestlingevent" +
+                    "|cupfinal|ncaabasketballsinglegame|baseballgame|nflgame|nflchamp|aflchamp|basketballgame|race|sportevent" +
+                    "|singlegame|hockeygame|yearlygame|outdoorgame|frcgame|olympicevent|mmaevent|daytona500|gamesevent|swcevent)");
 
     private static final Pattern AWARD_PATTERN = Pattern.compile("\\{\\{infobox[\\w\\|]*?(award|awards|contest|beautypageant)");
 
     private static final Pattern ELECTION_PATTERN = Pattern.compile("\\{\\{infobox[\\w\\|]*?(election)");
+
+    private static final Pattern CONCRETE_EVENT = Pattern.compile("\\{\\{infobox[\\w\\|]*?(solareclipse|newsevent|concert|weaponstest|explosivetest" +
+                "|summit|convention|conference|summitmeeting|festival)");
 
     private static StanfordCoreNLP pipeline;
 
@@ -77,23 +80,26 @@ public class WikiLinksExtractor {
 
     public static String extractPageInfoBox(String pageText) {
         String text = pageText.toLowerCase().replaceAll(" ", "");
-        final String infoboxSubstring = text.substring(text.indexOf("{{infobox"));
-
         StringBuilder infoBoxFinal = new StringBuilder();
-        int infoBarCount = 0;
-        for(int i = 0 ; i < infoboxSubstring.length() ; i++) {
-            final char c = infoboxSubstring.charAt(i);
-            if (c == '}') {
-                infoBarCount--;
-                if(infoBarCount == 0) {
-                    infoBoxFinal.append(c);
-                    break;
-                }
-            } else if(c == '{') {
-                infoBarCount++;
-            }
 
-            infoBoxFinal.append(c);
+        final int beginIndex = text.indexOf("{{infobox");
+        if(beginIndex != -1) {
+            final String infoboxSubstring = text.substring(beginIndex);
+            int infoBarCount = 0;
+            for (int i = 0; i < infoboxSubstring.length(); i++) {
+                final char c = infoboxSubstring.charAt(i);
+                if (c == '}') {
+                    infoBarCount--;
+                    if (infoBarCount == 0) {
+                        infoBoxFinal.append(c);
+                        break;
+                    }
+                } else if (c == '{') {
+                    infoBarCount++;
+                }
+
+                infoBoxFinal.append(c);
+            }
         }
 
         return infoBoxFinal.toString();
@@ -149,24 +155,12 @@ public class WikiLinksExtractor {
     }
 
     public static boolean isCivilAttack(String infoBox) {
-
-        Pattern datePattern = Pattern.compile("[12][980][0-9][0-9]");
-
-        if(infoBox.contains("date=")) {
-            String dateLine = infoBox.substring(infoBox.indexOf("date="));
-            dateLine = dateLine.substring(0, dateLine.indexOf("\n"));
-
-            Matcher dateMach = datePattern.matcher(dateLine);
-            Set<String> uniqueDates = new HashSet<>();
-            while (dateMach.find()) {
-                uniqueDates.add(dateMach.group());
-            }
-
-            if (infoBox.contains("{{infoboxcivilianattack") || infoBox.contains("{{infoboxterroristattack")
-                    || infoBox.contains("{{infoboxmilitaryattack") || infoBox.contains("{{infoboxcivilconflict")) {
-                if(uniqueDates.size() < 2) {
-                    return true;
-                }
+        final Set<String> uniqueDates = getYears(infoBox);
+        if (infoBox.contains("{{infoboxcivilianattack") || infoBox.contains("{{infoboxterroristattack")
+                || infoBox.contains("{{infoboxmilitaryattack") || infoBox.contains("{{infoboxcivilconflict")
+                || infoBox.contains("{{infoboxmilitaryconflict")) {
+            if (uniqueDates.size() < 2) {
+                return true;
             }
         }
 
@@ -212,18 +206,12 @@ public class WikiLinksExtractor {
     }
 
     public static boolean isConcreteGeneralEvent(String infoBox, String title) {
-        Pattern concreteEvent = Pattern.compile("\\{\\{infobox[\\w\\|]*?(solareclipse|newsevent|concert|weaponstest|explosivetest)");
-        Matcher concreteMatcher = concreteEvent.matcher(infoBox);
-        if (concreteMatcher.find()) {
-            return true;
-        }
 
+        Matcher concreteMatcher = CONCRETE_EVENT.matcher(infoBox);
         Pattern titlePattern = Pattern.compile("(.*\\s?\\d\\d?th\\s.*|.*[12][90][0-9][0-9].*)");
-        Pattern newsEvent = Pattern.compile("\\{\\{infobox[\\w\\|]*(summit|convention|conference|summitmeeting|festival)");
-
         Matcher titleMatcher = titlePattern.matcher(title);
-        Matcher newsMatcher = newsEvent.matcher(infoBox);
-        if (newsMatcher.find() && titleMatcher.find()) {
+        final Set<String> years = getYears(infoBox);
+        if (concreteMatcher.find() && (titleMatcher.find() || years.size() < 2)) {
             return true;
         }
 
@@ -253,7 +241,8 @@ public class WikiLinksExtractor {
     public static boolean isSportEvent(String infoBox) {
         Matcher linkMatcher = SPORT_PATTERN.matcher(infoBox);
         if (linkMatcher.find()) {
-            if(infoBox.contains("date")) {
+            if(infoBox.contains("date=") || infoBox.contains("dates=") || infoBox.contains("|datey=") ||
+                infoBox.contains("score=")) {
                 return true;
             }
         }
@@ -333,6 +322,28 @@ public class WikiLinksExtractor {
 
         setMentionsContext(mentions, context);
         return mentions;
+    }
+
+    private static Set<String> getYears(String infoBox) {
+        Set<String> uniqueDates = new HashSet<>();
+        Pattern datePattern = Pattern.compile("[12][0-9][0-9][0-9]|[0-9][0-9][0-9]");
+
+        final int beginDateIndex = infoBox.indexOf("date=");
+        if(beginDateIndex != -1) {
+            String dateLine = infoBox.substring(beginDateIndex);
+
+            final int endIndex = dateLine.indexOf("\n");
+            if (endIndex != -1) {
+                dateLine = dateLine.substring(0, endIndex);
+            }
+
+            Matcher dateMach = datePattern.matcher(dateLine);
+            while (dateMach.find()) {
+                uniqueDates.add(dateMach.group());
+            }
+        }
+
+        return uniqueDates;
     }
 
     private static void setMentionsContext(List<WikiLinksMention> mentions, String context) {

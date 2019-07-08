@@ -40,6 +40,8 @@ public class WikiToWikiLinksMain {
         createWikiLinks.readAllWikiPagesAndProcess();
         createWikiLinks.persistAllCorefs();
 
+        elasticApi.closeElasticQueryApi();
+
         long end = System.currentTimeMillis();
         System.out.println("Process Done, took-" + (end - start) + "ms to run");
     }
