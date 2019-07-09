@@ -88,17 +88,20 @@ public class TestWikiLinksExtractor {
     public void testGetAllPagesTexts() throws InterruptedException, ExecutionException, TimeoutException, IOException {
         Map<String, String> config = getConfigFile();
 
-        ElasticQueryApi elasticQueryApi = new ElasticQueryApi(config);
+        ElasticQueryApi elasticQueryApi = new ElasticQueryApi(config.get("elastic_wiki_index"),
+                Integer.parseInt(config.get("elastic_search_interval")), config.get("elastic_host"),
+                Integer.parseInt(config.get("elastic_port")));
+
         Set<String> pagesList = new HashSet<>();
         pagesList.add("Alan Turing");
         pagesList.add("September 11 attacks");
         final Map<String, String> allPagesText = elasticQueryApi.getAllWikiPagesTitleAndText(pagesList);
 
-        final String alan_turing = WikiLinksExtractor.extractPageInfoBox(allPagesText.get("Alan Turing"));
+        final String alan_turing = allPagesText.get("Alan Turing");
         Assert.assertTrue(WikiLinksExtractor.isPerson(alan_turing));
         Assert.assertTrue(WikiLinksExtractor.extractTypes(alan_turing).isEmpty());
 
-        final String sep_11 = WikiLinksExtractor.extractPageInfoBox(allPagesText.get("September 11 attacks"));
+        final String sep_11 = allPagesText.get("September 11 attacks");
         Assert.assertFalse(WikiLinksExtractor.isPerson(sep_11));
         Assert.assertTrue(!WikiLinksExtractor.extractTypes(sep_11).isEmpty());
     }
@@ -107,7 +110,9 @@ public class TestWikiLinksExtractor {
     public void testGetPageText() throws IOException {
         Map<String, String> config = getConfigFile();
 
-        ElasticQueryApi elasticQueryApi = new ElasticQueryApi(config);
+        ElasticQueryApi elasticQueryApi = new ElasticQueryApi(config.get("elastic_wiki_index"),
+                Integer.parseInt(config.get("elastic_search_interval")), config.get("elastic_host"),
+                Integer.parseInt(config.get("elastic_port")));
         final String alan_turing = elasticQueryApi.getPageText("Alan Turing");
         final String infoBox = WikiLinksExtractor.extractPageInfoBox(alan_turing);
         Assert.assertTrue(WikiLinksExtractor.isPerson(infoBox));
@@ -189,7 +194,7 @@ public class TestWikiLinksExtractor {
 
         final List<Pair<String, String>> sportText = getSportText();
         for(Pair<String, String> text : sportText) {
-            boolean ret = WikiLinksExtractor.isSportEvent(WikiLinksExtractor.extractPageInfoBox(text.getValue()));
+            boolean ret = WikiLinksExtractor.isSportEvent(WikiLinksExtractor.extractPageInfoBox(text.getValue()), text.getKey());
             Assert.assertTrue(text.getKey(), ret);
         }
 
@@ -204,7 +209,7 @@ public class TestWikiLinksExtractor {
 
         for(Pair<String, String> text : other) {
             String infoBox = WikiLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WikiLinksExtractor.isSportEvent(infoBox);
+            boolean ret = WikiLinksExtractor.isSportEvent(infoBox, text.getKey());
             Assert.assertFalse(text.getKey(), ret);
         }
     }
@@ -291,12 +296,12 @@ public class TestWikiLinksExtractor {
     }
 
     @Test
-    public void isCivilAttack() {
+    public void testIsCivilAttack() {
         final List<Pair<String, String>> civilAttack = getCivilAttack();
         for(Pair<String, String> text : civilAttack) {
             String infoBox = WikiLinksExtractor.extractPageInfoBox(text.getValue());
             boolean ret = WikiLinksExtractor.isCivilAttack(infoBox);
-            Assert.assertTrue(ret);
+            Assert.assertTrue(text.getKey(), ret);
         }
 
         List<Pair<String, String>> other = new ArrayList<>();
@@ -333,7 +338,7 @@ public class TestWikiLinksExtractor {
             ret = WikiLinksExtractor.isAccident(infoBox);
             Assert.assertFalse(pair.getKey(), ret);
 
-            ret = WikiLinksExtractor.isSportEvent(infoBox);
+            ret = WikiLinksExtractor.isSportEvent(infoBox, pair.getKey());
             Assert.assertFalse(pair.getKey(), ret);
 
             ret = WikiLinksExtractor.isCivilAttack(infoBox);

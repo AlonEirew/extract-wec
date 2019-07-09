@@ -5,23 +5,30 @@ import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
 import wikilinks.PersonOrEventFilter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ParseAndExtractWorkersFactory implements IWorkerFactory {
 
-    private ParseListener listener;
+    private SQLQueryApi sqlApi;
+    private ElasticQueryApi elasticApi;
 
     public ParseAndExtractWorkersFactory(SQLQueryApi sqlApi, ElasticQueryApi elasticApi) {
-        this.listener = new ParseListener(sqlApi, elasticApi, new PersonOrEventFilter());
+        this.sqlApi = sqlApi;
+        this.elasticApi = elasticApi;
     }
 
     @Override
     public AWorker createNewWorker(List<RawElasticResult> rawElasticResults) {
-        return new ParseAndExtractMentionsWorker(rawElasticResults, this.listener);
+        return new ParseAndExtractMentionsWorker(rawElasticResults, this.sqlApi, this.elasticApi, new PersonOrEventFilter());
     }
 
     @Override
     public void finalizeIfNeeded() {
-        this.listener.handle();
+        final ParseAndExtractMentionsWorker parseAndExtractMentionsWorker = new
+                ParseAndExtractMentionsWorker(new ArrayList<>(),
+                this.sqlApi, this.elasticApi, new PersonOrEventFilter());
+
+        parseAndExtractMentionsWorker.commitCurrent();
     }
 }

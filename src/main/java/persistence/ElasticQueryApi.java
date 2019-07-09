@@ -21,13 +21,16 @@ import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
 public class ElasticQueryApi {
     private final RestHighLevelClient elasticClient;
-    private final Map<String, String> config;
+    private final String elasticIndex;
+    private final int queryInterval;
 
-    public ElasticQueryApi(Map<String, String> configuration) {
-        this.config = configuration;
+    public ElasticQueryApi(String elasticIndex, int queryInterval, String host, int port) {
+        this.elasticIndex = elasticIndex;
+        this.queryInterval = queryInterval;
+
         this.elasticClient = new RestHighLevelClient(
-                RestClient.builder(new HttpHost(configuration.get("elastic_host"),
-                        Integer.parseInt(configuration.get("elastic_port")), "http")).setRequestConfigCallback(
+                RestClient.builder(new HttpHost(host,
+                        port, "http")).setRequestConfigCallback(
                         requestConfigBuilder -> requestConfigBuilder
                                 .setConnectionRequestTimeout(60*60*1000)
                                 .setConnectTimeout(60*60*1000)
@@ -157,10 +160,10 @@ public class ElasticQueryApi {
     }
 
     public SearchResponse createElasticSearchResponse(Scroll scroll) throws IOException {
-        final SearchRequest searchRequest = new SearchRequest(this.config.get("elastic_wiki_index"));
+        final SearchRequest searchRequest = new SearchRequest(this.elasticIndex);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(matchAllQuery());
-        searchSourceBuilder.size(Integer.parseInt(this.config.get("elastic_search_interval")));
+        searchSourceBuilder.size(this.queryInterval);
         searchRequest.source(searchSourceBuilder);
         searchRequest.scroll(scroll);
         return elasticClient.search(searchRequest);

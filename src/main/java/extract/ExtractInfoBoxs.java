@@ -26,7 +26,9 @@ public class ExtractInfoBoxs {
                 Map.class);
 
         SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections(config.get("sql_connection_url")));
-        ElasticQueryApi elasticApi = new ElasticQueryApi(config);
+        ElasticQueryApi elasticApi = new ElasticQueryApi(config.get("elastic_wiki_index"),
+                Integer.parseInt(config.get("elastic_search_interval")), config.get("elastic_host"),
+                Integer.parseInt(config.get("elastic_port")));
 
         ReadInfoBoxWorkerFactory readInfoBoxWorkerFactory = new ReadInfoBoxWorkerFactory();
         CreateWikiLinks createWikiLinks = new CreateWikiLinks(sqlApi, elasticApi, config, readInfoBoxWorkerFactory);

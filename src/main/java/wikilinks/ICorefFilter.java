@@ -1,5 +1,7 @@
 package wikilinks;
 
-public interface ICorefFilter<T> {
-    boolean isConditionMet(T input);
+import data.RawElasticResult;
+
+public interface ICorefFilter {
+    boolean isConditionMet(RawElasticResult input);
 }

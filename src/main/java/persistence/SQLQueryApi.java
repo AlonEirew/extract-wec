@@ -125,6 +125,25 @@ public class SQLQueryApi {
         return true;
     }
 
+    public Map<Integer, WikiLinksCoref> readCorefTableToMap() {
+        Map<Integer, WikiLinksCoref> resultList = new HashMap();
+        String query = "Select * from " + WikiLinksCoref.TABLE_COREF;
+        try (Connection conn = this.sqlConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+
+            try(ResultSet rs = stmt.executeQuery(query)) {
+                while (rs.next()) {
+                    final WikiLinksCoref coref = WikiLinksCoref.resultSetToObject(rs);
+                    resultList.put(coref.getCorefId(), coref);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return resultList;
+    }
+
     public boolean updateCorefTable(String tableName, Map<Integer, WikiLinksCoref> corefs) {
         String query = "Select * from CorefChains where corefid in";
         try (Connection conn = this.sqlConnection.getConnection();
@@ -148,7 +167,6 @@ public class SQLQueryApi {
                         rs.updateRow();
                         copyCoref.remove(corefId);
                     }
-
                 }
             }
 
