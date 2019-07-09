@@ -81,19 +81,9 @@ public class ElasticQueryApi {
         return pageText;
     }
 
-    public Map<String, String> getAllWikiPagesTitleAndText(Set<String> pagesTitles) throws InterruptedException, ExecutionException, TimeoutException {
+    public Map<String, String> getAllWikiPagesTitleAndText(Set<String> pagesTitles) throws InterruptedException, ExecutionException, TimeoutException, IOException {
         System.out.println("Got total of-" + pagesTitles.size() + " coref pages to extract from elastic");
-
-        ExecutorService elasticSearchPool = new ThreadPoolExecutor(
-                10,
-                20,
-                20,
-                TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(10),
-                new ThreadPoolExecutor.CallerRunsPolicy());
-
-        List<Future<List<RawElasticResult>>> futureList = new ArrayList<>();
-
+        List<RawElasticResult> multiSearchResult = new ArrayList<>();
         MultiSearchRequest multiSearchRequest = new MultiSearchRequest();
         int index = 0;
         for(String page : pagesTitles) {
@@ -105,24 +95,19 @@ public class ElasticQueryApi {
 
             index ++;
             if(index % 1000 == 0) {
-                futureList.add(elasticSearchPool.submit(new ElasticSearchCallRequest(multiSearchRequest)));
+                multiSearchResult.addAll(executeMultiSearch(multiSearchRequest));
                 multiSearchRequest = new MultiSearchRequest();
                 System.out.println("Done extracting " + index + " coref pages");
             }
         }
 
-        futureList.add(elasticSearchPool.submit(new ElasticSearchCallRequest(multiSearchRequest)));
-        elasticSearchPool.shutdown();
+        multiSearchResult.addAll(executeMultiSearch(multiSearchRequest));
 
         Map<String, String> pagesResults = new HashMap<>();
-        for(Future<List<RawElasticResult>> future : futureList) {
-            final List<RawElasticResult> rawElasticResults = future.get(1000, TimeUnit.SECONDS);
-            for(RawElasticResult result : rawElasticResults) {
-                pagesResults.put(result.getTitle(), result.getText());
-            }
+        for(RawElasticResult result : multiSearchResult) {
+            pagesResults.put(result.getTitle(), result.getText());
         }
 
-        ExecutorServiceFactory.closeService(elasticSearchPool);
         return pagesResults;
     }
 
@@ -179,30 +164,20 @@ public class ElasticQueryApi {
         }
     }
 
-    class ElasticSearchCallRequest implements Callable<List<RawElasticResult>> {
-
-        private MultiSearchRequest request;
-
-        public ElasticSearchCallRequest(MultiSearchRequest request) {
-            this.request = request;
-        }
-
-        @Override
-        public List<RawElasticResult> call() throws Exception {
-            List<RawElasticResult> rawResults = new ArrayList<>();
-            MultiSearchResponse response = elasticClient.multiSearch(request);
-            for(MultiSearchResponse.Item item : response.getResponses()) {
-                final SearchHit[] hits = item.getResponse().getHits().getHits();
-                if(hits.length > 0) {
-                    final RawElasticResult rawElasticResult = extractFromHit(hits[0]);
-                    if(rawElasticResult != null) {
-                        final String infoBox = WikiLinksExtractor.extractPageInfoBox(rawElasticResult.getText());
-                        rawResults.add(new RawElasticResult(rawElasticResult.getTitle(), infoBox));
-                    }
+    private List<RawElasticResult> executeMultiSearch(MultiSearchRequest request) throws IOException {
+        List<RawElasticResult> rawResults = new ArrayList<>();
+        MultiSearchResponse response = elasticClient.multiSearch(request);
+        for(MultiSearchResponse.Item item : response.getResponses()) {
+            final SearchHit[] hits = item.getResponse().getHits().getHits();
+            if(hits.length > 0) {
+                final RawElasticResult rawElasticResult = extractFromHit(hits[0]);
+                if(rawElasticResult != null) {
+                    final String infoBox = WikiLinksExtractor.extractPageInfoBox(rawElasticResult.getText());
+                    rawResults.add(new RawElasticResult(rawElasticResult.getTitle(), infoBox));
                 }
             }
-
-            return rawResults;
         }
+
+        return rawResults;
     }
 }
