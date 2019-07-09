@@ -17,7 +17,7 @@ import workers.IWorkerFactory;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.*;
 
 public class CreateWikiLinks {
 
@@ -33,11 +33,10 @@ public class CreateWikiLinks {
         this.workerFactory = workerFactory;
     }
 
-    public void readAllWikiPagesAndProcess() throws IOException {
+    public void readAllWikiPagesAndProcess() throws IOException, InterruptedException, ExecutionException, TimeoutException {
         System.out.println("Strating process, Reading all documents from wikipedia (elastic)");
 
-        final int poolSize = Integer.parseInt(this.config.get("pool_size"));
-        ExecutorService parsePool = ExecutorServiceFactory.getExecutorService(poolSize);
+        List<Future<?>> allTasks = new ArrayList<>();
 
         long totalDocsCount = this.elasticApi.getTotalDocsCount();
         final int totalAmountToExtract = Integer.parseInt(this.config.get("total_amount_to_extract"));
@@ -56,7 +55,7 @@ public class CreateWikiLinks {
             scrollId = searchResponse.getScrollId();
 
             List<RawElasticResult> rawElasticResults = this.elasticApi.getNextScrollResults(searchHits);
-            parsePool.submit(this.workerFactory.createNewWorker(rawElasticResults));
+            allTasks.add(ExecutorServiceFactory.submit(this.workerFactory.createNewWorker(rawElasticResults)));
             System.out.println((totalDocsCount - count) + " documents to go");
 
             if(count >= totalAmountToExtract) {
@@ -69,11 +68,12 @@ public class CreateWikiLinks {
 
 
         elasticApi.closeScroll(scrollId);
-
-        parsePool.shutdown();
-        ExecutorServiceFactory.closeService(parsePool);
-
         System.out.println("Handling last mentions if exists");
+
+        for (Future<?> future : allTasks) {
+            future.get(1000, TimeUnit.SECONDS);
+        }
+
         this.workerFactory.finalizeIfNeeded();
     }
 

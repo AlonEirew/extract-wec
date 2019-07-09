@@ -29,6 +29,6 @@ public class ParseAndExtractWorkersFactory implements IWorkerFactory {
                 ParseAndExtractMentionsWorker(new ArrayList<>(),
                 this.sqlApi, this.elasticApi, new PersonOrEventFilter());
 
-        parseAndExtractMentionsWorker.commitCurrent();
+        parseAndExtractMentionsWorker.handle(true);
     }
 }

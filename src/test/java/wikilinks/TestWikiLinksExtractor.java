@@ -11,6 +11,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import data.WikiLinksMention;
 import persistence.ElasticQueryApi;
+import utils.ExecutorServiceFactory;
 import workers.ReadInfoBoxWorker;
 
 import java.io.File;
@@ -88,6 +89,8 @@ public class TestWikiLinksExtractor {
     public void testGetAllPagesTexts() throws InterruptedException, ExecutionException, TimeoutException, IOException {
         Map<String, String> config = getConfigFile();
 
+        ExecutorServiceFactory.initExecutorService(Integer.parseInt(config.get("pool_size")));
+
         ElasticQueryApi elasticQueryApi = new ElasticQueryApi(config.get("elastic_wiki_index"),
                 Integer.parseInt(config.get("elastic_search_interval")), config.get("elastic_host"),
                 Integer.parseInt(config.get("elastic_port")));
@@ -104,6 +107,8 @@ public class TestWikiLinksExtractor {
         final String sep_11 = allPagesText.get("September 11 attacks");
         Assert.assertFalse(WikiLinksExtractor.isPerson(sep_11));
         Assert.assertTrue(!WikiLinksExtractor.extractTypes(sep_11).isEmpty());
+
+        ExecutorServiceFactory.closeService();
     }
 
     @Test

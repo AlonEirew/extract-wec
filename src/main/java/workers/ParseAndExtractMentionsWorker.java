@@ -10,10 +10,11 @@ import wikilinks.WikiLinksExtractor;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.ReentrantLock;
 
 class ParseAndExtractMentionsWorker extends AWorker {
 
-    private static Object sLock = new Object();
+    private static final ReentrantLock sLock = new ReentrantLock();
     private static final int COMMIT_MAX_SIZE = 1000000;
 
     private static final CopyOnWriteArrayList<WikiLinksMention> finalToCommit = new CopyOnWriteArrayList<>();
@@ -39,13 +40,32 @@ class ParseAndExtractMentionsWorker extends AWorker {
             this.mentions.addAll(wikiLinksMentions);
         }
 
-        this.handle();
+        this.handle(false);
     }
 
-    public void handle() {
-        System.out.println("Handle all worker mentions...in total-" + this.mentions.size() + " will be handled");
+    public void handle(boolean forceCommit) {
+
+        sLock.lock();
+        finalToCommit.addAll(this.mentions);
+        if(finalToCommit.size() >= COMMIT_MAX_SIZE || forceCommit) {
+            List<WikiLinksMention> localNewList = new ArrayList<>();
+            localNewList.addAll(finalToCommit);
+            finalToCommit.clear();
+
+            sLock.unlock();
+
+            localNewList = extractFromWikiAndCleanNoneRelevant(localNewList);
+            commitCurrent(localNewList);
+        } else {
+            sLock.unlock();
+        }
+
+    }
+
+    private List<WikiLinksMention> extractFromWikiAndCleanNoneRelevant(List<WikiLinksMention> localNewList) {
+        System.out.println("Handle all worker mentions...in total-" + localNewList.size() + " will be handled");
         Set<String> corefTitleSet = new HashSet<>();
-        for(WikiLinksMention mention : this.mentions) {
+        for(WikiLinksMention mention : localNewList) {
             corefTitleSet.add(mention.getCorefChain().getCorefValue());
         }
 
@@ -57,7 +77,7 @@ class ParseAndExtractMentionsWorker extends AWorker {
         }
 
         if(allPagesText != null) {
-            final Iterator<WikiLinksMention> iterator = this.mentions.iterator();
+            final Iterator<WikiLinksMention> iterator = localNewList.iterator();
             while (iterator.hasNext()) {
                 WikiLinksMention ment = iterator.next();
                 final String corefValue = ment.getCorefChain().getCorefValue();
@@ -69,29 +89,19 @@ class ParseAndExtractMentionsWorker extends AWorker {
                     ment.getCorefChain().setMarkedForRemoval(true);
                 }
             }
-
-            synchronized (sLock) {
-                finalToCommit.addAll(this.mentions);
-                if(finalToCommit.size() >= COMMIT_MAX_SIZE) {
-                    commitCurrent();
-                }
-            }
         }
+
+        return localNewList;
     }
 
-    void commitCurrent() {
-        synchronized (sLock) {
-            System.out.println("Prepare to inset-" + finalToCommit.size() + " mentions to SQL");
-            try {
-                if (!this.sqlApi.insertRowsToTable(finalToCommit)) {
-                    System.out.println("Failed to insert mentions Batch!!!!");
-                }
-
-                finalToCommit.clear();
-
-            } catch (SQLException e) {
-                e.printStackTrace();
+    private void commitCurrent(List<WikiLinksMention> localNewList) {
+        System.out.println("Prepare to inset-" + localNewList.size() + " mentions to SQL");
+        try {
+            if (!this.sqlApi.insertRowsToTable(localNewList)) {
+                System.out.println("Failed to insert mentions Batch!!!!");
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 }

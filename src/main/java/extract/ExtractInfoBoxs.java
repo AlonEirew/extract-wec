@@ -12,12 +12,14 @@ import workers.ReadInfoBoxWorkerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 public class ExtractInfoBoxs {
 
     private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException, TimeoutException {
         final String property = System.getProperty("user.dir");
         System.out.println("Working directory=" + property);
 
