@@ -51,6 +51,10 @@ public class WikiLinksCoref implements ISQLObject {
         return corefValue;
     }
 
+    public void setCorefValue(String corefValue) {
+        this.corefValue = corefValue;
+    }
+
     public void incMentionsCount() {
         this.mentionsCount.incrementAndGet();
     }

@@ -3,7 +3,6 @@ package wikilinks;
 import data.CorefType;
 import data.RawElasticResult;
 import data.WikiLinksCoref;
-import data.WikiLinksMention;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.common.unit.TimeValue;
@@ -17,29 +16,29 @@ import workers.IWorkerFactory;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class CreateWikiLinks {
 
     private final SQLQueryApi sqlApi;
-    private final Map<String, String> config;
     private final IWorkerFactory workerFactory;
     private final ElasticQueryApi elasticApi;
 
-    public CreateWikiLinks(SQLQueryApi sqlApi, ElasticQueryApi elasticApi, Map<String, String> configuration, IWorkerFactory workerFactory) {
+    public CreateWikiLinks(SQLQueryApi sqlApi, ElasticQueryApi elasticApi, IWorkerFactory workerFactory) {
         this.sqlApi = sqlApi;
         this.elasticApi = elasticApi;
-        this.config = configuration;
         this.workerFactory = workerFactory;
     }
 
-    public void readAllWikiPagesAndProcess() throws IOException, InterruptedException, ExecutionException, TimeoutException {
+    public void readAllWikiPagesAndProcess(int totalAmountToExtract) throws IOException, InterruptedException, ExecutionException, TimeoutException {
         System.out.println("Strating process, Reading all documents from wikipedia (elastic)");
 
         List<Future<?>> allTasks = new ArrayList<>();
 
         long totalDocsCount = this.elasticApi.getTotalDocsCount();
-        final int totalAmountToExtract = Integer.parseInt(this.config.get("total_amount_to_extract"));
 
         final Scroll scroll = new Scroll(TimeValue.timeValueHours(5L));
         SearchResponse searchResponse = this.elasticApi.createElasticSearchResponse(scroll);

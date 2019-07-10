@@ -33,8 +33,8 @@ public class ExtractInfoBoxs {
                 Integer.parseInt(config.get("elastic_port")));
 
         ReadInfoBoxWorkerFactory readInfoBoxWorkerFactory = new ReadInfoBoxWorkerFactory();
-        CreateWikiLinks createWikiLinks = new CreateWikiLinks(sqlApi, elasticApi, config, readInfoBoxWorkerFactory);
-        createWikiLinks.readAllWikiPagesAndProcess();
+        CreateWikiLinks createWikiLinks = new CreateWikiLinks(sqlApi, elasticApi, readInfoBoxWorkerFactory);
+        createWikiLinks.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
         final Map<String, String> infoBoxes = readInfoBoxWorkerFactory.getInfoBoxes();
 
         System.out.println(infoBoxes.size());

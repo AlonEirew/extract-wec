@@ -125,8 +125,8 @@ public class SQLQueryApi {
         return true;
     }
 
-    public Map<Integer, WikiLinksCoref> readCorefTableToMap() {
-        Map<Integer, WikiLinksCoref> resultList = new HashMap();
+    public Map<String, WikiLinksCoref> readCorefTableToMap() {
+        Map<String, WikiLinksCoref> resultList = new HashMap();
         String query = "Select * from " + WikiLinksCoref.TABLE_COREF;
         try (Connection conn = this.sqlConnection.getConnection();
              Statement stmt = conn.createStatement()) {
@@ -134,7 +134,7 @@ public class SQLQueryApi {
             try(ResultSet rs = stmt.executeQuery(query)) {
                 while (rs.next()) {
                     final WikiLinksCoref coref = WikiLinksCoref.resultSetToObject(rs);
-                    resultList.put(coref.getCorefId(), coref);
+                    resultList.put(coref.getCorefValue(), coref);
                 }
             }
         } catch (SQLException e) {

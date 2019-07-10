@@ -37,7 +37,7 @@ public class WikiToWikiLinksMain {
                 Integer.parseInt(config.get("elastic_search_interval")), config.get("elastic_host"),
                 Integer.parseInt(config.get("elastic_port")));
 
-        CreateWikiLinks createWikiLinks = new CreateWikiLinks(sqlApi, elasticApi, config, new ParseAndExtractWorkersFactory(sqlApi, elasticApi));
+        CreateWikiLinks createWikiLinks = new CreateWikiLinks(sqlApi, elasticApi, new ParseAndExtractWorkersFactory(sqlApi, elasticApi));
 
         long start = System.currentTimeMillis();
 
@@ -46,7 +46,7 @@ public class WikiToWikiLinksMain {
             return;
         }
 
-        createWikiLinks.readAllWikiPagesAndProcess();
+        createWikiLinks.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
         createWikiLinks.persistAllCorefs();
 
         elasticApi.closeElasticQueryApi();

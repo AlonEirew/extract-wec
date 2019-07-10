@@ -1,6 +1,7 @@
 package wikilinks;
 
 import data.WikiLinksMention;
+import data.WikiNewsMention;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.CoreDocument;
 import edu.stanford.nlp.pipeline.CoreSentence;
@@ -37,9 +38,65 @@ public class WikiLinksExtractor {
         pipeline = new StanfordCoreNLP(props);
     }
 
-    public static List<WikiLinksMention> extractFromFile(String pageName, String text) {
+    public static List<WikiNewsMention> extractFromWikiNews(String pageName, String text) {
+        List<WikiNewsMention> finalResults = new ArrayList<>();
+        text = cleanTextField(text);
+        String[] textLines = text.split("\\.\n\n");
+        for (String context : textLines) {
+            final List<WikiLinksMention> wikiLinksMentions = extractTextBodyMentions(pageName, context);
+            for(WikiLinksMention wikiLinksMention : wikiLinksMentions) {
+                finalResults.add(new WikiNewsMention(wikiLinksMention));
+            }
+        }
+
+        for(WikiNewsMention mention : finalResults) {
+            String corefValue = mention.getCorefChain().getCorefValue();
+            if(corefValue.contains("w:")) {
+                corefValue = corefValue.replace("w:", "").trim();
+                mention.getCorefChain().setCorefValue(corefValue);
+            }
+        }
+
+        return finalResults;
+    }
+
+    public static List<WikiLinksMention> extractFromWikipedia(String pageName, String text) {
         List<WikiLinksMention> finalResults = new ArrayList<>();
 
+        text = cleanTextField(text);
+
+        String relText = "";
+        int firstSentenceStartIndex = text.indexOf("'''");
+        if(firstSentenceStartIndex >= 0) {
+            relText = text.substring(firstSentenceStartIndex);
+            String[] textLines = relText.split("\\.\n\n");
+            for (String context : textLines) {
+                finalResults.addAll(extractTextBodyMentions(pageName, context));
+            }
+        }
+
+        return finalResults;
+    }
+
+    private static List<WikiLinksMention> extractTextBodyMentions(String pageName, String context) {
+        String[] contextLines = context.split("\n");
+        for (int i = 0 ; i < contextLines.length ; i++) {
+            if(contextLines[i] != null && !contextLines[i].isEmpty() && isValidLine(contextLines[i])) {
+                contextLines[i] = contextLines[i]
+                        .replaceAll("\\*.*?\n", "")
+                        .replaceAll("\n", " ")
+                        .replaceAll("\\<.*?>", "")
+                        .replaceAll("\\s+", " ").trim();
+            } else {
+                contextLines[i] = "";
+            }
+        }
+
+        String fixedContext = String.join("\n", contextLines);
+        return extractFromLine(pageName, fixedContext);
+    }
+
+    private static String cleanTextField(String text) {
         text = text.replaceAll("==.*?==\n", "\n");
         text = text.replaceAll("\\{\\{.*?\\}\\}", "");
         text = text.replaceAll("<ref[\\s\\S]*?/>", "");
@@ -50,32 +107,7 @@ public class WikiLinksExtractor {
         text = text.replaceAll("(?s)\\{\\{\\s?(bar\\sbox|reflist|[Ss]uccession\\sbox|[Ii]nfobox|s-bef|s-ttl|s-aft|columns-list)+.*?\n\\}\\}", "");
         text = text.replaceAll("(?s)\\{\\{\\s?.*box\\|.*?\\}\\}\n\\}\\}", "");
         text = text.replaceAll("(?s)<ref[\\s\\S]*?</ref>", "");
-
-        String relText = "";
-        int firstSentenceStartIndex = text.indexOf("'''");
-        if(firstSentenceStartIndex >= 0) {
-            relText = text.substring(firstSentenceStartIndex);
-            String[] textLines = relText.split("\\.\n\n");
-            for (String context : textLines) {
-                String[] contextLines = context.split("\n");
-                for (int i = 0 ; i < contextLines.length ; i++) {
-                    if(contextLines[i] != null && !contextLines[i].isEmpty() && isValidLine(contextLines[i])) {
-                        contextLines[i] = contextLines[i]
-                                .replaceAll("\\*.*?\n", "")
-                                .replaceAll("\n", " ")
-                                .replaceAll("\\<.*?>", "")
-                                .replaceAll("\\s+", " ").trim();
-                    } else {
-                        contextLines[i] = "";
-                    }
-                }
-
-                String fixedContext = String.join("\n", contextLines);
-                finalResults.addAll(extractFromLine(pageName, fixedContext));
-            }
-        }
-
-        return finalResults;
+        return text;
     }
 
     public static String extractPageInfoBox(String pageText) {
@@ -350,7 +382,7 @@ public class WikiLinksExtractor {
         return uniqueDates;
     }
 
-    private static void setMentionsContext(List<WikiLinksMention> mentions, String context) {
+    private static <T extends WikiLinksMention> void setMentionsContext(List<T> mentions, String context) {
         final List<String> mentContext = new ArrayList<>();
         CoreDocument doc = new CoreDocument(context);
         pipeline.annotate(doc);
@@ -366,9 +398,9 @@ public class WikiLinksExtractor {
             }
 
             Set<Integer> usedStartIndexes = new HashSet<>();
-            Iterator<WikiLinksMention> iterator = mentions.iterator();
+            Iterator<T> iterator = mentions.iterator();
             while (iterator.hasNext()) {
-                final WikiLinksMention mention = iterator.next();
+                final T mention = iterator.next();
                 mention.setContext(mentContext);
                 CoreDocument mentionCoreDoc = new CoreDocument(mention.getMentionText());
                 pipeline.annotate(mentionCoreDoc);

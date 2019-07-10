@@ -35,8 +35,8 @@ public class ExtractDates {
                 Integer.parseInt(config.get("elastic_port")));
 
         ReadDateWorkerFactory readDateWorkerFactory = new ReadDateWorkerFactory();
-        CreateWikiLinks createWikiLinks = new CreateWikiLinks(sqlApi, elasticApi, config, readDateWorkerFactory);
-        createWikiLinks.readAllWikiPagesAndProcess();
+        CreateWikiLinks createWikiLinks = new CreateWikiLinks(sqlApi, elasticApi, readDateWorkerFactory);
+        createWikiLinks.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
         final List<String> datesSchemas = readDateWorkerFactory.getDatesSchemas();
 
         System.out.println(datesSchemas.size());

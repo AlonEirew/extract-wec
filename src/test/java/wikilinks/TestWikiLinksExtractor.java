@@ -1,23 +1,18 @@
 package wikilinks;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import data.RawElasticResult;
+import data.WikiLinksMention;
 import javafx.util.Pair;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
-import data.WikiLinksMention;
 import persistence.ElasticQueryApi;
 import utils.ExecutorServiceFactory;
 import workers.ReadInfoBoxWorker;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -30,7 +25,7 @@ public class TestWikiLinksExtractor {
     public void testExtract() {
         Map<String, List<WikiLinksMention>> finalResults = new HashMap<>();
         String pageText = getFilmList();
-        final List<WikiLinksMention> extractMentions = WikiLinksExtractor.extractFromFile("na", pageText);
+        final List<WikiLinksMention> extractMentions = WikiLinksExtractor.extractFromWikipedia("na", pageText);
         for (WikiLinksMention mention : extractMentions) {
             if(finalResults.containsKey(mention.getCorefChain())) {
                 finalResults.get(mention.getCorefChain()).add(mention);
@@ -394,75 +389,55 @@ public class TestWikiLinksExtractor {
         return config;
     }
 
-    private String getText(String fileNme) {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream(fileNme);
-        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
-        return inputJsonNlp.get("text").getAsString();
-    }
-
-    private List<Pair<String, String>> getTextAndTitle(String fileName) {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream(fileName);
-        JsonArray inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonArray.class);
-
-        List<Pair<String, String>> retTexts = new ArrayList<>();
-        for(JsonElement jsonObj : inputJsonNlp) {
-            Pair<String, String> pair = new Pair<>(jsonObj.getAsJsonObject().get("title").getAsString(),
-                    jsonObj.getAsJsonObject().get("text").getAsString());
-            retTexts.add(pair);
-        }
-
-        return retTexts;
-    }
-
     private String getSmallCompanyText() {
-        return getText("mobileye.json");
+        return TestUtils.getText("wiki_links/mobileye.json");
     }
 
     private List<Pair<String, String>> getSportText() {
-        return getTextAndTitle("sport.json");
+        return TestUtils.getTextAndTitle("wiki_links/sport.json");
     }
 
     private List<Pair<String, String>> getDisasterText() {
-        return getTextAndTitle("disaster.json");
+        return TestUtils.getTextAndTitle("wiki_links/disaster.json");
     }
 
     private List<Pair<String, String>> getCivilAttack() {
-        return getTextAndTitle("civil_attack.json");
+        return TestUtils.getTextAndTitle("wiki_links/civil_attack.json");
     }
 
     private List<Pair<String, String>> getPeopleText() {
-        return getTextAndTitle("people.json");
+        return TestUtils.getTextAndTitle("wiki_links/people.json");
     }
 
     private String getWeddingText() {
-        return getText("wedding.json");
+        return TestUtils.getText("wiki_links/wedding.json");
     }
 
     private List<Pair<String, String>> getElectionText() {
-        return getTextAndTitle("election.json");
+        return TestUtils.getTextAndTitle("wiki_links/election.json");
     }
 
     private List<Pair<String, String>> getAccidentText() {
-        return getTextAndTitle("accident.json");
+        return TestUtils.getTextAndTitle("wiki_links/accident.json");
     }
 
     private String getFilmList() {
-        return getText("list_of_films.json");
+        return TestUtils.getText("wiki_links/list_of_films.json");
     }
 
     private List<Pair<String, String>> getAwards() {
-        return getTextAndTitle("award.json");
+        return TestUtils.getTextAndTitle("wiki_links/award.json");
     }
 
     private List<Pair<String, String>> getConcreteGeneralTexts() {
-        return getTextAndTitle("concrete_general.json");
+        return TestUtils.getTextAndTitle("wiki_links/concrete_general.json");
     }
 
     private List<Pair<String, String>> getRejectTexts() {
-        return getTextAndTitle("reject.json");
+        return TestUtils.getTextAndTitle("wiki_links/reject.json");
     }
 
     private String getInfoBoxs() {
-        return getText("many_infobox.json");
+        return TestUtils.getText("wiki_links/many_infobox.json");
     }
 }

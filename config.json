@@ -6,5 +6,5 @@
   "elastic_wikinews_index": "wikinews_v1",
   "elastic_search_interval" : "1000",
   "total_amount_to_extract" : "10000",
-  "sql_connection_url": "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEvent_v5.db"
+  "sql_connection_url": "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v5.db"
 }

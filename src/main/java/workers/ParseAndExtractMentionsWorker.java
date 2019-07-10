@@ -17,9 +17,8 @@ class ParseAndExtractMentionsWorker extends AWorker {
     private static final ReentrantLock sLock = new ReentrantLock();
     private static final int COMMIT_MAX_SIZE = 1000000;
 
-    private static final CopyOnWriteArrayList<WikiLinksMention> finalToCommit = new CopyOnWriteArrayList<>();
+    private static final List<WikiLinksMention> finalToCommit = new ArrayList<>();
 
-    private final List<WikiLinksMention> mentions = new ArrayList<>();
     private final SQLQueryApi sqlApi;
     private final ElasticQueryApi elasticApi;
     private final ICorefFilter filter;
@@ -34,19 +33,20 @@ class ParseAndExtractMentionsWorker extends AWorker {
 
     @Override
     public void run() {
+        List<WikiLinksMention> mentions = new ArrayList<>();
         for(RawElasticResult rowResult : this.rawElasticResults) {
-            List<WikiLinksMention> wikiLinksMentions = WikiLinksExtractor.extractFromFile(rowResult.getTitle(), rowResult.getText());
+            List<WikiLinksMention> wikiLinksMentions = WikiLinksExtractor.extractFromWikipedia(rowResult.getTitle(), rowResult.getText());
             wikiLinksMentions.stream().forEach(wikiLinksMention -> wikiLinksMention.getCorefChain().incMentionsCount());
-            this.mentions.addAll(wikiLinksMentions);
+            mentions.addAll(wikiLinksMentions);
         }
 
-        this.handle(false);
+        this.handle(mentions, false);
     }
 
-    public void handle(boolean forceCommit) {
+    public void handle(List<WikiLinksMention> mentions, boolean forceCommit) {
 
         sLock.lock();
-        finalToCommit.addAll(this.mentions);
+        finalToCommit.addAll(mentions);
         if(finalToCommit.size() >= COMMIT_MAX_SIZE || forceCommit) {
             List<WikiLinksMention> localNewList = new ArrayList<>();
             localNewList.addAll(finalToCommit);
