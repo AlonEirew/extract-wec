@@ -4,7 +4,7 @@ import data.CorefType;
 import data.RawElasticResult;
 import data.WikiLinksCoref;
 
-public class PersonOrEventFilter implements ICorefFilter<RawElasticResult> {
+public class PersonOrEventFilter implements ICorefFilter {
 
 
     @Override
@@ -17,7 +17,7 @@ public class PersonOrEventFilter implements ICorefFilter<RawElasticResult> {
             final boolean isElection = WikiLinksExtractor.isElection(result.getText(), result.getTitle());
             final boolean isCivilAttack = WikiLinksExtractor.isCivilAttack(result.getText());
             final boolean isAccidentEvent = WikiLinksExtractor.isAccident(result.getText());
-            final boolean isSportEvent = WikiLinksExtractor.isSportEvent(result.getText());
+            final boolean isSportEvent = WikiLinksExtractor.isSportEvent(result.getText(), result.getTitle());
             final boolean isAwardEvent = WikiLinksExtractor.isAwardEvent(result.getText(), result.getTitle());
             final boolean isConcreteGeneralEvent = WikiLinksExtractor.isConcreteGeneralEvent(result.getText(), result.getTitle());
             final boolean isGeneralEvent = WikiLinksExtractor.isGeneralEvent(result.getText());

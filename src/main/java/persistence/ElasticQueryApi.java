@@ -21,13 +21,16 @@ import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
 public class ElasticQueryApi {
     private final RestHighLevelClient elasticClient;
-    private final Map<String, String> config;
+    private final String elasticIndex;
+    private final int queryInterval;
 
-    public ElasticQueryApi(Map<String, String> configuration) {
-        this.config = configuration;
+    public ElasticQueryApi(String elasticIndex, int queryInterval, String host, int port) {
+        this.elasticIndex = elasticIndex;
+        this.queryInterval = queryInterval;
+
         this.elasticClient = new RestHighLevelClient(
-                RestClient.builder(new HttpHost(configuration.get("elastic_host"),
-                        Integer.parseInt(configuration.get("elastic_port")), "http")).setRequestConfigCallback(
+                RestClient.builder(new HttpHost(host,
+                        port, "http")).setRequestConfigCallback(
                         requestConfigBuilder -> requestConfigBuilder
                                 .setConnectionRequestTimeout(60*60*1000)
                                 .setConnectTimeout(60*60*1000)
@@ -80,15 +83,6 @@ public class ElasticQueryApi {
 
     public Map<String, String> getAllWikiPagesTitleAndText(Set<String> pagesTitles) throws InterruptedException, ExecutionException, TimeoutException {
         System.out.println("Got total of-" + pagesTitles.size() + " coref pages to extract from elastic");
-
-        ExecutorService elasticSearchPool = new ThreadPoolExecutor(
-                10,
-                20,
-                20,
-                TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(10),
-                new ThreadPoolExecutor.CallerRunsPolicy());
-
         List<Future<List<RawElasticResult>>> futureList = new ArrayList<>();
 
         MultiSearchRequest multiSearchRequest = new MultiSearchRequest();
@@ -102,14 +96,13 @@ public class ElasticQueryApi {
 
             index ++;
             if(index % 1000 == 0) {
-                futureList.add(elasticSearchPool.submit(new ElasticSearchCallRequest(multiSearchRequest)));
+                futureList.add(ExecutorServiceFactory.submit(new ElasticSearchCallRequest(multiSearchRequest)));
                 multiSearchRequest = new MultiSearchRequest();
                 System.out.println("Done extracting " + index + " coref pages");
             }
         }
 
-        futureList.add(elasticSearchPool.submit(new ElasticSearchCallRequest(multiSearchRequest)));
-        elasticSearchPool.shutdown();
+        futureList.add(ExecutorServiceFactory.submit(new ElasticSearchCallRequest(multiSearchRequest)));
 
         Map<String, String> pagesResults = new HashMap<>();
         for(Future<List<RawElasticResult>> future : futureList) {
@@ -119,7 +112,6 @@ public class ElasticQueryApi {
             }
         }
 
-        ExecutorServiceFactory.closeService(elasticSearchPool);
         return pagesResults;
     }
 
@@ -157,10 +149,10 @@ public class ElasticQueryApi {
     }
 
     public SearchResponse createElasticSearchResponse(Scroll scroll) throws IOException {
-        final SearchRequest searchRequest = new SearchRequest(this.config.get("elastic_wiki_index"));
+        final SearchRequest searchRequest = new SearchRequest(this.elasticIndex);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(matchAllQuery());
-        searchSourceBuilder.size(Integer.parseInt(this.config.get("elastic_search_interval")));
+        searchSourceBuilder.size(this.queryInterval);
         searchRequest.source(searchSourceBuilder);
         searchRequest.scroll(scroll);
         return elasticClient.search(searchRequest);

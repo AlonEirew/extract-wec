@@ -1,6 +1,7 @@
 package wikilinks;
 
 import data.WikiLinksMention;
+import data.WikiNewsMention;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.CoreDocument;
 import edu.stanford.nlp.pipeline.CoreSentence;
@@ -17,7 +18,7 @@ public class WikiLinksExtractor {
     private static final String LINK_REGEX_2 = "\\[\\[([^\\[]*?)\\|?([^\\|]*?)\\]\\]";
     private static final Pattern LINK_PATTERN_2 = Pattern.compile(LINK_REGEX_2);
     private static final Pattern SPORT_PATTERN = Pattern.compile(
-            "\\{\\{infobox[\\w\\|]*?(match|draft|racereport|indy500|championships|athleticscompetition|sailingcompetition" +
+            "\\{\\{infobox[\\w\\|]*?(halftimeshow|match|draft|racereport|indy500|championships|athleticscompetition|sailingcompetition" +
                     "|competitionevent|paralympicevent|tennisevent|grandslamevent|tournamentevent|swimmingevent|all-stargame|grandprixevent|wrestlingevent" +
                     "|cupfinal|ncaabasketballsinglegame|baseballgame|nflgame|nflchamp|aflchamp|basketballgame|race|sportevent" +
                     "|singlegame|hockeygame|yearlygame|outdoorgame|frcgame|olympicevent|mmaevent|daytona500|gamesevent|swcevent)");
@@ -37,9 +38,65 @@ public class WikiLinksExtractor {
         pipeline = new StanfordCoreNLP(props);
     }
 
-    public static List<WikiLinksMention> extractFromFile(String pageName, String text) {
+    public static List<WikiNewsMention> extractFromWikiNews(String pageName, String text) {
+        List<WikiNewsMention> finalResults = new ArrayList<>();
+        text = cleanTextField(text);
+        String[] textLines = text.split("\\.\n\n");
+        for (String context : textLines) {
+            final List<WikiLinksMention> wikiLinksMentions = extractTextBodyMentions(pageName, context);
+            for(WikiLinksMention wikiLinksMention : wikiLinksMentions) {
+                finalResults.add(new WikiNewsMention(wikiLinksMention));
+            }
+        }
+
+        for(WikiNewsMention mention : finalResults) {
+            String corefValue = mention.getCorefChain().getCorefValue();
+            if(corefValue.contains("w:")) {
+                corefValue = corefValue.replace("w:", "").trim();
+                mention.getCorefChain().setCorefValue(corefValue);
+            }
+        }
+
+        return finalResults;
+    }
+
+    public static List<WikiLinksMention> extractFromWikipedia(String pageName, String text) {
         List<WikiLinksMention> finalResults = new ArrayList<>();
 
+        text = cleanTextField(text);
+
+        String relText = "";
+        int firstSentenceStartIndex = text.indexOf("'''");
+        if(firstSentenceStartIndex >= 0) {
+            relText = text.substring(firstSentenceStartIndex);
+            String[] textLines = relText.split("\\.\n\n");
+            for (String context : textLines) {
+                finalResults.addAll(extractTextBodyMentions(pageName, context));
+            }
+        }
+
+        return finalResults;
+    }
+
+    private static List<WikiLinksMention> extractTextBodyMentions(String pageName, String context) {
+        String[] contextLines = context.split("\n");
+        for (int i = 0 ; i < contextLines.length ; i++) {
+            if(contextLines[i] != null && !contextLines[i].isEmpty() && isValidLine(contextLines[i])) {
+                contextLines[i] = contextLines[i]
+                        .replaceAll("\\*.*?\n", "")
+                        .replaceAll("\n", " ")
+                        .replaceAll("\\<.*?>", "")
+                        .replaceAll("\\s+", " ").trim();
+            } else {
+                contextLines[i] = "";
+            }
+        }
+
+        String fixedContext = String.join("\n", contextLines);
+        return extractFromLine(pageName, fixedContext);
+    }
+
+    private static String cleanTextField(String text) {
         text = text.replaceAll("==.*?==\n", "\n");
         text = text.replaceAll("\\{\\{.*?\\}\\}", "");
         text = text.replaceAll("<ref[\\s\\S]*?/>", "");
@@ -50,32 +107,7 @@ public class WikiLinksExtractor {
         text = text.replaceAll("(?s)\\{\\{\\s?(bar\\sbox|reflist|[Ss]uccession\\sbox|[Ii]nfobox|s-bef|s-ttl|s-aft|columns-list)+.*?\n\\}\\}", "");
         text = text.replaceAll("(?s)\\{\\{\\s?.*box\\|.*?\\}\\}\n\\}\\}", "");
         text = text.replaceAll("(?s)<ref[\\s\\S]*?</ref>", "");
-
-        String relText = "";
-        int firstSentenceStartIndex = text.indexOf("'''");
-        if(firstSentenceStartIndex >= 0) {
-            relText = text.substring(firstSentenceStartIndex);
-            String[] textLines = relText.split("\\.\n\n");
-            for (String context : textLines) {
-                String[] contextLines = context.split("\n");
-                for (int i = 0 ; i < contextLines.length ; i++) {
-                    if(contextLines[i] != null && !contextLines[i].isEmpty() && isValidLine(contextLines[i])) {
-                        contextLines[i] = contextLines[i]
-                                .replaceAll("\\*.*?\n", "")
-                                .replaceAll("\n", " ")
-                                .replaceAll("\\<.*?>", "")
-                                .replaceAll("\\s+", " ").trim();
-                    } else {
-                        contextLines[i] = "";
-                    }
-                }
-
-                String fixedContext = String.join("\n", contextLines);
-                finalResults.addAll(extractFromLine(pageName, fixedContext));
-            }
-        }
-
-        return finalResults;
+        return text;
     }
 
     public static String extractPageInfoBox(String pageText) {
@@ -143,11 +175,9 @@ public class WikiLinksExtractor {
     }
 
     public static boolean isElection(String infoBox, String title) {
-        Pattern titlePattern = Pattern.compile("(.*\\s?\\d\\d?th\\s.*|.*[12][980][0-9][0-9].*)");
-
-        Matcher titleMatcher = titlePattern.matcher(title);
+        boolean titleMatch = titleNumberMatch(title);
         Matcher linkMatcher = ELECTION_PATTERN.matcher(infoBox);
-        if (linkMatcher.find() && titleMatcher.find()) {
+        if (linkMatcher.find() && titleMatch) {
             return true;
         }
 
@@ -159,7 +189,7 @@ public class WikiLinksExtractor {
         if (infoBox.contains("{{infoboxcivilianattack") || infoBox.contains("{{infoboxterroristattack")
                 || infoBox.contains("{{infoboxmilitaryattack") || infoBox.contains("{{infoboxcivilconflict")
                 || infoBox.contains("{{infoboxmilitaryconflict")) {
-            if (uniqueDates.size() < 2) {
+            if (uniqueDates != null && uniqueDates.size() < 2) {
                 return true;
             }
         }
@@ -208,10 +238,9 @@ public class WikiLinksExtractor {
     public static boolean isConcreteGeneralEvent(String infoBox, String title) {
 
         Matcher concreteMatcher = CONCRETE_EVENT.matcher(infoBox);
-        Pattern titlePattern = Pattern.compile("(.*\\s?\\d\\d?th\\s.*|.*[12][90][0-9][0-9].*)");
-        Matcher titleMatcher = titlePattern.matcher(title);
+        boolean titleMatch = titleNumberMatch(title);
         final Set<String> years = getYears(infoBox);
-        if (concreteMatcher.find() && (titleMatcher.find() || years.size() < 2)) {
+        if (concreteMatcher.find() && (titleMatch || (years != null && years.size() < 2))) {
             return true;
         }
 
@@ -238,24 +267,20 @@ public class WikiLinksExtractor {
         return false;
     }
 
-    public static boolean isSportEvent(String infoBox) {
+    public static boolean isSportEvent(String infoBox, String title) {
         Matcher linkMatcher = SPORT_PATTERN.matcher(infoBox);
-        if (linkMatcher.find()) {
-            if(infoBox.contains("date=") || infoBox.contains("dates=") || infoBox.contains("|datey=") ||
-                infoBox.contains("score=")) {
-                return true;
-            }
+        boolean titleMatch = titleNumberMatch(title);
+        if (linkMatcher.find() && titleMatch) {
+            return true;
         }
 
         return false;
     }
 
     public static boolean isAwardEvent(String infoBox, String title) {
-        Pattern titlePattern = Pattern.compile("(.*\\s?\\d\\d?th\\s.*|.*[12][90][0-9][0-9].*)");
-
-        Matcher titleMatcher = titlePattern.matcher(title);
+        boolean titleMatch = titleNumberMatch(title);
         Matcher awardMatcher = AWARD_PATTERN.matcher(infoBox);
-        if (awardMatcher.find() && titleMatcher.find()) {
+        if (awardMatcher.find() && titleMatch) {
             return true;
         }
 
@@ -324,29 +349,40 @@ public class WikiLinksExtractor {
         return mentions;
     }
 
+    private static boolean titleNumberMatch(String title) {
+        Pattern titlePattern = Pattern.compile("\\s?\\d\\d?th\\s|[12][90][0-9][0-9]|\\b[MDCLXVI]+\\b");
+        Matcher titleMatcher = titlePattern.matcher(title);
+        return titleMatcher.find();
+    }
+
     private static Set<String> getYears(String infoBox) {
-        Set<String> uniqueDates = new HashSet<>();
+        Set<String> uniqueDates = null;
         Pattern datePattern = Pattern.compile("[12][0-9][0-9][0-9]|[0-9][0-9][0-9]");
 
-        final int beginDateIndex = infoBox.indexOf("date=");
-        if(beginDateIndex != -1) {
-            String dateLine = infoBox.substring(beginDateIndex);
+        Pattern dateEql = Pattern.compile("\\n\\|date=(.*)\n");
+        Matcher matcher = dateEql.matcher(infoBox);
 
-            final int endIndex = dateLine.indexOf("\n");
-            if (endIndex != -1) {
-                dateLine = dateLine.substring(0, endIndex);
+        if(matcher.find()) {
+            String dateLine = matcher.group(1);
+            if (!dateLine.isEmpty()) {
+                uniqueDates = new HashSet<>();
             }
 
             Matcher dateMach = datePattern.matcher(dateLine);
             while (dateMach.find()) {
                 uniqueDates.add(dateMach.group());
             }
+
+            if(dateLine.contains("plainlist")) {
+                uniqueDates.add("rej1");
+                uniqueDates.add("rej2");
+            }
         }
 
         return uniqueDates;
     }
 
-    private static void setMentionsContext(List<WikiLinksMention> mentions, String context) {
+    private static <T extends WikiLinksMention> void setMentionsContext(List<T> mentions, String context) {
         final List<String> mentContext = new ArrayList<>();
         CoreDocument doc = new CoreDocument(context);
         pipeline.annotate(doc);
@@ -362,9 +398,9 @@ public class WikiLinksExtractor {
             }
 
             Set<Integer> usedStartIndexes = new HashSet<>();
-            Iterator<WikiLinksMention> iterator = mentions.iterator();
+            Iterator<T> iterator = mentions.iterator();
             while (iterator.hasNext()) {
-                final WikiLinksMention mention = iterator.next();
+                final T mention = iterator.next();
                 mention.setContext(mentContext);
                 CoreDocument mentionCoreDoc = new CoreDocument(mention.getMentionText());
                 pipeline.annotate(mentionCoreDoc);

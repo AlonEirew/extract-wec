@@ -3,13 +3,14 @@ package data;
 import persistence.ISQLObject;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class WikiLinksCoref implements ISQLObject {
-    private static final String TABLE_COREF = "CorefChains";
+    public static final String TABLE_COREF = "CorefChains";
 
     private static volatile AtomicInteger runningId = new AtomicInteger();
     private static final ConcurrentHashMap<String, WikiLinksCoref> globalCorefIds = new ConcurrentHashMap<>();
@@ -48,6 +49,10 @@ public class WikiLinksCoref implements ISQLObject {
 
     public String getCorefValue() {
         return corefValue;
+    }
+
+    public void setCorefValue(String corefValue) {
+        this.corefValue = corefValue;
     }
 
     public void incMentionsCount() {
@@ -125,5 +130,19 @@ public class WikiLinksCoref implements ISQLObject {
                 .append(";");
 
         return query.toString();
+    }
+
+    public static WikiLinksCoref resultSetToObject(ResultSet rs) throws SQLException {
+        final int corefId = rs.getInt("corefId");
+        final String corefValue = rs.getString("corefValue");
+        final int mentionsCount = rs.getInt("mentionsCount");
+        final int corefType = rs.getInt("corefType");
+
+        WikiLinksCoref extractedCoref = new WikiLinksCoref(corefValue);
+        extractedCoref.corefId = corefId;
+        extractedCoref.mentionsCount = new AtomicInteger(mentionsCount);
+        extractedCoref.corefType = CorefType.values()[corefType];
+
+        return extractedCoref;
     }
 }

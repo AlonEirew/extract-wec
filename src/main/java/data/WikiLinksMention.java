@@ -71,6 +71,10 @@ public class WikiLinksMention implements ISQLObject {
         this.coreChain = WikiLinksCoref.getAndSetIfNotExistCorefChain(corefChainValue);
     }
 
+    public void setCorefChain(WikiLinksCoref corefChainValue) {
+        this.coreChain = corefChainValue;
+    }
+
     public List<String> getContext() {
         return context;
     }

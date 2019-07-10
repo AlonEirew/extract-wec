@@ -1,22 +1,18 @@
 package wikilinks;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import data.RawElasticResult;
+import data.WikiLinksMention;
 import javafx.util.Pair;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
-import data.WikiLinksMention;
 import persistence.ElasticQueryApi;
+import utils.ExecutorServiceFactory;
 import workers.ReadInfoBoxWorker;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -29,7 +25,7 @@ public class TestWikiLinksExtractor {
     public void testExtract() {
         Map<String, List<WikiLinksMention>> finalResults = new HashMap<>();
         String pageText = getFilmList();
-        final List<WikiLinksMention> extractMentions = WikiLinksExtractor.extractFromFile("na", pageText);
+        final List<WikiLinksMention> extractMentions = WikiLinksExtractor.extractFromWikipedia("na", pageText);
         for (WikiLinksMention mention : extractMentions) {
             if(finalResults.containsKey(mention.getCorefChain())) {
                 finalResults.get(mention.getCorefChain()).add(mention);
@@ -88,26 +84,35 @@ public class TestWikiLinksExtractor {
     public void testGetAllPagesTexts() throws InterruptedException, ExecutionException, TimeoutException, IOException {
         Map<String, String> config = getConfigFile();
 
-        ElasticQueryApi elasticQueryApi = new ElasticQueryApi(config);
+        ExecutorServiceFactory.initExecutorService(Integer.parseInt(config.get("pool_size")));
+
+        ElasticQueryApi elasticQueryApi = new ElasticQueryApi(config.get("elastic_wiki_index"),
+                Integer.parseInt(config.get("elastic_search_interval")), config.get("elastic_host"),
+                Integer.parseInt(config.get("elastic_port")));
+
         Set<String> pagesList = new HashSet<>();
         pagesList.add("Alan Turing");
         pagesList.add("September 11 attacks");
         final Map<String, String> allPagesText = elasticQueryApi.getAllWikiPagesTitleAndText(pagesList);
 
-        final String alan_turing = WikiLinksExtractor.extractPageInfoBox(allPagesText.get("Alan Turing"));
+        final String alan_turing = allPagesText.get("Alan Turing");
         Assert.assertTrue(WikiLinksExtractor.isPerson(alan_turing));
         Assert.assertTrue(WikiLinksExtractor.extractTypes(alan_turing).isEmpty());
 
-        final String sep_11 = WikiLinksExtractor.extractPageInfoBox(allPagesText.get("September 11 attacks"));
+        final String sep_11 = allPagesText.get("September 11 attacks");
         Assert.assertFalse(WikiLinksExtractor.isPerson(sep_11));
         Assert.assertTrue(!WikiLinksExtractor.extractTypes(sep_11).isEmpty());
+
+        ExecutorServiceFactory.closeService();
     }
 
     @Test
     public void testGetPageText() throws IOException {
         Map<String, String> config = getConfigFile();
 
-        ElasticQueryApi elasticQueryApi = new ElasticQueryApi(config);
+        ElasticQueryApi elasticQueryApi = new ElasticQueryApi(config.get("elastic_wiki_index"),
+                Integer.parseInt(config.get("elastic_search_interval")), config.get("elastic_host"),
+                Integer.parseInt(config.get("elastic_port")));
         final String alan_turing = elasticQueryApi.getPageText("Alan Turing");
         final String infoBox = WikiLinksExtractor.extractPageInfoBox(alan_turing);
         Assert.assertTrue(WikiLinksExtractor.isPerson(infoBox));
@@ -189,7 +194,7 @@ public class TestWikiLinksExtractor {
 
         final List<Pair<String, String>> sportText = getSportText();
         for(Pair<String, String> text : sportText) {
-            boolean ret = WikiLinksExtractor.isSportEvent(WikiLinksExtractor.extractPageInfoBox(text.getValue()));
+            boolean ret = WikiLinksExtractor.isSportEvent(WikiLinksExtractor.extractPageInfoBox(text.getValue()), text.getKey());
             Assert.assertTrue(text.getKey(), ret);
         }
 
@@ -204,7 +209,7 @@ public class TestWikiLinksExtractor {
 
         for(Pair<String, String> text : other) {
             String infoBox = WikiLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WikiLinksExtractor.isSportEvent(infoBox);
+            boolean ret = WikiLinksExtractor.isSportEvent(infoBox, text.getKey());
             Assert.assertFalse(text.getKey(), ret);
         }
     }
@@ -291,12 +296,12 @@ public class TestWikiLinksExtractor {
     }
 
     @Test
-    public void isCivilAttack() {
+    public void testIsCivilAttack() {
         final List<Pair<String, String>> civilAttack = getCivilAttack();
         for(Pair<String, String> text : civilAttack) {
             String infoBox = WikiLinksExtractor.extractPageInfoBox(text.getValue());
             boolean ret = WikiLinksExtractor.isCivilAttack(infoBox);
-            Assert.assertTrue(ret);
+            Assert.assertTrue(text.getKey(), ret);
         }
 
         List<Pair<String, String>> other = new ArrayList<>();
@@ -333,7 +338,7 @@ public class TestWikiLinksExtractor {
             ret = WikiLinksExtractor.isAccident(infoBox);
             Assert.assertFalse(pair.getKey(), ret);
 
-            ret = WikiLinksExtractor.isSportEvent(infoBox);
+            ret = WikiLinksExtractor.isSportEvent(infoBox, pair.getKey());
             Assert.assertFalse(pair.getKey(), ret);
 
             ret = WikiLinksExtractor.isCivilAttack(infoBox);
@@ -384,75 +389,55 @@ public class TestWikiLinksExtractor {
         return config;
     }
 
-    private String getText(String fileNme) {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream(fileNme);
-        JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
-        return inputJsonNlp.get("text").getAsString();
-    }
-
-    private List<Pair<String, String>> getTextAndTitle(String fileName) {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream(fileName);
-        JsonArray inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonArray.class);
-
-        List<Pair<String, String>> retTexts = new ArrayList<>();
-        for(JsonElement jsonObj : inputJsonNlp) {
-            Pair<String, String> pair = new Pair<>(jsonObj.getAsJsonObject().get("title").getAsString(),
-                    jsonObj.getAsJsonObject().get("text").getAsString());
-            retTexts.add(pair);
-        }
-
-        return retTexts;
-    }
-
     private String getSmallCompanyText() {
-        return getText("mobileye.json");
+        return TestUtils.getText("wiki_links/mobileye.json");
     }
 
     private List<Pair<String, String>> getSportText() {
-        return getTextAndTitle("sport.json");
+        return TestUtils.getTextAndTitle("wiki_links/sport.json");
     }
 
     private List<Pair<String, String>> getDisasterText() {
-        return getTextAndTitle("disaster.json");
+        return TestUtils.getTextAndTitle("wiki_links/disaster.json");
     }
 
     private List<Pair<String, String>> getCivilAttack() {
-        return getTextAndTitle("civil_attack.json");
+        return TestUtils.getTextAndTitle("wiki_links/civil_attack.json");
     }
 
     private List<Pair<String, String>> getPeopleText() {
-        return getTextAndTitle("people.json");
+        return TestUtils.getTextAndTitle("wiki_links/people.json");
     }
 
     private String getWeddingText() {
-        return getText("wedding.json");
+        return TestUtils.getText("wiki_links/wedding.json");
     }
 
     private List<Pair<String, String>> getElectionText() {
-        return getTextAndTitle("election.json");
+        return TestUtils.getTextAndTitle("wiki_links/election.json");
     }
 
     private List<Pair<String, String>> getAccidentText() {
-        return getTextAndTitle("accident.json");
+        return TestUtils.getTextAndTitle("wiki_links/accident.json");
     }
 
     private String getFilmList() {
-        return getText("list_of_films.json");
+        return TestUtils.getText("wiki_links/list_of_films.json");
     }
 
     private List<Pair<String, String>> getAwards() {
-        return getTextAndTitle("award.json");
+        return TestUtils.getTextAndTitle("wiki_links/award.json");
     }
 
     private List<Pair<String, String>> getConcreteGeneralTexts() {
-        return getTextAndTitle("concrete_general.json");
+        return TestUtils.getTextAndTitle("wiki_links/concrete_general.json");
     }
 
     private List<Pair<String, String>> getRejectTexts() {
-        return getTextAndTitle("reject.json");
+        return TestUtils.getTextAndTitle("wiki_links/reject.json");
     }
 
     private String getInfoBoxs() {
-        return getText("many_infobox.json");
+        return TestUtils.getText("wiki_links/many_infobox.json");
     }
 }

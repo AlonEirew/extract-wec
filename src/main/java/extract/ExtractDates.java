@@ -14,12 +14,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 public class ExtractDates {
 
     private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException, TimeoutException {
         final String property = System.getProperty("user.dir");
         System.out.println("Working directory=" + property);
 
@@ -28,11 +30,13 @@ public class ExtractDates {
                 Map.class);
 
         SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections(config.get("sql_connection_url")));
-        ElasticQueryApi elasticApi = new ElasticQueryApi(config);
+        ElasticQueryApi elasticApi = new ElasticQueryApi(config.get("elastic_wiki_index"),
+                Integer.parseInt(config.get("elastic_search_interval")), config.get("elastic_host"),
+                Integer.parseInt(config.get("elastic_port")));
 
         ReadDateWorkerFactory readDateWorkerFactory = new ReadDateWorkerFactory();
-        CreateWikiLinks createWikiLinks = new CreateWikiLinks(sqlApi, elasticApi, config, readDateWorkerFactory);
-        createWikiLinks.readAllWikiPagesAndProcess();
+        CreateWikiLinks createWikiLinks = new CreateWikiLinks(sqlApi, elasticApi, readDateWorkerFactory);
+        createWikiLinks.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
         final List<String> datesSchemas = readDateWorkerFactory.getDatesSchemas();
 
         System.out.println(datesSchemas.size());
