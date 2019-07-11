@@ -19,7 +19,8 @@ public class WikiLinksMention implements ISQLObject {
     private int tokenEnd = -1;
     private WikiLinksCoref coreChain;
     private String extractedFromPage = "";
-    private List<String> mentinoTokens = new ArrayList<>();
+    private List<String> mentionTokens = new ArrayList<>();
+    private List<String> mentionTokensPos = new ArrayList<>();
     private List<String> context;
 
     public WikiLinksMention() {
@@ -95,13 +96,14 @@ public class WikiLinksMention implements ISQLObject {
         return mentionId;
     }
 
-    public List<String> getMentinoTokens() {
-        return mentinoTokens;
-    }
-
-    public void addMentionToken(String token) {
+    public void addMentionToken(String token, String tokenPos) {
         if(token != null) {
-            mentinoTokens.add(token);
+            this.mentionTokens.add(token);
+            if(tokenPos != null) {
+                this.mentionTokensPos.add(tokenPos);
+            } else {
+                this.mentionTokensPos.add("UNK");
+            }
         }
     }
 
@@ -113,8 +115,8 @@ public class WikiLinksMention implements ISQLObject {
                 this.coreChain.getCorefValue().toLowerCase().startsWith("wikipedia:") ||
                 this.coreChain.getCorefValue().toLowerCase().startsWith("category:") ||
                 this.tokenStart == -1 || this.tokenEnd == -1 ||
-                this.mentinoTokens.size() == 0 ||
-                ((this.tokenEnd - this.tokenStart + 1) != this.mentinoTokens.size()) ||
+                this.mentionTokens.size() == 0 ||
+                ((this.tokenEnd - this.tokenStart + 1) != this.mentionTokens.size()) ||
                 this.context.contains("#") ||
                 this.context.contains("jpg") ||
                 this.context.contains("{") ||
@@ -129,9 +131,21 @@ public class WikiLinksMention implements ISQLObject {
         return String.join(" ", this.context);
     }
 
+    private int isVerb() {
+        int isVerb = 1;
+        for(String pos : this.mentionTokensPos) {
+            if(!pos.matches("VB[DGNPZ]?")) {
+                isVerb = 0;
+                break;
+            }
+        }
+
+        return isVerb;
+    }
+
     @Override
     public String getColumnNames() {
-        return "mentionId, coreChainId, mentionText, tokenStart, tokenEnd, extractedFromPage, context";
+        return "mentionId, coreChainId, mentionText, tokenStart, tokenEnd, extractedFromPage, context, PartOfSpeech";
     }
 
     @Override
@@ -144,6 +158,7 @@ public class WikiLinksMention implements ISQLObject {
                 "tokenEnd INT, " +
                 "extractedFromPage VARCHAR(500), " +
                 "context TEXT," +
+                "PartOfSpeech TEXT," +
                 "PRIMARY KEY (mentionId)";
     }
 
@@ -155,7 +170,8 @@ public class WikiLinksMention implements ISQLObject {
                 tokenStart + "," +
                 tokenEnd + "," +
                 "'" + extractedFromPage + "'" +  "," +
-                "'" + getContextAsSQLBlob() + "'";
+                "'" + getContextAsSQLBlob() + "'" +
+                "'" + String.join(", ", this.mentionTokensPos) + "'";
     }
 
     @Override
@@ -172,6 +188,7 @@ public class WikiLinksMention implements ISQLObject {
         preparedStatement.setInt(5, this.tokenEnd);
         preparedStatement.setString(6, this.extractedFromPage);
         preparedStatement.setString(7, this.getContextAsSQLBlob());
+        preparedStatement.setString(8, String.join(", ", this.mentionTokensPos));
     }
 
     @Override
@@ -181,7 +198,7 @@ public class WikiLinksMention implements ISQLObject {
                 .append(tableName).append(" ")
                 .append("(").append(getColumnNames()).append(")").append(" ")
                 .append("VALUES").append(" ")
-                .append("(?,?,?,?,?,?,?)")
+                .append("(?,?,?,?,?,?,?,?)")
                 .append(";");
 
         return query.toString();

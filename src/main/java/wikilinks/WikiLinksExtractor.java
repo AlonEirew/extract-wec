@@ -2,6 +2,7 @@ package wikilinks;
 
 import data.WikiLinksMention;
 import data.WikiNewsMention;
+import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.CoreDocument;
 import edu.stanford.nlp.pipeline.CoreSentence;
@@ -30,12 +31,17 @@ public class WikiLinksExtractor {
     private static final Pattern CONCRETE_EVENT = Pattern.compile("\\{\\{infobox[\\w\\|]*?(solareclipse|newsevent|concert|weaponstest|explosivetest" +
                 "|summit|convention|conference|summitmeeting|festival)");
 
-    private static StanfordCoreNLP pipeline;
+    private static StanfordCoreNLP pipelineWithPos;
+    private static StanfordCoreNLP pipelineNoPos;
 
     static {
-        Properties props = new Properties();
-        props.setProperty("annotators", "tokenize,ssplit");
-        pipeline = new StanfordCoreNLP(props);
+        Properties props1 = new Properties();
+        props1.setProperty("annotators", "tokenize, ssplit, pos");
+        pipelineWithPos = new StanfordCoreNLP(props1);
+
+        Properties props2 = new Properties();
+        props2.setProperty("annotators", "tokenize, ssplit");
+        pipelineNoPos = new StanfordCoreNLP(props2);
     }
 
     public static List<WikiNewsMention> extractFromWikiNews(String pageName, String text) {
@@ -385,7 +391,7 @@ public class WikiLinksExtractor {
     private static <T extends WikiLinksMention> void setMentionsContext(List<T> mentions, String context) {
         final List<String> mentContext = new ArrayList<>();
         CoreDocument doc = new CoreDocument(context);
-        pipeline.annotate(doc);
+        pipelineNoPos.annotate(doc);
         if(doc.sentences().size() > 0) {
             for(CoreSentence sentence : doc.sentences()) {
                 final List<CoreLabel> tokens = sentence.tokens();
@@ -403,11 +409,11 @@ public class WikiLinksExtractor {
                 final T mention = iterator.next();
                 mention.setContext(mentContext);
                 CoreDocument mentionCoreDoc = new CoreDocument(mention.getMentionText());
-                pipeline.annotate(mentionCoreDoc);
+                pipelineWithPos.annotate(mentionCoreDoc);
                 if (mentionCoreDoc.sentences().size() > 0) {
                     final List<CoreLabel> mentTokens = mentionCoreDoc.sentences().get(0).tokens();
                     for(CoreLabel label : mentTokens) {
-                        mention.addMentionToken(label.originalText());
+                        mention.addMentionToken(label.originalText(), label.get(CoreAnnotations.PartOfSpeechAnnotation.class));
                     }
 
                     for (int i = 0; i < mentContext.size(); i++) {
