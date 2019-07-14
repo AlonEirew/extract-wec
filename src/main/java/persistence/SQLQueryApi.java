@@ -1,6 +1,7 @@
 package persistence;
 
 import com.google.common.collect.Iterables;
+import data.CorefType;
 import data.WikiLinksCoref;
 import org.apache.commons.lang3.StringUtils;
 
@@ -223,5 +224,27 @@ public class SQLQueryApi {
         }
 
         return result;
+    }
+
+    public void persistAllCorefs() {
+        System.out.println("Persisting corefs tables values");
+        final Collection<WikiLinksCoref> allCorefs = WikiLinksCoref.getGlobalCorefMap().values();
+        final Iterator<WikiLinksCoref> corefIterator = allCorefs.iterator();
+
+        while(corefIterator.hasNext()) {
+            final WikiLinksCoref wikiLinksCoref = corefIterator.next();
+            if(wikiLinksCoref.getMentionsCount() < 2 || wikiLinksCoref.getCorefType() == CorefType.NA ||
+                    wikiLinksCoref.isMarkedForRemoval()) {
+                corefIterator.remove();
+            }
+        }
+
+        try {
+            if (!insertRowsToTable(new ArrayList<>(allCorefs))) {
+                System.out.println("Failed to insert Corefs!!!!");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

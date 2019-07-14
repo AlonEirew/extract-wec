@@ -1,21 +1,18 @@
 package wikilinks;
 
-import data.CorefType;
 import data.RawElasticResult;
-import data.WikiLinksCoref;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import persistence.ElasticQueryApi;
-import persistence.SQLQueryApi;
 import utils.ExecutorServiceFactory;
 import workers.IWorkerFactory;
 
 import java.io.IOException;
-import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -23,12 +20,10 @@ import java.util.concurrent.TimeoutException;
 
 public class CreateWikiLinks {
 
-    private final SQLQueryApi sqlApi;
     private final IWorkerFactory workerFactory;
     private final ElasticQueryApi elasticApi;
 
-    public CreateWikiLinks(SQLQueryApi sqlApi, ElasticQueryApi elasticApi, IWorkerFactory workerFactory) {
-        this.sqlApi = sqlApi;
+    public CreateWikiLinks(ElasticQueryApi elasticApi, IWorkerFactory workerFactory) {
         this.elasticApi = elasticApi;
         this.workerFactory = workerFactory;
     }
@@ -74,27 +69,5 @@ public class CreateWikiLinks {
         }
 
         this.workerFactory.finalizeIfNeeded();
-    }
-
-    public void persistAllCorefs() {
-        System.out.println("Persisting corefs tables values");
-        final Collection<WikiLinksCoref> allCorefs = WikiLinksCoref.getGlobalCorefMap().values();
-        final Iterator<WikiLinksCoref> corefIterator = allCorefs.iterator();
-
-        while(corefIterator.hasNext()) {
-            final WikiLinksCoref wikiLinksCoref = corefIterator.next();
-            if(wikiLinksCoref.getMentionsCount() < 2 || wikiLinksCoref.getCorefType() == CorefType.NA ||
-                    wikiLinksCoref.isMarkedForRemoval()) {
-                corefIterator.remove();
-            }
-        }
-
-        try {
-            if (!this.sqlApi.insertRowsToTable(new ArrayList<>(allCorefs))) {
-                System.out.println("Failed to insert Corefs!!!!");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 }

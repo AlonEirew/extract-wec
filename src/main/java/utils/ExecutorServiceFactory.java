@@ -32,23 +32,25 @@ public class ExecutorServiceFactory {
 
     public static void closeService() {
         lock.lock();
-        try {
-            elasticSearchPool.shutdown();
-            // Wait a while for existing tasks to terminate
-            if (!elasticSearchPool.awaitTermination(5, TimeUnit.HOURS)) {
-                elasticSearchPool.shutdownNow(); // Cancel currently executing tasks
-                // Wait a while for tasks to respond to being cancelled
-                if (!elasticSearchPool.awaitTermination(60, TimeUnit.SECONDS))
-                    System.err.println("Pool did not terminate");
+        if(elasticSearchPool != null) {
+            try {
+                elasticSearchPool.shutdown();
+                // Wait a while for existing tasks to terminate
+                if (!elasticSearchPool.awaitTermination(5, TimeUnit.HOURS)) {
+                    elasticSearchPool.shutdownNow(); // Cancel currently executing tasks
+                    // Wait a while for tasks to respond to being cancelled
+                    if (!elasticSearchPool.awaitTermination(60, TimeUnit.SECONDS))
+                        System.err.println("Pool did not terminate");
+                }
+            } catch (InterruptedException ie) {
+                // (Re-)Cancel if current thread also interrupted
+                elasticSearchPool.shutdownNow();
+                // Preserve interrupt status
+                Thread.currentThread().interrupt();
             }
-        } catch (InterruptedException ie) {
-            // (Re-)Cancel if current thread also interrupted
-            elasticSearchPool.shutdownNow();
-            // Preserve interrupt status
-            Thread.currentThread().interrupt();
-        }
 
-        elasticSearchPool = null;
-        lock.unlock();
+            elasticSearchPool = null;
+            lock.unlock();
+        }
     }
 }

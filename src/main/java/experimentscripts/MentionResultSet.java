@@ -1,4 +1,4 @@
-package extract;
+package experimentscripts;
 
 import java.util.Objects;
 
@@ -10,15 +10,17 @@ public class MentionResultSet {
     private int tokenEnd;
     private String context;
     private boolean markedForDelete = false;
+    private String pos;
 
     public MentionResultSet(int corefId, String mentionString, String extractedFromPage,
-                            int tokenStart, int tokenEnd, String context) {
+                            int tokenStart, int tokenEnd, String context, String pos) {
         this.corefId = corefId;
         this.mentionString = mentionString;
         this.extractedFromPage = extractedFromPage;
         this.tokenStart = tokenStart;
         this.tokenEnd = tokenEnd;
         this.context = context;
+        this.pos = pos;
     }
 
     public MentionResultSet(MentionResultSet mention) {
@@ -28,6 +30,7 @@ public class MentionResultSet {
         this.tokenStart = mention.tokenStart;
         this.tokenEnd = mention.tokenEnd;
         this.context = mention.context;
+        this.pos = mention.pos;
     }
 
     public String getMentionString() {
@@ -60,6 +63,10 @@ public class MentionResultSet {
 
     public void setMarkedForDelete(boolean markedForDelete) {
         this.markedForDelete = markedForDelete;
+    }
+
+    public String getPos() {
+        return pos;
     }
 
     @Override

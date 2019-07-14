@@ -1,4 +1,4 @@
-package extract;
+package experimentscripts;
 
 import com.google.gson.Gson;
 import persistence.SQLiteConnections;
@@ -170,7 +170,7 @@ public class Experiment {
         return tableResult;
     }
 
-    private static int[] createResultTableForStringAmongClusters(final Map<String, AtomicInteger> stringAmongClusterCountByType) {
+    static <T> int[] createResultTableForStringAmongClusters(final Map<T, AtomicInteger> stringAmongClusterCountByType) {
         int[] resultTable = new int[6]; // represent ranges for table in presentation
         for(AtomicInteger stringCount : stringAmongClusterCountByType.values()) {
             countTableColumnValues(resultTable, stringCount.get());
@@ -216,7 +216,7 @@ public class Experiment {
         System.out.println("Preparing to select all coref mentions by types");
         try (Connection conn = sqlConnection.getConnection(); Statement stmt = conn.createStatement()) {
             for (int i = TYPES_START; i <= TYPES_END; i++) {
-                System.out.println("Preparing to extract unique text for type=" + i);
+                System.out.println("Preparing to experimentscripts unique text for type=" + i);
                 Map<Integer, CorefResultSet> countMapString = new HashMap<>();
 
                 String query = "SELECT coreChainId, mentionText, extractedFromPage, tokenStart, tokenEnd from Mentions INNER JOIN " +
@@ -235,7 +235,7 @@ public class Experiment {
                     }
 
                     countMapString.get(corefId).addMention(new MentionResultSet(corefId, mentionText, extractedFromPage,
-                            tokenStart, tokenEnd, context));
+                            tokenStart, tokenEnd, context, null));
                 }
 
                 countPerType.add(countMapString);

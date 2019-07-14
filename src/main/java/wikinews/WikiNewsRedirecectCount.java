@@ -1,24 +1,23 @@
 package wikinews;
 
 import com.google.gson.Gson;
-import data.WikiLinksCoref;
-import data.WikiNewsMention;
 import org.apache.commons.io.FileUtils;
 import persistence.ElasticQueryApi;
-import persistence.SQLQueryApi;
-import persistence.SQLiteConnections;
 import utils.ExecutorServiceFactory;
 import wikilinks.CreateWikiLinks;
-import workers.WikiNewsWorkerFactory;
+import workers.WikiNewsRedirectCounterWorker;
+import workers.WikiNewsRedirectCounterWorkerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-public class WikiNewsToWikiLinksMain {
+public class WikiNewsRedirecectCount {
+
     private static Gson gson = new Gson();
 
     public static void main(String[] args) throws IOException {
+
         final String property = System.getProperty("user.dir");
         System.out.println("Working directory=" + property);
 
@@ -32,19 +31,13 @@ public class WikiNewsToWikiLinksMain {
                 Integer.parseInt(config.get("elastic_search_interval")), config.get("elastic_host"),
                 Integer.parseInt(config.get("elastic_port")))) {
 
-            SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections(config.get("sql_connection_url")));
-
-            sqlApi.createTable(new WikiNewsMention());
-
-            final Map<String, WikiLinksCoref> wikiLinksCorefMap = sqlApi.readCorefTableToMap();
-
             CreateWikiLinks createWikiLinks = new CreateWikiLinks(elasticApi,
-                    new WikiNewsWorkerFactory(wikiLinksCorefMap, sqlApi));
+                    new WikiNewsRedirectCounterWorkerFactory());
 
             createWikiLinks.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
-
-
             ExecutorServiceFactory.closeService();
+
+            System.out.println("Total redirect pages=" + WikiNewsRedirectCounterWorker.getCounter());
         } catch (Exception ex) {
             ex.printStackTrace();
             ExecutorServiceFactory.closeService();

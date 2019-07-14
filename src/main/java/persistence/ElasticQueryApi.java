@@ -13,13 +13,14 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import utils.ExecutorServiceFactory;
 import wikilinks.WikiLinksExtractor;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
-public class ElasticQueryApi {
+public class ElasticQueryApi implements Closeable {
     private final RestHighLevelClient elasticClient;
     private final String elasticIndex;
     private final int queryInterval;
@@ -38,20 +39,12 @@ public class ElasticQueryApi {
                         .setMaxRetryTimeoutMillis(60*60*1000));
     }
 
-    public void closeElasticQueryApi() {
-        try {
-            this.elasticClient.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public long getTotalDocsCount() throws IOException {
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         sourceBuilder.query(QueryBuilders.matchAllQuery());
         sourceBuilder.size(0);
         sourceBuilder.timeout(new TimeValue(60, TimeUnit.SECONDS));
-        SearchRequest searchRequest = new SearchRequest();
+        SearchRequest searchRequest = new SearchRequest(this.elasticIndex);
         searchRequest.source(sourceBuilder);
 
         final SearchResponse search = this.elasticClient.search(searchRequest);
@@ -66,7 +59,7 @@ public class ElasticQueryApi {
         sourceBuilder.from(0);
         sourceBuilder.size(5);
         sourceBuilder.timeout(new TimeValue(60, TimeUnit.SECONDS));
-        SearchRequest searchRequest = new SearchRequest();
+        SearchRequest searchRequest = new SearchRequest(this.elasticIndex);
         searchRequest.source(sourceBuilder);
 
         final SearchResponse search = this.elasticClient.search(searchRequest);
@@ -82,13 +75,13 @@ public class ElasticQueryApi {
     }
 
     public Map<String, String> getAllWikiPagesTitleAndText(Set<String> pagesTitles) throws InterruptedException, ExecutionException, TimeoutException {
-        System.out.println("Got total of-" + pagesTitles.size() + " coref pages to extract from elastic");
+        System.out.println("Got total of-" + pagesTitles.size() + " coref pages to experimentscripts from elastic");
         List<Future<List<RawElasticResult>>> futureList = new ArrayList<>();
 
         MultiSearchRequest multiSearchRequest = new MultiSearchRequest();
         int index = 0;
         for(String page : pagesTitles) {
-            SearchRequest searchRequest = new SearchRequest();
+            SearchRequest searchRequest = new SearchRequest(this.elasticIndex);
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             searchSourceBuilder.query(QueryBuilders.matchPhraseQuery("title.keyword", page));
             searchRequest.source(searchSourceBuilder);
@@ -165,6 +158,15 @@ public class ElasticQueryApi {
         ClearScrollResponse clearScrollResponse = this.elasticClient.clearScroll(clearScrollRequest);
         if(clearScrollResponse.isSucceeded()) {
             System.out.println("Done, Scroll closed!");
+        }
+    }
+
+    @Override
+    public void close() {
+        try {
+            this.elasticClient.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

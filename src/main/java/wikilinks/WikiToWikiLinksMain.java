@@ -14,14 +14,12 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 public class WikiToWikiLinksMain {
 
     private static Gson gson = new Gson();
 
-    public static void main(String[] args) throws IOException, SQLException, InterruptedException, ExecutionException, TimeoutException {
+    public static void main(String[] args) throws IOException {
         final String property = System.getProperty("user.dir");
         System.out.println("Working directory=" + property);
 
@@ -33,27 +31,29 @@ public class WikiToWikiLinksMain {
 
         SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections(config.get("sql_connection_url")));
 
-        ElasticQueryApi elasticApi = new ElasticQueryApi(config.get("elastic_wiki_index"),
+        try (ElasticQueryApi elasticApi = new ElasticQueryApi(config.get("elastic_wiki_index"),
                 Integer.parseInt(config.get("elastic_search_interval")), config.get("elastic_host"),
-                Integer.parseInt(config.get("elastic_port")));
+                Integer.parseInt(config.get("elastic_port")));) {
+            CreateWikiLinks createWikiLinks = new CreateWikiLinks(elasticApi, new ParseAndExtractWorkersFactory(sqlApi, elasticApi));
 
-        CreateWikiLinks createWikiLinks = new CreateWikiLinks(sqlApi, elasticApi, new ParseAndExtractWorkersFactory(sqlApi, elasticApi));
+            long start = System.currentTimeMillis();
 
-        long start = System.currentTimeMillis();
+            if (!createSQLWikiLinksTables(sqlApi)) {
+                System.out.println("Failed to create Database and tables, finishing process");
+                return;
+            }
 
-        if(!createSQLWikiLinksTables(sqlApi)) {
-            System.out.println("Failed to create Database and tables, finishing process");
-            return;
+            createWikiLinks.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
+            sqlApi.persistAllCorefs();
+
+            ExecutorServiceFactory.closeService();
+
+            long end = System.currentTimeMillis();
+            System.out.println("Process Done, took-" + (end - start) + "ms to run");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            ExecutorServiceFactory.closeService();
         }
-
-        createWikiLinks.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
-        createWikiLinks.persistAllCorefs();
-
-        elasticApi.closeElasticQueryApi();
-        ExecutorServiceFactory.closeService();
-
-        long end = System.currentTimeMillis();
-        System.out.println("Process Done, took-" + (end - start) + "ms to run");
     }
 
     private static boolean createSQLWikiLinksTables(SQLQueryApi sqlApi) throws SQLException {
