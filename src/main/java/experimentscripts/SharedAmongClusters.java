@@ -1,0 +1,77 @@
+package experimentscripts;
+
+import com.google.gson.Gson;
+import persistence.SQLiteConnections;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class SharedAmongClusters {
+    private static Gson gson = new Gson();
+
+    public static void main(String[] args) throws SQLException {
+        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v6.db";
+        SQLiteConnections sqLiteConnections = new SQLiteConnections(connectionUrl);
+
+        final List<Map<Integer, CorefResultSet>> countPerType = Experiment.countClustersString(sqLiteConnections);
+        final List<Map<Integer, CorefResultSet>> clustersUniqueString = Experiment.countClustersUniqueString(countPerType);
+        final Map<String, AtomicInteger> exactStringAmongClusters = countExactStringAmongClusters(clustersUniqueString);
+
+        final int[] resultTableForStringAmongClusters = createResultTableForStringAmongClusters(exactStringAmongClusters);
+        System.out.println(gson.toJson(resultTableForStringAmongClusters) + "UNIQUE");
+
+        final List<Map<Integer, CorefResultSet>> mapOnlyTextual = countClustersOnlyTextual(clustersUniqueString);
+        final Map<String, AtomicInteger> onlyTextualAmongClusters = countExactStringAmongClusters(mapOnlyTextual);
+
+        final int[] resultTableForTextualOnlyAmongClusters = createResultTableForStringAmongClusters(onlyTextualAmongClusters);
+        System.out.println(gson.toJson(resultTableForTextualOnlyAmongClusters) + "Textual");
+    }
+
+    private static <T> int[] createResultTableForStringAmongClusters(final Map<T, AtomicInteger> stringAmongClusterCountByType) {
+        int[] resultTable = new int[6]; // represent ranges for table in presentation
+        for(AtomicInteger stringCount : stringAmongClusterCountByType.values()) {
+            Experiment.countTableColumnValues(resultTable, stringCount.get());
+        }
+
+        return resultTable;
+    }
+
+    private static List<Map<Integer, CorefResultSet>> countClustersOnlyTextual(List<Map<Integer, CorefResultSet>> lowerStringByTypeMap) {
+        List<Map<Integer, CorefResultSet>> countPerType = new ArrayList<>();
+        for(Map<Integer, CorefResultSet> map : lowerStringByTypeMap) {
+            Map<Integer, CorefResultSet> newMap = new HashMap<>();
+            for(int corefId : map.keySet()) {
+                CorefResultSet corefResultSet = map.get(corefId);
+                CorefResultSet clusterMentions = corefResultSet.getMentionsOnlyTextual();
+                newMap.put(corefId, clusterMentions);
+            }
+
+            countPerType.add(newMap);
+        }
+
+        return countPerType;
+    }
+
+    private static Map<String, AtomicInteger> countExactStringAmongClusters(List<Map<Integer, CorefResultSet>> clustersUniqueString) {
+        Map<String, AtomicInteger> uniqueStringAmongClusterCount = new HashMap<>();
+        for(int i = 0 ; i < clustersUniqueString.size() ; i++) {
+            Map<Integer, CorefResultSet> corefResultSetMap = clustersUniqueString.get(i);
+            for (CorefResultSet coreResultSet : corefResultSetMap.values()) {
+                final List<MentionResultSet> mentions = coreResultSet.getMentions();
+                for (MentionResultSet ment : mentions) {
+                    if(uniqueStringAmongClusterCount.containsKey(ment.getMentionString())) {
+                        uniqueStringAmongClusterCount.get(ment.getMentionString()).incrementAndGet();
+                    } else {
+                        uniqueStringAmongClusterCount.put(ment.getMentionString(), new AtomicInteger(1));
+                    }
+                }
+            }
+        }
+
+        return uniqueStringAmongClusterCount;
+    }
+}

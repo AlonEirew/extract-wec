@@ -7,8 +7,10 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Experiment {
     private static final int TYPES_START = 2;
@@ -23,54 +25,31 @@ public class Experiment {
         final List<Map<Integer, CorefResultSet>> countPerType = countClustersString(sqLiteConnections);
         final List<Map<Integer, CorefResultSet>> clustersUniqueString = countClustersUniqueString(countPerType);
 
-        final Map<String, AtomicInteger> exactStringAmongClusters = countExactStringAmongClusters(clustersUniqueString);
-        final int[] resultTableForStringAmongClusters = createResultTableForStringAmongClusters(exactStringAmongClusters);
-        System.out.println(gson.toJson(resultTableForStringAmongClusters) + "UNIQUE");
-//
-//        printResults(countPerType, "PURE");
-//        printResults(clustersUniqueString, "UNIQUE");
-//
-//        createLevinshteinDistanceReport(clustersUniqueString);
-//        createMentionsIntersectionReport(clustersUniqueString);
-//        createMentionsLevinshteinAndIntersectionReport(clustersUniqueString);
+        printResults(countPerType, "PURE");
+        printResults(clustersUniqueString, "UNIQUE");
+
+        createLevinshteinDistanceReport(clustersUniqueString);
+        createMentionsIntersectionReport(clustersUniqueString);
+        createMentionsLevinshteinAndIntersectionReport(clustersUniqueString);
     }
 
-    private static void createLevinshteinDistanceReport(List<Map<Integer, CorefResultSet>> clustersUniqueString) {
+    static void createLevinshteinDistanceReport(List<Map<Integer, CorefResultSet>> clustersUniqueString) {
         final List<Map<Integer, CorefResultSet>> levSimilar = calcLevenshteinDistance(clustersUniqueString);
         printResults(levSimilar, "LEVINSHTEIN");
     }
 
-    private static void createMentionsIntersectionReport(List<Map<Integer, CorefResultSet>> clustersUniqueString) {
+    static void createMentionsIntersectionReport(List<Map<Integer, CorefResultSet>> clustersUniqueString) {
         final List<Map<Integer, CorefResultSet>> calcContains = calcIntersecting(clustersUniqueString);
         printResults(calcContains, "NON-INTERSECTING");
     }
 
-    private static void createMentionsLevinshteinAndIntersectionReport(List<Map<Integer, CorefResultSet>> clustersUniqueString) {
+    static void createMentionsLevinshteinAndIntersectionReport(List<Map<Integer, CorefResultSet>> clustersUniqueString) {
         final List<Map<Integer, CorefResultSet>> levSimilar = calcLevenshteinDistance(clustersUniqueString);
         final List<Map<Integer, CorefResultSet>> calcContains = calcIntersecting(levSimilar);
         printResults(calcContains, "LEVINSHTEIN+INTERSECTING");
     }
 
-    private static Map<String, AtomicInteger> countExactStringAmongClusters(List<Map<Integer, CorefResultSet>> clustersUniqueString) {
-        Map<String, AtomicInteger> uniqueStringAmongClusterCount = new HashMap<>();
-        for(int i = 0 ; i < clustersUniqueString.size() ; i++) {
-            Map<Integer, CorefResultSet> corefResultSetMap = clustersUniqueString.get(i);
-            for (CorefResultSet coreResultSet : corefResultSetMap.values()) {
-                final List<MentionResultSet> mentions = coreResultSet.getMentions();
-                for (MentionResultSet ment : mentions) {
-                    if(uniqueStringAmongClusterCount.containsKey(ment.getMentionString())) {
-                        uniqueStringAmongClusterCount.get(ment.getMentionString()).incrementAndGet();
-                    } else {
-                        uniqueStringAmongClusterCount.put(ment.getMentionString(), new AtomicInteger(1));
-                    }
-                }
-            }
-        }
-
-        return uniqueStringAmongClusterCount;
-    }
-
-    private static void printResults(List<Map<Integer, CorefResultSet>> resultsToPrint, String message) {
+    static void printResults(List<Map<Integer, CorefResultSet>> resultsToPrint, String message) {
         int[] mentionsCountList = countMentions1_30Plus(resultsToPrint);
         int[][] tableResult = createResultTable(resultsToPrint);
 
@@ -103,7 +82,7 @@ public class Experiment {
         System.out.println("WD MENTIONS" + gson.toJson(wdPerType));
     }
 
-    private static List<Map<Integer, CorefResultSet>> calcLevenshteinDistance(List<Map<Integer, CorefResultSet>> clustersUniqueString) {
+    static List<Map<Integer, CorefResultSet>> calcLevenshteinDistance(List<Map<Integer, CorefResultSet>> clustersUniqueString) {
         List<Map<Integer, CorefResultSet>> clusterByTypeLevenCount = new ArrayList<>();
         for(int i = 0 ; i < clustersUniqueString.size() ; i++) {
             Map<Integer, CorefResultSet> thisTypeCount = clustersUniqueString.get(i);
@@ -170,16 +149,7 @@ public class Experiment {
         return tableResult;
     }
 
-    static <T> int[] createResultTableForStringAmongClusters(final Map<T, AtomicInteger> stringAmongClusterCountByType) {
-        int[] resultTable = new int[6]; // represent ranges for table in presentation
-        for(AtomicInteger stringCount : stringAmongClusterCountByType.values()) {
-            countTableColumnValues(resultTable, stringCount.get());
-        }
-
-        return resultTable;
-    }
-
-    private static void countTableColumnValues(int[] resultTable, int count) {
+    static void countTableColumnValues(int[] resultTable, int count) {
         if (count == 1) {
             resultTable[0]++;
         } else if (count == 2) {
@@ -190,12 +160,12 @@ public class Experiment {
             resultTable[3]++;
         } else if (count >= 11 && count <= 30) {
             resultTable[4]++;
-        } else {
+        } else if (count > 30) {
             resultTable[5]++;
         }
     }
 
-    private static List<Map<Integer, CorefResultSet>> countClustersUniqueString(List<Map<Integer, CorefResultSet>> lowerStringByTypeMap) {
+    static List<Map<Integer, CorefResultSet>> countClustersUniqueString(List<Map<Integer, CorefResultSet>> lowerStringByTypeMap) {
         List<Map<Integer, CorefResultSet>> countPerType = new ArrayList<>();
         for(Map<Integer, CorefResultSet> map : lowerStringByTypeMap) {
             Map<Integer, CorefResultSet> newMap = new HashMap<>();
@@ -211,7 +181,7 @@ public class Experiment {
         return countPerType;
     }
 
-    private static List<Map<Integer, CorefResultSet>> countClustersString(SQLiteConnections sqlConnection) throws SQLException {
+    static List<Map<Integer, CorefResultSet>> countClustersString(SQLiteConnections sqlConnection) throws SQLException {
         ArrayList<Map<Integer, CorefResultSet>> countPerType = new ArrayList<>();
         System.out.println("Preparing to select all coref mentions by types");
         try (Connection conn = sqlConnection.getConnection(); Statement stmt = conn.createStatement()) {

@@ -49,6 +49,19 @@ public class CorefResultSet {
         return wdCoref;
     }
 
+    public float getAverageMentionsSpan() {
+        float sum = 0;
+        if(this.mentions.size() > 0) {
+            for (MentionResultSet mention : this.mentions) {
+                sum += mention.getMentionString().split(" ").length;
+            }
+
+            return sum / mentions.size();
+        }
+
+        return 0;
+    }
+
     public int getCorefId() {
         return corefId;
     }
@@ -58,6 +71,18 @@ public class CorefResultSet {
         Set<String> clusterMentionsAsString = new HashSet<>();
         for(MentionResultSet mentionResultSet : this.mentions) {
             if(clusterMentionsAsString.add(mentionResultSet.getMentionString())) {
+                retResultSet.addMentionCopy(mentionResultSet);
+            }
+        }
+
+        return retResultSet;
+    }
+
+    public CorefResultSet getMentionsOnlyTextual() {
+        CorefResultSet retResultSet = new CorefResultSet(this.corefId);
+        Set<String> clusterMentionsAsString = new HashSet<>();
+        for(MentionResultSet mentionResultSet : this.mentions) {
+            if(!mentionResultSet.getMentionString().matches(".*\\d+.*")) {
                 retResultSet.addMentionCopy(mentionResultSet);
             }
         }
