@@ -7,6 +7,7 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.CoreDocument;
 import edu.stanford.nlp.pipeline.CoreSentence;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import javafx.util.Pair;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -29,7 +30,10 @@ public class WikiLinksExtractor {
     private static final Pattern ELECTION_PATTERN = Pattern.compile("\\{\\{infobox[\\w\\|]*?(election)");
 
     private static final Pattern CONCRETE_EVENT = Pattern.compile("\\{\\{infobox[\\w\\|]*?(solareclipse|newsevent|concert|weaponstest|explosivetest" +
-                "|summit|convention|conference|summitmeeting|festival)");
+            "|summit|convention|conference|summitmeeting|festival)");
+
+    private static String[] MONTHS = {"january", "february", "march", "april", "may", "june", "july", "august",
+            "september", "october", "november", "december"};
 
     private static StanfordCoreNLP pipelineWithPos;
     private static StanfordCoreNLP pipelineNoPos;
@@ -50,14 +54,14 @@ public class WikiLinksExtractor {
         String[] textLines = text.split("\\.\n\n");
         for (String context : textLines) {
             final List<WikiLinksMention> wikiLinksMentions = extractTextBodyMentions(pageName, context);
-            for(WikiLinksMention wikiLinksMention : wikiLinksMentions) {
+            for (WikiLinksMention wikiLinksMention : wikiLinksMentions) {
                 finalResults.add(new WikiNewsMention(wikiLinksMention));
             }
         }
 
-        for(WikiNewsMention mention : finalResults) {
+        for (WikiNewsMention mention : finalResults) {
             String corefValue = mention.getCorefChain().getCorefValue();
-            if(corefValue.contains("w:")) {
+            if (corefValue.contains("w:")) {
                 corefValue = corefValue.replace("w:", "").trim();
                 mention.getCorefChain().setCorefValue(corefValue);
             }
@@ -69,12 +73,17 @@ public class WikiLinksExtractor {
     public static List<WikiLinksMention> extractFromWikipedia(String pageName, String text) {
         List<WikiLinksMention> finalResults = new ArrayList<>();
 
-        text = cleanTextField(text);
+        if (text.toLowerCase().contains("[[category:opinion polling") || text.toLowerCase().contains("[[category:years in") ||
+                text.toLowerCase().contains("[[category:lists of") || text.toLowerCase().contains("[[category:list of")) {
+            text = "";
+        }
+
+        String textClean = cleanTextField(text);
 
         String relText = "";
-        int firstSentenceStartIndex = text.indexOf("'''");
-        if(firstSentenceStartIndex >= 0) {
-            relText = text.substring(firstSentenceStartIndex);
+        int firstSentenceStartIndex = textClean.indexOf("'''");
+        if (firstSentenceStartIndex >= 0) {
+            relText = textClean.substring(firstSentenceStartIndex);
             String[] textLines = relText.split("\\.\n\n");
             for (String context : textLines) {
                 finalResults.addAll(extractTextBodyMentions(pageName, context));
@@ -86,8 +95,8 @@ public class WikiLinksExtractor {
 
     private static List<WikiLinksMention> extractTextBodyMentions(String pageName, String context) {
         String[] contextLines = context.split("\n");
-        for (int i = 0 ; i < contextLines.length ; i++) {
-            if(contextLines[i] != null && !contextLines[i].isEmpty() && isValidLine(contextLines[i])) {
+        for (int i = 0; i < contextLines.length; i++) {
+            if (contextLines[i] != null && !contextLines[i].isEmpty() && isValidLine(contextLines[i])) {
                 contextLines[i] = contextLines[i]
                         .replaceAll("\\*.*?\n", "")
                         .replaceAll("\n", " ")
@@ -104,15 +113,19 @@ public class WikiLinksExtractor {
 
     private static String cleanTextField(String text) {
         text = text.replaceAll("==.*?==\n", "\n");
-        text = text.replaceAll("\\{\\{.*?\\}\\}", "");
-        text = text.replaceAll("<ref[\\s\\S]*?/>", "");
+        Pattern pat1 = Pattern.compile("(?s)\\{\\{[^{]*?\\}\\}");
+        Matcher match1 = pat1.matcher(text);
+        while (match1.find()) {
+            text = match1.replaceAll("");
+            match1 = pat1.matcher(text);
+        }
+        text = text.replaceAll("<ref[\\s\\S][^<]*?/>", "");
+        text = text.replaceAll("(?s)<ref[\\s\\S]*?</ref>", "");
         text = text.replaceAll("(?s)\\{\\|\\s?class=\\\"?wikitable.*?\n\\|\\}", "");
-        text = text.replaceAll("(?s)\\{\\{\\s?notelist.*?\\}\\}\n\\}\\}", "");
         text = text.replaceAll("(?s)<gallery.*?</gallery>", "");
         text = text.replaceAll("(?s)<timeline.*?</timeline>", "");
-        text = text.replaceAll("(?s)\\{\\{\\s?(bar\\sbox|reflist|[Ss]uccession\\sbox|[Ii]nfobox|s-bef|s-ttl|s-aft|columns-list)+.*?\n\\}\\}", "");
-        text = text.replaceAll("(?s)\\{\\{\\s?.*box\\|.*?\\}\\}\n\\}\\}", "");
-        text = text.replaceAll("(?s)<ref[\\s\\S]*?</ref>", "");
+        text = text.replaceAll("\\[\\[([cC]ategory|[fF]ile|[iI]mage).*", "");
+        text = text.replaceAll("\\*.*?\n", "\n");
         return text;
     }
 
@@ -121,7 +134,7 @@ public class WikiLinksExtractor {
         StringBuilder infoBoxFinal = new StringBuilder();
 
         final int beginIndex = text.indexOf("{{infobox");
-        if(beginIndex != -1) {
+        if (beginIndex != -1) {
             final String infoboxSubstring = text.substring(beginIndex);
             int infoBarCount = 0;
             for (int i = 0; i < infoboxSubstring.length(); i++) {
@@ -147,14 +160,14 @@ public class WikiLinksExtractor {
         Set<String> finalResults = new HashSet<>();
         String relText = "";
         int firstSentenceStartIndex = text.indexOf("|type");
-        if(firstSentenceStartIndex < 0) {
+        if (firstSentenceStartIndex < 0) {
             firstSentenceStartIndex = text.indexOf("| type");
         }
 
-        if(firstSentenceStartIndex >= 0) {
+        if (firstSentenceStartIndex >= 0) {
             relText = text.substring(firstSentenceStartIndex);
             final int endIndex = relText.indexOf("\n");
-            if(endIndex != -1) {
+            if (endIndex != -1) {
                 relText = relText.substring(0, endIndex);
             }
 
@@ -192,6 +205,7 @@ public class WikiLinksExtractor {
 
     public static boolean isCivilAttack(String infoBox) {
         final Set<String> uniqueDates = getYears(infoBox);
+
         if (infoBox.contains("{{infoboxcivilianattack") || infoBox.contains("{{infoboxterroristattack")
                 || infoBox.contains("{{infoboxmilitaryattack") || infoBox.contains("{{infoboxcivilconflict")
                 || infoBox.contains("{{infoboxmilitaryconflict")) {
@@ -204,7 +218,7 @@ public class WikiLinksExtractor {
     }
 
     public static boolean isAccident(String infoBox) {
-        if(infoBox.contains("{{infoboxaircraftoccurrence") || infoBox.contains("{{infoboxairlinerincident") ||
+        if (infoBox.contains("{{infoboxaircraftoccurrence") || infoBox.contains("{{infoboxairlinerincident") ||
                 infoBox.contains("{{infoboxrailaccident") || infoBox.contains("{{infoboxairlineraccident") ||
                 infoBox.contains("{{infoboxbusaccident") || infoBox.contains("{{infoboxaircraftcrash")
                 || infoBox.contains("{{infoboxaircraftaccident") || infoBox.contains("{{infoboxaircraftincident")) {
@@ -215,9 +229,9 @@ public class WikiLinksExtractor {
     }
 
     public static boolean isDisaster(String infoBox) {
-        if(infoBox.contains("{{infoboxearthquake") || infoBox.contains("{{infoboxhurricane")
+        if (infoBox.contains("{{infoboxearthquake") || infoBox.contains("{{infoboxhurricane")
                 || infoBox.contains("{{infoboxwildfire") || infoBox.contains("infoboxstorm/sandbox") ||
-                    infoBox.contains("infoboxflood") || infoBox.contains("infoboxoilspill")
+                infoBox.contains("infoboxflood") || infoBox.contains("infoboxoilspill")
                 || infoBox.contains("infoboxstorm") || infoBox.contains("infoboxeruption")) {
             return true;
         }
@@ -226,7 +240,7 @@ public class WikiLinksExtractor {
     }
 
     public static boolean isGeneralEvent(String infoBox) {
-        if(infoBox.contains("{{infoboxevent")) {
+        if (infoBox.contains("{{infoboxevent")) {
             return true;
         }
 
@@ -234,7 +248,7 @@ public class WikiLinksExtractor {
     }
 
     public static boolean isHistoricalEvent(String infoBox) {
-        if(infoBox.contains("{{infoboxhistoricalevent")) {
+        if (infoBox.contains("{{infoboxhistoricalevent")) {
             return true;
         }
 
@@ -254,17 +268,18 @@ public class WikiLinksExtractor {
     }
 
     public static boolean isSmallCompanyEvent(String infoBox) {
-        if(infoBox.contains("{{infoboxcompany")) {
+        if (infoBox.contains("{{infoboxcompany")) {
             for (String line : infoBox.split("\n")) {
-                if(line.startsWith("|num_employees=")) {
+                if (line.startsWith("|num_employees=")) {
                     final String[] numEmpSplit = line.split("=");
-                    if(numEmpSplit.length == 2) {
+                    if (numEmpSplit.length == 2) {
                         try {
                             int empAmount = Integer.parseInt(numEmpSplit[1]);
                             if (empAmount <= MAX_EMPLOYEES) {
                                 return true;
                             }
-                        } catch (NumberFormatException e) { }
+                        } catch (NumberFormatException e) {
+                        }
                     }
                 }
             }
@@ -294,7 +309,7 @@ public class WikiLinksExtractor {
     }
 
     public static boolean hasDateAndLocation(String infoBox) {
-        if(infoBox != null) {
+        if (infoBox != null) {
             String dateLine = null;
             String locationLine = null;
             for (String line : infoBox.split("\n")) {
@@ -347,7 +362,7 @@ public class WikiLinksExtractor {
         String context = linkMatcher
                 .replaceAll("$2")
                 .replaceAll("\\s+", " ").trim();
-        if(context.matches("'''(.*?)'''(.*?)")) {
+        if (context.matches("'''(.*?)'''(.*?)")) {
             context = context.replaceAll("'''(.*?)'''(.*?)", "$1");
         }
 
@@ -363,23 +378,23 @@ public class WikiLinksExtractor {
 
     private static Set<String> getYears(String infoBox) {
         Set<String> uniqueDates = null;
-        Pattern datePattern = Pattern.compile("[12][0-9][0-9][0-9]|[0-9][0-9][0-9]");
+        Pattern yearPattern = Pattern.compile("[12][0-9][0-9][0-9]|[0-9][0-9][0-9]");
 
         Pattern dateEql = Pattern.compile("\\n\\|date=(.*)\n");
         Matcher matcher = dateEql.matcher(infoBox);
 
-        if(matcher.find()) {
+        if (matcher.find()) {
             String dateLine = matcher.group(1);
             if (!dateLine.isEmpty()) {
                 uniqueDates = new HashSet<>();
             }
 
-            Matcher dateMach = datePattern.matcher(dateLine);
-            while (dateMach.find()) {
-                uniqueDates.add(dateMach.group());
+            Matcher yearMatch = yearPattern.matcher(dateLine);
+            while (yearMatch.find()) {
+                uniqueDates.add(yearMatch.group());
             }
 
-            if(dateLine.contains("plainlist")) {
+            if (dateLine.contains("plainlist")) {
                 uniqueDates.add("rej1");
                 uniqueDates.add("rej2");
             }
@@ -392,8 +407,8 @@ public class WikiLinksExtractor {
         final List<String> mentContext = new ArrayList<>();
         CoreDocument doc = new CoreDocument(context);
         pipelineNoPos.annotate(doc);
-        if(doc.sentences().size() > 0) {
-            for(CoreSentence sentence : doc.sentences()) {
+        if (doc.sentences().size() > 0) {
+            for (CoreSentence sentence : doc.sentences()) {
                 final List<CoreLabel> tokens = sentence.tokens();
                 for (CoreLabel token : tokens) {
                     if (token.originalText().matches("[|\\[\\]\\*^\\+]")) {
@@ -412,12 +427,12 @@ public class WikiLinksExtractor {
                 pipelineWithPos.annotate(mentionCoreDoc);
                 if (mentionCoreDoc.sentences().size() > 0) {
                     final List<CoreLabel> mentTokens = mentionCoreDoc.sentences().get(0).tokens();
-                    for(CoreLabel label : mentTokens) {
+                    for (CoreLabel label : mentTokens) {
                         mention.addMentionToken(label.originalText(), label.get(CoreAnnotations.PartOfSpeechAnnotation.class));
                     }
 
                     for (int i = 0; i < mentContext.size(); i++) {
-                        if(!usedStartIndexes.contains(i)) {
+                        if (!usedStartIndexes.contains(i)) {
                             if (mentContext.get(i).equals(mentTokens.get(0).originalText())) {
                                 mention.setTokenStart(i);
                                 usedStartIndexes.add(i);
@@ -432,7 +447,7 @@ public class WikiLinksExtractor {
                         }
                     }
 
-                    if(!mention.isValid()) {
+                    if (!mention.isValid()) {
                         iterator.remove();
                     }
 
@@ -447,10 +462,7 @@ public class WikiLinksExtractor {
 
     static boolean isValidLine(String line) {
         line = line.toLowerCase();
-        return !(line.startsWith("{{") || line.startsWith("}}") || line.startsWith("|") ||
-                line.startsWith("*") || line.startsWith("=") || line.startsWith("#") ||
-                line.startsWith(";") || line.startsWith(":") || line.startsWith("[[file") ||
-                line.startsWith("[[category") || line.startsWith("[[image") ||
-                (line.startsWith("'''") && line.endsWith("'''")));
+        return !(line.startsWith("|") || line.startsWith("*") || line.startsWith("=") || line.startsWith("#") ||
+                line.startsWith(";") || line.startsWith(":"));
     }
 }

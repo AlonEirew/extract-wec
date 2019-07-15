@@ -1,6 +1,7 @@
 package wikilinks;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import data.RawElasticResult;
 import data.WikiLinksMention;
 import javafx.util.Pair;
@@ -23,19 +24,15 @@ public class TestWikiLinksExtractor {
 
     @Test
     public void testExtract() {
-        Map<String, List<WikiLinksMention>> finalResults = new HashMap<>();
-        String pageText = getFilmList();
-        final List<WikiLinksMention> extractMentions = WikiLinksExtractor.extractFromWikipedia("na", pageText);
-        for (WikiLinksMention mention : extractMentions) {
-            if(finalResults.containsKey(mention.getCorefChain())) {
-                finalResults.get(mention.getCorefChain()).add(mention);
-            } else {
-                finalResults.put(mention.getCorefChain().getCorefValue(), new ArrayList<>());
-                finalResults.get(mention.getCorefChain().getCorefValue()).add(mention);
-            }
-        }
 
-        System.out.println(gson.toJson(finalResults));
+        final List<JsonObject> extractFromPage = getExtractFromPage();
+        for(JsonObject jo : extractFromPage) {
+            String pageText = jo.get("text").getAsString();
+            String title = jo.get("title").getAsString();
+            int expected = jo.get("expected").getAsInt();
+            final List<WikiLinksMention> extractMentions1 = WikiLinksExtractor.extractFromWikipedia(title, pageText);
+            Assert.assertEquals(title, expected, extractMentions1.size());
+        }
     }
 
     @Test
@@ -421,16 +418,16 @@ public class TestWikiLinksExtractor {
         return TestUtils.getTextAndTitle("wiki_links/accident.json");
     }
 
-    private String getFilmList() {
-        return TestUtils.getText("wiki_links/list_of_films.json");
-    }
-
     private List<Pair<String, String>> getAwards() {
         return TestUtils.getTextAndTitle("wiki_links/award.json");
     }
 
     private List<Pair<String, String>> getConcreteGeneralTexts() {
         return TestUtils.getTextAndTitle("wiki_links/concrete_general.json");
+    }
+
+    private List<JsonObject> getExtractFromPage() {
+        return TestUtils.getTextTitleAndExpected("wiki_links/extractfrompage.json");
     }
 
     private List<Pair<String, String>> getRejectTexts() {

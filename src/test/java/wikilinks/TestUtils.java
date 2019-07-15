@@ -28,6 +28,19 @@ public class TestUtils {
         return retTexts;
     }
 
+    public static List<JsonObject> getTextTitleAndExpected(String fileName) {
+        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream(fileName);
+        JsonArray inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonArray.class);
+
+        List<JsonObject> retTexts = new ArrayList<>();
+        for(JsonElement jsonObj : inputJsonNlp) {
+            final JsonObject asJsonObject = jsonObj.getAsJsonObject();
+            retTexts.add(asJsonObject);
+        }
+
+        return retTexts;
+    }
+
     public static String getText(String fileNme) {
         InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream(fileNme);
         JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
