@@ -14,7 +14,7 @@ public class SharedAmongClusters {
     private static Gson gson = new Gson();
 
     public static void main(String[] args) throws SQLException {
-        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v6.db";
+        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v7.db";
         SQLiteConnections sqLiteConnections = new SQLiteConnections(connectionUrl);
 
         final List<Map<Integer, CorefResultSet>> countPerType = Experiment.countClustersString(sqLiteConnections);
@@ -24,11 +24,17 @@ public class SharedAmongClusters {
         final int[] resultTableForStringAmongClusters = createResultTableForStringAmongClusters(exactStringAmongClusters);
         System.out.println(gson.toJson(resultTableForStringAmongClusters) + "UNIQUE");
 
-        final List<Map<Integer, CorefResultSet>> mapOnlyTextual = countClustersOnlyTextual(clustersUniqueString);
-        final Map<String, AtomicInteger> onlyTextualAmongClusters = countExactStringAmongClusters(mapOnlyTextual);
+        final List<Map<Integer, CorefResultSet>> mapOnlyTextual1 = countClustersOnlyTextual(clustersUniqueString, true);
+        final Map<String, AtomicInteger> onlyTextualAmongClusters1 = countExactStringAmongClusters(mapOnlyTextual1);
 
-        final int[] resultTableForTextualOnlyAmongClusters = createResultTableForStringAmongClusters(onlyTextualAmongClusters);
-        System.out.println(gson.toJson(resultTableForTextualOnlyAmongClusters) + "Textual");
+        final int[] resultTableForTextualOnlyAmongClusters1 = createResultTableForStringAmongClusters(onlyTextualAmongClusters1);
+        System.out.println(gson.toJson(resultTableForTextualOnlyAmongClusters1) + "Textual (without Numbers)");
+
+        final List<Map<Integer, CorefResultSet>> mapOnlyTextual2 = countClustersOnlyTextual(clustersUniqueString, false);
+        final Map<String, AtomicInteger> onlyTextualAmongClusters2 = countExactStringAmongClusters(mapOnlyTextual2);
+
+        final int[] resultTableForTextualOnlyAmongClusters2 = createResultTableForStringAmongClusters(onlyTextualAmongClusters2);
+        System.out.println(gson.toJson(resultTableForTextualOnlyAmongClusters2) + "Textual (No Only Numbers)");
     }
 
     private static <T> int[] createResultTableForStringAmongClusters(final Map<T, AtomicInteger> stringAmongClusterCountByType) {
@@ -40,14 +46,20 @@ public class SharedAmongClusters {
         return resultTable;
     }
 
-    private static List<Map<Integer, CorefResultSet>> countClustersOnlyTextual(List<Map<Integer, CorefResultSet>> lowerStringByTypeMap) {
+    private static List<Map<Integer, CorefResultSet>> countClustersOnlyTextual(
+            List<Map<Integer, CorefResultSet>> lowerStringByTypeMap, boolean noNumAllowed) {
         List<Map<Integer, CorefResultSet>> countPerType = new ArrayList<>();
         for(Map<Integer, CorefResultSet> map : lowerStringByTypeMap) {
             Map<Integer, CorefResultSet> newMap = new HashMap<>();
             for(int corefId : map.keySet()) {
                 CorefResultSet corefResultSet = map.get(corefId);
-                CorefResultSet clusterMentions = corefResultSet.getMentionsOnlyTextual();
-                newMap.put(corefId, clusterMentions);
+                if(noNumAllowed) {
+                    CorefResultSet clusterMentions = corefResultSet.getMentionsOnlyTextual();
+                    newMap.put(corefId, clusterMentions);
+                } else {
+                    CorefResultSet clusterMentions = corefResultSet.getMentionsNoOnlyNumbers();
+                    newMap.put(corefId, clusterMentions);
+                }
             }
 
             countPerType.add(newMap);

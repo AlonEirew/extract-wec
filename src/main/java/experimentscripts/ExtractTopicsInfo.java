@@ -17,7 +17,7 @@ public class ExtractTopicsInfo {
     private static Gson gson = new Gson();
 
     public static void main(String[] args) throws SQLException, IOException {
-        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v6.db";
+        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v7.db";
         SQLiteConnections sqLiteConnections = new SQLiteConnections(connectionUrl);
 
         final Map<Integer, CorefResultSet> allCorefs = getAllCorefs(sqLiteConnections);
@@ -33,7 +33,7 @@ public class ExtractTopicsInfo {
 
         Collections.sort(printTopicsBySize, Comparator.comparingInt(Pair::getValue));
 
-        FileUtils.writeLines(new File("output/topics.txt"), "UTF-8", printTopicsBySize);
+        FileUtils.writeLines(new File("output/topics2.txt"), "UTF-8", printTopicsBySize);
     }
 
     private static Map<String, List<MentionResultSet>> countTopicsMentions(Map<Integer, CorefResultSet> allCorefs) {
@@ -51,13 +51,14 @@ public class ExtractTopicsInfo {
         return topics;
     }
 
-    private static Map<Integer, CorefResultSet> getAllCorefs(SQLiteConnections sqlConnection) throws SQLException {
+    static Map<Integer, CorefResultSet> getAllCorefs(SQLiteConnections sqlConnection) throws SQLException {
         System.out.println("Preparing to select all coref mentions by types");
         Map<Integer, CorefResultSet> corefMap = new HashMap<>();
         try (Connection conn = sqlConnection.getConnection(); Statement stmt = conn.createStatement()) {
             System.out.println("Preparing to extract");
 
-            String query = "SELECT coreChainId, mentionText, extractedFromPage, tokenStart, tokenEnd, PartOfSpeech, context " +
+            String query = "SELECT coreChainId, mentionText, extractedFromPage, tokenStart, " +
+                    "tokenEnd, corefValue, corefType, PartOfSpeech, context " +
                     "from Mentions INNER JOIN CorefChains ON Mentions.coreChainId=CorefChains.corefId " +
                     "where corefType>=2 and corefType<=8";
 
@@ -70,9 +71,11 @@ public class ExtractTopicsInfo {
                 final int tokenEnd = rs.getInt("tokenEnd");
                 final String partOfSpeech = rs.getString("PartOfSpeech");
                 final String context = rs.getString("context");
+                final int corefType = rs.getInt("corefType");
+                final String corefValue = rs.getString("corefValue");
 
                 if(!corefMap.containsKey(corefId)) {
-                    corefMap.put(corefId, new CorefResultSet(corefId));
+                    corefMap.put(corefId, new CorefResultSet(corefId, corefType, corefValue));
                 }
 
                 corefMap.get(corefId).addMention(new MentionResultSet(corefId, mentionText, extractedFromPage,

@@ -14,8 +14,6 @@ import java.util.Map;
 
 public class CheckNominalization {
 
-    private static Gson gson = new Gson();
-
     public static void main(String[] args) throws SQLException {
         String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v6.db";
         SQLiteConnections sqLiteConnections = new SQLiteConnections(connectionUrl);
@@ -29,9 +27,7 @@ public class CheckNominalization {
         final List<Map<Integer, CorefResultSet>> uniqueCorefMap = Experiment.countClustersUniqueString(corefsMapList);
         Experiment.printResults(uniqueCorefMap, "UNIQUE");
 
-        final List<Map<Integer, CorefResultSet>> levSimilar = Experiment.calcLevenshteinDistance(uniqueCorefMap);
-        Experiment.printResults(levSimilar, "LEVINSHTEIN");
-
+        Experiment.createLevinshteinDistanceReport(uniqueCorefMap);
         Experiment.createMentionsIntersectionReport(uniqueCorefMap);
         Experiment.createMentionsLevinshteinAndIntersectionReport(uniqueCorefMap);
 

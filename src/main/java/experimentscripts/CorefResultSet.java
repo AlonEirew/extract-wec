@@ -6,10 +6,18 @@ import java.util.*;
 
 public class CorefResultSet {
     private int corefId;
+    private int corefType;
+    private String corefValue;
     private List<MentionResultSet> mentions = new ArrayList<>();
 
     public CorefResultSet(int corefId) {
         this.corefId = corefId;
+    }
+
+    public CorefResultSet(int corefId, int corefType, String corefValue) {
+        this.corefId = corefId;
+        this.corefType = corefType;
+        this.corefValue = corefValue;
     }
 
     public void addMention(MentionResultSet mention) {
@@ -19,6 +27,10 @@ public class CorefResultSet {
     public void addMentionCopy(MentionResultSet mention) {
         MentionResultSet newMention = new MentionResultSet(mention);
         this.mentions.add(newMention);
+    }
+
+    public int getMentionsSize() {
+        return this.mentions.size();
     }
 
     public void addMentionsCollection(Collection<MentionResultSet> mentColl) {
@@ -67,7 +79,7 @@ public class CorefResultSet {
     }
 
     public CorefResultSet getMentionsOnlyUniques() {
-        CorefResultSet retResultSet = new CorefResultSet(this.corefId);
+        CorefResultSet retResultSet = new CorefResultSet(this.corefId, this.corefType, this.corefValue);
         Set<String> clusterMentionsAsString = new HashSet<>();
         for(MentionResultSet mentionResultSet : this.mentions) {
             if(clusterMentionsAsString.add(mentionResultSet.getMentionString())) {
@@ -79,8 +91,7 @@ public class CorefResultSet {
     }
 
     public CorefResultSet getMentionsOnlyTextual() {
-        CorefResultSet retResultSet = new CorefResultSet(this.corefId);
-        Set<String> clusterMentionsAsString = new HashSet<>();
+        CorefResultSet retResultSet = new CorefResultSet(this.corefId, this.corefType, this.corefValue);
         for(MentionResultSet mentionResultSet : this.mentions) {
             if(!mentionResultSet.getMentionString().matches(".*\\d+.*")) {
                 retResultSet.addMentionCopy(mentionResultSet);
@@ -90,8 +101,19 @@ public class CorefResultSet {
         return retResultSet;
     }
 
+    public CorefResultSet getMentionsNoOnlyNumbers() {
+        CorefResultSet retResultSet = new CorefResultSet(this.corefId, this.corefType, this.corefValue);
+        for(MentionResultSet mentionResultSet : this.mentions) {
+            if(!mentionResultSet.getMentionString().matches("\\d+")) {
+                retResultSet.addMentionCopy(mentionResultSet);
+            }
+        }
+
+        return retResultSet;
+    }
+
     public CorefResultSet getLevenshteinDistanceMentions() {
-        CorefResultSet retResultSet = new CorefResultSet(this.corefId);
+        CorefResultSet retResultSet = new CorefResultSet(this.corefId, this.corefType, this.corefValue);
         if(this.mentions.size() == 1) {
             retResultSet.addMentionCopy(this.mentions.get(0));
         } else {
@@ -116,7 +138,7 @@ public class CorefResultSet {
     }
 
     public CorefResultSet getNonIntersectingMentions() {
-        CorefResultSet retResultSet = new CorefResultSet(this.corefId);
+        CorefResultSet retResultSet = new CorefResultSet(this.corefId, this.corefType, this.corefValue);
         if(this.mentions.size() == 1) {
             retResultSet.addMentionCopy(this.mentions.get(0));
         } else {
@@ -162,5 +184,11 @@ public class CorefResultSet {
         }
 
         return retList;
+    }
+
+    @Override
+    public String toString() {
+        return "corefId=" + corefId +", corefValue=" + corefValue +", mentions=" + mentions.size() +
+                ", corefType=" + corefType;
     }
 }

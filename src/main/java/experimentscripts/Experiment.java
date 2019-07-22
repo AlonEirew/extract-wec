@@ -1,16 +1,16 @@
 package experimentscripts;
 
 import com.google.gson.Gson;
+import org.apache.commons.io.FileUtils;
 import persistence.SQLiteConnections;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Experiment {
     private static final int TYPES_START = 2;
@@ -19,10 +19,13 @@ public class Experiment {
     private static Gson gson = new Gson();
 
     public static void main(String[] args) throws SQLException {
-        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v5.db";
+        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v7.db";
         SQLiteConnections sqLiteConnections = new SQLiteConnections(connectionUrl);
 
         final List<Map<Integer, CorefResultSet>> countPerType = countClustersString(sqLiteConnections);
+//        final Map<Integer, CorefResultSet> allCorefs = ExtractTopicsInfo.getAllCorefs(sqLiteConnections);
+//        List<Map<Integer, CorefResultSet>> countPerType = new ArrayList<>();
+//        countPerType.add(allCorefs);
         final List<Map<Integer, CorefResultSet>> clustersUniqueString = countClustersUniqueString(countPerType);
 
         printResults(countPerType, "PURE");
@@ -53,9 +56,24 @@ public class Experiment {
         int[] mentionsCountList = countMentions1_30Plus(resultsToPrint);
         int[][] tableResult = createResultTable(resultsToPrint);
 
-        countWithinDocMentions(resultsToPrint);
-        System.out.println(gson.toJson(tableResult) + " " + message);
-        System.out.println(message + " Mentions=" + gson.toJson(mentionsCountList));
+        try {
+            printMostToFile(resultsToPrint, message);
+            countWithinDocMentions(resultsToPrint);
+            System.out.println(gson.toJson(tableResult) + " " + message);
+            System.out.println(message + " Mentions=" + gson.toJson(mentionsCountList));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void printMostToFile(List<Map<Integer, CorefResultSet>> resultsToPrint, String message) throws IOException {
+        for(int i = 0 ; i < resultsToPrint.size() ; i++) {
+            final Map<Integer, CorefResultSet> integerCorefResultSetMap = resultsToPrint.get(i);
+            final List<CorefResultSet> values = new ArrayList<>(integerCorefResultSetMap.values());
+            Collections.sort(values, Comparator.comparingInt(CorefResultSet::getMentionsSize));
+            FileUtils.writeLines(new File("output" + File.separator + message + File.separator + (i + TYPES_START) + ".txt"),
+                    "UTF-8", values);
+        }
     }
 
     private static void countWithinDocMentions(List<Map<Integer, CorefResultSet>> countPerType) {
