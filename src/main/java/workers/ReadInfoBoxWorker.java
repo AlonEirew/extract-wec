@@ -1,19 +1,22 @@
 package workers;
 
 import data.RawElasticResult;
+import wikilinks.WikiLinksExtractor;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ReadInfoBoxWorker extends AWorker {
 
-    private Map<String, String> infoBoxes;
+    private Map<String, Set<String>> infoBoxes;
 
     public ReadInfoBoxWorker() {
 
     }
 
-    public ReadInfoBoxWorker(List<RawElasticResult> rawElasticResults, Map<String, String> infoBoxes) {
+    public ReadInfoBoxWorker(List<RawElasticResult> rawElasticResults, Map<String, Set<String>> infoBoxes) {
         super(rawElasticResults);
         this.infoBoxes = infoBoxes;
     }
@@ -21,27 +24,44 @@ public class ReadInfoBoxWorker extends AWorker {
     @Override
     public void run() {
         for(RawElasticResult rawResult : this.rawElasticResults) {
-            String infoBox = extractPageInfoBox(rawResult.getText());
-            if(infoBox != null && !this.infoBoxes.containsKey(infoBox)) {
-                this.infoBoxes.put(infoBox, rawResult.getTitle());
+            String infoBox = WikiLinksExtractor.extractPageInfoBox(rawResult.getText());
+            if(infoBox != null && !infoBox.isEmpty()) {
+                infoBox = toReadableString(infoBox);
+
+                if (infoBoxValid(infoBox)) {
+                    if (!this.infoBoxes.containsKey(infoBox)) {
+                        this.infoBoxes.put(infoBox, new HashSet<>());
+                    }
+
+                    this.infoBoxes.get(infoBox).add(rawResult.getTitle());
+                }
             }
         }
     }
 
-    public String extractPageInfoBox(String text) {
-        String infoBox = null;
-        if(text.contains("Infobox")) {
-            infoBox = text.substring(text.indexOf("Infobox"));
-            infoBox = infoBox.substring(0, text.indexOf("\n"));
-        }
-        // Check all occurrences
+    private boolean infoBoxValid(String infoBox) {
+        return !infoBox.contains("template:") && !infoBox.contains("wikipedia:");
+    }
+
+    private String toReadableString(String infoBox) {
         if(infoBox != null && !infoBox.isEmpty()) {
-            infoBox = infoBox.substring(0, infoBox.indexOf("\n"));
-            infoBox = infoBox.replaceAll("\\{", "");
-            infoBox = infoBox.replaceAll("}", "");
-            infoBox = infoBox.replaceAll("\\|", "");
-            infoBox = infoBox.replaceAll("<.*?>", "");
-            infoBox = infoBox.replace("Infobox", "").trim();
+            if(infoBox.contains("|")) {
+                infoBox = infoBox.substring(0, infoBox.indexOf("|"));
+            }
+
+            infoBox = infoBox
+                    .replaceAll("\\{", "")
+                    .replaceAll("}", "")
+                    .replaceAll("\n", "")
+                    .replaceAll("-", "")
+                    .replaceAll("=", "")
+                    .replaceAll("!", "")
+                    .replaceAll("<", "")
+                    .replaceAll(">", "")
+                    .replaceAll("\\s+", "")
+                    .replaceAll("\\|", "")
+                    .replaceAll("<.*?>", "")
+                    .replace("infobox", "").trim();
         }
 
         return infoBox;

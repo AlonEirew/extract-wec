@@ -3,6 +3,7 @@ package experimentscripts;
 import java.util.Objects;
 
 public class MentionResultSet {
+    private int mentionId;
     private int corefId;
     private String mentionString;
     private String extractedFromPage;
@@ -31,6 +32,15 @@ public class MentionResultSet {
         this.tokenEnd = mention.tokenEnd;
         this.context = mention.context;
         this.pos = mention.pos;
+    }
+
+    public MentionResultSet(int corefId, int mentionId, String mentionText, String extractedFromPage, int tokenStart, int tokenEnd, String context, String partOfSpeech) {
+        this(corefId, mentionText, extractedFromPage, tokenStart, tokenEnd, context, partOfSpeech);
+        this.mentionId = mentionId;
+    }
+
+    public int getMentionId() {
+        return mentionId;
     }
 
     public String getMentionString() {

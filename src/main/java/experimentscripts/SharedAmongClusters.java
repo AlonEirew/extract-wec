@@ -17,7 +17,7 @@ public class SharedAmongClusters {
         String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v7.db";
         SQLiteConnections sqLiteConnections = new SQLiteConnections(connectionUrl);
 
-        final List<Map<Integer, CorefResultSet>> countPerType = Experiment.countClustersString(sqLiteConnections);
+        final List<Map<Integer, CorefResultSet>> countPerType = Experiment.extractClustersString(sqLiteConnections);
         final List<Map<Integer, CorefResultSet>> clustersUniqueString = Experiment.countClustersUniqueString(countPerType);
         final Map<String, AtomicInteger> exactStringAmongClusters = countExactStringAmongClusters(clustersUniqueString);
 

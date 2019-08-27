@@ -29,6 +29,16 @@ public class CorefResultSet {
         this.mentions.add(newMention);
     }
 
+    public void addNoneIntersectionUniqueMention(MentionResultSet mention) {
+        for(MentionResultSet localMentions : this.mentions) {
+            if(isIntersecting(localMentions, mention) || isLevenshteinDistanceApply(localMentions, mention, 2)) {
+                return;
+            }
+        }
+
+        this.mentions.add(mention);
+    }
+
     public int getMentionsSize() {
         return this.mentions.size();
     }
@@ -78,6 +88,10 @@ public class CorefResultSet {
         return corefId;
     }
 
+    public int getCorefType() {
+        return corefType;
+    }
+
     public CorefResultSet getMentionsOnlyUniques() {
         CorefResultSet retResultSet = new CorefResultSet(this.corefId, this.corefType, this.corefValue);
         Set<String> clusterMentionsAsString = new HashSet<>();
@@ -120,13 +134,11 @@ public class CorefResultSet {
             retResultSet.addMentionsCopyCollection(this.mentions);
             for (int x = 0; x < retResultSet.mentions.size(); x++) {
                 for (int y = x + 1; y < retResultSet.mentions.size(); y++) {
-                    if(!retResultSet.mentions.get(y).isMarkedForDelete()) {
-                        final Integer apply = LevenshteinDistance.getDefaultInstance()
-                                .apply(retResultSet.mentions.get(x).getMentionString(),
-                                        retResultSet.mentions.get(y).getMentionString());
-
-                        if (apply <= 2) {
-                            retResultSet.mentions.get(y).setMarkedForDelete(true);
+                    final MentionResultSet mentionResultSet1 = retResultSet.mentions.get(x);
+                    final MentionResultSet mentionResultSet2 = retResultSet.mentions.get(y);
+                    if(!mentionResultSet1.isMarkedForDelete()) {
+                        if (isLevenshteinDistanceApply(mentionResultSet1, mentionResultSet2, 2)) {
+                            mentionResultSet1.setMarkedForDelete(true);
                         }
                     }
                 }
@@ -135,6 +147,16 @@ public class CorefResultSet {
 
         retResultSet.cleanMentionsMarkedForDeletion();
         return retResultSet;
+    }
+
+    private boolean isLevenshteinDistanceApply(MentionResultSet m1, MentionResultSet m2, int threshold) {
+        final Integer apply = LevenshteinDistance.getDefaultInstance().apply(m1.getMentionString(), m2.getMentionString());
+
+        if(apply <= threshold) {
+            return true;
+        }
+
+        return false;
     }
 
     public CorefResultSet getNonIntersectingMentions() {
@@ -146,13 +168,9 @@ public class CorefResultSet {
             for (int x = 0; x < retResultSet.mentions.size(); x++) {
                 for (int y = x + 1; y < retResultSet.mentions.size(); y++) {
                     if(!retResultSet.mentions.get(y).isMarkedForDelete()) {
-                        List<String> m1 = new ArrayList<>(Arrays.asList(retResultSet.mentions.get(x)
-                                .getMentionString().split("\\s")));
-                        List<String> m2 = new ArrayList<>(Arrays.asList(retResultSet.mentions.get(y)
-                                .getMentionString().split("\\s")));
-
-                        m1.retainAll(m2);
-                        if (m1.size() >= 1) {
+                        final MentionResultSet mentionResultSet1 = retResultSet.mentions.get(x);
+                        final MentionResultSet mentionResultSet2 = retResultSet.mentions.get(y);
+                        if (isIntersecting(mentionResultSet1, mentionResultSet2)) {
                             retResultSet.mentions.get(y).setMarkedForDelete(true);
                         }
                     }
@@ -162,6 +180,20 @@ public class CorefResultSet {
 
         retResultSet.cleanMentionsMarkedForDeletion();
         return retResultSet;
+    }
+
+    private boolean isIntersecting(MentionResultSet mentionResultSet1, MentionResultSet mentionResultSet2) {
+        List<String> m1 = new ArrayList<>(Arrays.asList(mentionResultSet1
+                .getMentionString().split("\\s")));
+        List<String> m2 = new ArrayList<>(Arrays.asList(mentionResultSet2
+                .getMentionString().split("\\s")));
+
+        m1.retainAll(m2);
+        if (m1.size() >= 1) {
+            return true;
+        }
+
+        return false;
     }
 
     public void cleanMentionsMarkedForDeletion() {

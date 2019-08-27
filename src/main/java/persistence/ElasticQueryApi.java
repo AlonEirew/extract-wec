@@ -115,12 +115,14 @@ public class ElasticQueryApi implements Closeable {
         final String title = (String)map.get("title");
         final Map relations = (Map)map.get("relations");
 
-        if((boolean)relations.get("isDisambiguation") ||
-                text.startsWith("#redirect") ||
-                text.startsWith("#REDIRECT") ||
-                title.toLowerCase().startsWith("file:") ||
-                title.toLowerCase().startsWith("wikipedia:")) {
-            return null;
+        if(relations != null && relations.containsKey("isDisambiguation")) {
+            if ((boolean) relations.get("isDisambiguation") ||
+                    text.startsWith("#redirect") ||
+                    text.startsWith("#REDIRECT") ||
+                    title.toLowerCase().startsWith("file:") ||
+                    title.toLowerCase().startsWith("wikipedia:")) {
+                return null;
+            }
         }
         return new RawElasticResult(id, title, text);
     }

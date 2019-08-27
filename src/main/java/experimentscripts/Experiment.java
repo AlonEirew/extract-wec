@@ -13,8 +13,8 @@ import java.sql.Statement;
 import java.util.*;
 
 public class Experiment {
-    private static final int TYPES_START = 2;
-    private static final int TYPES_END = 8;
+    private static final int TYPES_START = 1;
+    private static final int TYPES_END = 1;
 
     private static Gson gson = new Gson();
 
@@ -22,7 +22,7 @@ public class Experiment {
         String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v7.db";
         SQLiteConnections sqLiteConnections = new SQLiteConnections(connectionUrl);
 
-        final List<Map<Integer, CorefResultSet>> countPerType = countClustersString(sqLiteConnections);
+        final List<Map<Integer, CorefResultSet>> countPerType = extractClustersString(sqLiteConnections);
 //        final Map<Integer, CorefResultSet> allCorefs = ExtractTopicsInfo.getAllCorefs(sqLiteConnections);
 //        List<Map<Integer, CorefResultSet>> countPerType = new ArrayList<>();
 //        countPerType.add(allCorefs);
@@ -199,7 +199,7 @@ public class Experiment {
         return countPerType;
     }
 
-    static List<Map<Integer, CorefResultSet>> countClustersString(SQLiteConnections sqlConnection) throws SQLException {
+    static List<Map<Integer, CorefResultSet>> extractClustersString(SQLiteConnections sqlConnection) throws SQLException {
         ArrayList<Map<Integer, CorefResultSet>> countPerType = new ArrayList<>();
         System.out.println("Preparing to select all coref mentions by types");
         try (Connection conn = sqlConnection.getConnection(); Statement stmt = conn.createStatement()) {
@@ -217,7 +217,7 @@ public class Experiment {
                     final String extractedFromPage = rs.getString("extractedFromPage");
                     final int tokenStart = rs.getInt("tokenStart");
                     final int tokenEnd = rs.getInt("tokenEnd");
-                    final String context = null; //rs.getString("context");
+                    final String context = rs.getString("context");
                     if(!countMapString.containsKey(corefId)) {
                         countMapString.put(corefId, new CorefResultSet(corefId));
                     }
