@@ -47,8 +47,7 @@ public class TestWikiLinksExtractor {
     @Test
     public void testInfoBoxExtract() {
         String pageText = getInfoBoxs();
-        ReadInfoBoxWorker worker = new ReadInfoBoxWorker();
-        final String infoBoxs = worker.extractPageInfoBox(pageText);
+        final String infoBoxs = WikiLinksExtractor.extractPageInfoBox(pageText);
         System.out.println(infoBoxs);
     }
 

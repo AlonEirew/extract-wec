@@ -25,8 +25,6 @@ public class WikiNewsRedirecectCount {
                 new File(property + "/config.json"), "UTF-8"),
                 Map.class);
 
-        ExecutorServiceFactory.initExecutorService(Integer.parseInt(config.get("pool_size")));
-
         try (ElasticQueryApi elasticApi = new ElasticQueryApi(config.get("elastic_wikinews_index"),
                 Integer.parseInt(config.get("elastic_search_interval")), config.get("elastic_host"),
                 Integer.parseInt(config.get("elastic_port")))) {
@@ -35,12 +33,10 @@ public class WikiNewsRedirecectCount {
                     new WikiNewsRedirectCounterWorkerFactory());
 
             createWikiLinks.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
-            ExecutorServiceFactory.closeService();
 
             System.out.println("Total redirect pages=" + WikiNewsRedirectCounterWorker.getCounter());
         } catch (Exception ex) {
             ex.printStackTrace();
-            ExecutorServiceFactory.closeService();
         }
     }
 }

@@ -44,22 +44,17 @@ class ParseAndExtractMentionsWorker extends AWorker {
     }
 
     public void handle(List<WikiLinksMention> mentions, boolean forceCommit) {
-
         sLock.lock();
         finalToCommit.addAll(mentions);
         if(finalToCommit.size() >= COMMIT_MAX_SIZE || forceCommit) {
-            List<WikiLinksMention> localNewList = new ArrayList<>();
-            localNewList.addAll(finalToCommit);
+            List<WikiLinksMention> localNewList = new ArrayList<>(finalToCommit);
             finalToCommit.clear();
-
             sLock.unlock();
-
             localNewList = extractFromWikiAndCleanNoneRelevant(localNewList);
             commitCurrent(localNewList);
         } else {
             sLock.unlock();
         }
-
     }
 
     private List<WikiLinksMention> extractFromWikiAndCleanNoneRelevant(List<WikiLinksMention> localNewList) {

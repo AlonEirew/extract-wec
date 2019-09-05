@@ -75,7 +75,8 @@ public class ElasticQueryApi implements Closeable {
     }
 
     public Map<String, String> getAllWikiPagesTitleAndText(Set<String> pagesTitles) throws InterruptedException, ExecutionException, TimeoutException {
-        System.out.println("Got total of-" + pagesTitles.size() + " coref pages to experimentscripts from elastic");
+        System.out.println("Got total of-" + pagesTitles.size() + " coref pages to extract from elastic");
+        ExecutorServiceFactory threadPool = new ExecutorServiceFactory();
         List<Future<List<RawElasticResult>>> futureList = new ArrayList<>();
 
         MultiSearchRequest multiSearchRequest = new MultiSearchRequest();
@@ -89,14 +90,15 @@ public class ElasticQueryApi implements Closeable {
 
             index ++;
             if(index % 1000 == 0) {
-                futureList.add(ExecutorServiceFactory.submit(new ElasticSearchCallRequest(multiSearchRequest)));
+                futureList.add(threadPool.submit(new ElasticSearchCallRequest(multiSearchRequest)));
                 multiSearchRequest = new MultiSearchRequest();
                 System.out.println("Done extracting " + index + " coref pages");
             }
         }
 
-        futureList.add(ExecutorServiceFactory.submit(new ElasticSearchCallRequest(multiSearchRequest)));
+        futureList.add(threadPool.submit(new ElasticSearchCallRequest(multiSearchRequest)));
 
+        threadPool.closeService();
         Map<String, String> pagesResults = new HashMap<>();
         for(Future<List<RawElasticResult>> future : futureList) {
             final List<RawElasticResult> rawElasticResults = future.get(1000, TimeUnit.SECONDS);

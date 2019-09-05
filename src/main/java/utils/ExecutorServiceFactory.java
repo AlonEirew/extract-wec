@@ -5,33 +5,28 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class ExecutorServiceFactory {
 
-    private static ExecutorService elasticSearchPool;
-    private static ReentrantLock lock = new ReentrantLock();
+    private final ExecutorService elasticSearchPool;
 
-    public static void initExecutorService(int poolSize) {
-        lock.lock();
-        if (elasticSearchPool == null) {
-            elasticSearchPool = new ThreadPoolExecutor(
-                    poolSize,
-                    2 * poolSize,
-                    20,
-                    TimeUnit.SECONDS,
-                    new ArrayBlockingQueue<>(2 * poolSize),
-                    new ThreadPoolExecutor.CallerRunsPolicy());
-        }
-        lock.unlock();
+    public ExecutorServiceFactory() {
+        this(Runtime.getRuntime().availableProcessors());
+
     }
 
-    public static Future<?> submit(Runnable runnable) {
+    public ExecutorServiceFactory(int capacity) {
+        elasticSearchPool = new ThreadPoolExecutor(capacity, capacity,
+                0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(100),
+                new ThreadPoolExecutor.CallerRunsPolicy());
+    }
+
+    public Future<?> submit(Runnable runnable) {
         return elasticSearchPool.submit(runnable);
     }
 
-    public static <T> Future<T> submit(Callable<T> callable) {
+    public <T> Future<T> submit(Callable<T> callable) {
         return elasticSearchPool.submit(callable);
     }
 
-    public static void closeService() {
-        lock.lock();
+    public void closeService() {
         if(elasticSearchPool != null) {
             try {
                 elasticSearchPool.shutdown();
@@ -48,9 +43,6 @@ public class ExecutorServiceFactory {
                 // Preserve interrupt status
                 Thread.currentThread().interrupt();
             }
-
-            elasticSearchPool = null;
-            lock.unlock();
         }
     }
 }

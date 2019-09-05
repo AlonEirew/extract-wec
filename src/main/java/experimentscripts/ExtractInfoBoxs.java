@@ -32,15 +32,10 @@ public class ExtractInfoBoxs {
                 Integer.parseInt(config.get("elastic_search_interval")), config.get("elastic_host"),
                 Integer.parseInt(config.get("elastic_port")))) {
 
-            ExecutorServiceFactory.initExecutorService(Integer.parseInt(config.get("pool_size")));
-
             CreateWikiLinks createWikiLinks = new CreateWikiLinks(elasticApi, readInfoBoxWorkerFactory);
             createWikiLinks.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
-
-            ExecutorServiceFactory.closeService();
         } catch (Exception ex) {
             ex.printStackTrace();
-            ExecutorServiceFactory.closeService();
         }
 
         final Map<String, Set<String>> infoBoxes = readInfoBoxWorkerFactory.getInfoBoxes();

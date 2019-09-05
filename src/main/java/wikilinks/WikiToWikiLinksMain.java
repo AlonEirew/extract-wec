@@ -27,8 +27,6 @@ public class WikiToWikiLinksMain {
                 new File(property + "/config.json"), "UTF-8"),
                 Map.class);
 
-        ExecutorServiceFactory.initExecutorService(Integer.parseInt(config.get("pool_size")));
-
         SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections(config.get("sql_connection_url")));
 
         try (ElasticQueryApi elasticApi = new ElasticQueryApi(config.get("elastic_wiki_index"),
@@ -46,13 +44,10 @@ public class WikiToWikiLinksMain {
             createWikiLinks.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
             sqlApi.persistAllCorefs();
 
-            ExecutorServiceFactory.closeService();
-
             long end = System.currentTimeMillis();
             System.out.println("Process Done, took-" + (end - start) + "ms to run");
         } catch (Exception ex) {
             ex.printStackTrace();
-            ExecutorServiceFactory.closeService();
         }
     }
 
