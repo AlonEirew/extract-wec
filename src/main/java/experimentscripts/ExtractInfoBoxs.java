@@ -3,8 +3,9 @@ package experimentscripts;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
-import utils.ExecutorServiceFactory;
 import wikilinks.CreateWikiLinks;
 import workers.ReadInfoBoxWorkerFactory;
 
@@ -13,17 +14,16 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 public class ExtractInfoBoxs {
-
-    private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    private final static Logger LOGGER = LogManager.getLogger(ExtractInfoBoxs.class);
+    private final static Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException, TimeoutException {
         final String property = System.getProperty("user.dir");
-        System.out.println("Working directory=" + property);
+        LOGGER.info("Working directory=" + property);
 
-        Map<String, String> config = gson.fromJson(FileUtils.readFileToString(
+        Map<String, String> config = GSON.fromJson(FileUtils.readFileToString(
                 new File(property + "/config.json"), "UTF-8"),
                 Map.class);
 
@@ -35,7 +35,7 @@ public class ExtractInfoBoxs {
             CreateWikiLinks createWikiLinks = new CreateWikiLinks(elasticApi, readInfoBoxWorkerFactory);
             createWikiLinks.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.error(ex);
         }
 
         final Map<String, Set<String>> infoBoxes = readInfoBoxWorkerFactory.getInfoBoxes();
@@ -48,10 +48,10 @@ public class ExtractInfoBoxs {
 
         sortedInfoBoxesBySize.sort(Map.Entry.comparingByValue(Collections.reverseOrder()));
 
-            System.out.println(infoBoxes.size());
-//        System.out.println(gson.toJson(infoBoxes));
+            LOGGER.info(infoBoxes.size());
+//        LOGGER.info(gson.toJson(infoBoxes));
 
-            FileUtils.write(new File(property + "/infoboxesBySize.json"), gson.toJson(sortedInfoBoxesBySize), "UTF-8");
+            FileUtils.write(new File(property + "/infoboxesBySize.json"), GSON.toJson(sortedInfoBoxesBySize), "UTF-8");
 
     }
 }

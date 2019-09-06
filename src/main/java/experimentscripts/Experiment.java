@@ -2,6 +2,8 @@ package experimentscripts;
 
 import com.google.gson.Gson;
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import persistence.SQLiteConnections;
 
 import java.io.File;
@@ -13,12 +15,15 @@ import java.sql.Statement;
 import java.util.*;
 
 public class Experiment {
+    private final static Logger LOGGER = LogManager.getLogger(Experiment.class);
+
     private static final int TYPES_START = 1;
     private static final int TYPES_END = 1;
 
     private static Gson gson = new Gson();
 
     public static void main(String[] args) throws SQLException {
+
         String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v7.db";
         SQLiteConnections sqLiteConnections = new SQLiteConnections(connectionUrl);
 
@@ -59,10 +64,10 @@ public class Experiment {
         try {
             printMostToFile(resultsToPrint, message);
             countWithinDocMentions(resultsToPrint);
-            System.out.println(gson.toJson(tableResult) + " " + message);
-            System.out.println(message + " Mentions=" + gson.toJson(mentionsCountList));
+            LOGGER.info(gson.toJson(tableResult) + " " + message);
+            LOGGER.info(message + " Mentions=" + gson.toJson(mentionsCountList));
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
     }
 
@@ -85,7 +90,7 @@ public class Experiment {
                 final Map<String, List<MentionResultSet>> withinDocCoref = coreResultSet.getWithinDocCoref();
 //                final List<MentionResultSet> duplicates = coreResultSet.countDuplicates();
 //                if(duplicates.size() > 0) {
-//                    System.out.println(gson.toJson(duplicates));
+//                    LOGGER.info(gson.toJson(duplicates));
 //                }
                 for(List<MentionResultSet> wdCorefs : withinDocCoref.values()) {
                     if(wdCorefs.size() > 1) {
@@ -97,7 +102,7 @@ public class Experiment {
             wdPerType[i] = wdCount;
         }
 
-        System.out.println("WD MENTIONS" + gson.toJson(wdPerType));
+        LOGGER.info("WD MENTIONS" + gson.toJson(wdPerType));
     }
 
     static List<Map<Integer, CorefResultSet>> calcLevenshteinDistance(List<Map<Integer, CorefResultSet>> clustersUniqueString) {
@@ -201,10 +206,10 @@ public class Experiment {
 
     static List<Map<Integer, CorefResultSet>> extractClustersString(SQLiteConnections sqlConnection) throws SQLException {
         ArrayList<Map<Integer, CorefResultSet>> countPerType = new ArrayList<>();
-        System.out.println("Preparing to select all coref mentions by types");
+        LOGGER.info("Preparing to select all coref mentions by types");
         try (Connection conn = sqlConnection.getConnection(); Statement stmt = conn.createStatement()) {
             for (int i = TYPES_START; i <= TYPES_END; i++) {
-                System.out.println("Preparing to experimentscripts unique text for type=" + i);
+                LOGGER.info("Preparing to experimentscripts unique text for type=" + i);
                 Map<Integer, CorefResultSet> countMapString = new HashMap<>();
 
                 String query = "SELECT coreChainId, mentionText, extractedFromPage, tokenStart, tokenEnd from Mentions INNER JOIN " +
@@ -227,7 +232,7 @@ public class Experiment {
                 }
 
                 countPerType.add(countMapString);
-                System.out.println("Done extracting for type=" + i);
+                LOGGER.info("Done extracting for type=" + i);
             }
         }
 
@@ -236,18 +241,18 @@ public class Experiment {
 
     private static List[] selectCorefData(SQLiteConnections sqlConnection) throws SQLException {
         List[] corefIdsPerType = new List[TYPES_END];
-        System.out.println("Preparing to select all coref by types");
+        LOGGER.info("Preparing to select all coref by types");
         try (Connection conn = sqlConnection.getConnection(); Statement stmt = conn.createStatement()) {
             for (int i = 0; i < corefIdsPerType.length; i++) {
                 List<Integer> corefIds = new ArrayList<>();
-                System.out.println("Getting type=" + (i+1));
+                LOGGER.info("Getting type=" + (i+1));
                 String query = "Select corefId from CorefChains WHERE corefType=" + (i+1) + ";";
                 ResultSet rs = stmt.executeQuery(query);
                 while (rs.next()) {
                     corefIds.add(rs.getInt("corefId"));
                 }
                 corefIdsPerType[i] = corefIds;
-                System.out.println("Done with type=" + (i+1));
+                LOGGER.info("Done with type=" + (i+1));
             }
         }
 

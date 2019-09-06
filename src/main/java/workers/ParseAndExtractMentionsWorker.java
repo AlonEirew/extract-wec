@@ -2,10 +2,13 @@ package workers;
 
 import data.RawElasticResult;
 import data.WikiLinksMention;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
 import wikilinks.ICorefFilter;
 import wikilinks.WikiLinksExtractor;
+import wikinews.WikiNewsToWikiLinksMain;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -13,6 +16,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReentrantLock;
 
 class ParseAndExtractMentionsWorker extends AWorker {
+    private final static Logger LOGGER = LogManager.getLogger(ParseAndExtractMentionsWorker.class);
 
     private static final ReentrantLock sLock = new ReentrantLock();
     private static final int COMMIT_MAX_SIZE = 1000000;
@@ -58,7 +62,7 @@ class ParseAndExtractMentionsWorker extends AWorker {
     }
 
     private List<WikiLinksMention> extractFromWikiAndCleanNoneRelevant(List<WikiLinksMention> localNewList) {
-        System.out.println("Handle all worker mentions...in total-" + localNewList.size() + " will be handled");
+        LOGGER.info("Handle all worker mentions...in total-" + localNewList.size() + " will be handled");
         Set<String> corefTitleSet = new HashSet<>();
         for(WikiLinksMention mention : localNewList) {
             corefTitleSet.add(mention.getCorefChain().getCorefValue());
@@ -68,7 +72,7 @@ class ParseAndExtractMentionsWorker extends AWorker {
         try {
             allPagesText = this.elasticApi.getAllWikiPagesTitleAndText(corefTitleSet);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
 
         if(allPagesText != null) {
@@ -90,13 +94,13 @@ class ParseAndExtractMentionsWorker extends AWorker {
     }
 
     private void commitCurrent(List<WikiLinksMention> localNewList) {
-        System.out.println("Prepare to inset-" + localNewList.size() + " mentions to SQL");
+        LOGGER.info("Prepare to inset-" + localNewList.size() + " mentions to SQL");
         try {
             if (!this.sqlApi.insertRowsToTable(localNewList)) {
-                System.out.println("Failed to insert mentions Batch!!!!");
+                LOGGER.error("Failed to insert mentions Batch!!!!");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
     }
 }

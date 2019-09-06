@@ -1,5 +1,7 @@
 package experimentscripts;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import persistence.SQLQueryApi;
 import persistence.SQLiteConnections;
 
@@ -11,6 +13,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class ExtractSampleForValidation {
+    private final static Logger LOGGER = LogManager.getLogger(ExtractSampleForValidation.class);
+
     public static void main(String[] args) throws SQLException {
         String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v7.db";
         SQLiteConnections sqLiteConnections = new SQLiteConnections(connectionUrl);
@@ -25,17 +29,17 @@ public class ExtractSampleForValidation {
 
         commitCurrent(toCommit, sqlApi);
 
-        System.out.println();
+        LOGGER.info("");
     }
 
     private static void commitCurrent(List<ValidationMention> localNewList, SQLQueryApi sqlApi) {
-        System.out.println("Prepare to inset-" + localNewList.size() + " mentions to SQL");
+        LOGGER.info("Prepare to inset-" + localNewList.size() + " mentions to SQL");
         try {
             if (!sqlApi.insertRowsToTable(localNewList)) {
-                System.out.println("Failed to insert mentions Batch!!!!");
+                LOGGER.error("Failed to insert mentions Batch!!!!");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
     }
 
@@ -83,10 +87,10 @@ public class ExtractSampleForValidation {
     }
 
     static Map<Integer, CorefResultSet> getAllCorefs(SQLiteConnections sqlConnection) throws SQLException {
-        System.out.println("Preparing to select all coref mentions by types");
+        LOGGER.info("Preparing to select all coref mentions by types");
         Map<Integer, CorefResultSet> corefMap = new HashMap<>();
         try (Connection conn = sqlConnection.getConnection(); Statement stmt = conn.createStatement()) {
-            System.out.println("Preparing to extract");
+            LOGGER.info("Preparing to extract");
 
             String query = "SELECT mentionId, coreChainId, mentionText, extractedFromPage, tokenStart, " +
                     "tokenEnd, corefValue, corefType, PartOfSpeech, context " +

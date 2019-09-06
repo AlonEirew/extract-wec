@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import data.WikiLinksCoref;
 import data.WikiLinksMention;
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
 import persistence.SQLiteConnections;
@@ -16,12 +18,13 @@ import java.sql.SQLException;
 import java.util.Map;
 
 public class WikiToWikiLinksMain {
+    private final static Logger LOGGER = LogManager.getLogger(WikiToWikiLinksMain.class);
 
     private static Gson gson = new Gson();
 
     public static void main(String[] args) throws IOException {
         final String property = System.getProperty("user.dir");
-        System.out.println("Working directory=" + property);
+        LOGGER.info("Working directory=" + property);
 
         Map<String, String> config = gson.fromJson(FileUtils.readFileToString(
                 new File(property + "/config.json"), "UTF-8"),
@@ -37,7 +40,7 @@ public class WikiToWikiLinksMain {
             long start = System.currentTimeMillis();
 
             if (!createSQLWikiLinksTables(sqlApi)) {
-                System.out.println("Failed to create Database and tables, finishing process");
+                LOGGER.error("Failed to create Database and tables, finishing process");
                 return;
             }
 
@@ -45,14 +48,14 @@ public class WikiToWikiLinksMain {
             sqlApi.persistAllCorefs();
 
             long end = System.currentTimeMillis();
-            System.out.println("Process Done, took-" + (end - start) + "ms to run");
+            LOGGER.info("Process Done, took-" + (end - start) + "ms to run");
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.error(ex);
         }
     }
 
     private static boolean createSQLWikiLinksTables(SQLQueryApi sqlApi) throws SQLException {
-        System.out.println("Creating SQL Tables");
+        LOGGER.info("Creating SQL Tables");
         return sqlApi.createTable(new WikiLinksMention()) &&
                 sqlApi.createTable(WikiLinksCoref.getAndSetIfNotExistCorefChain("####TEMP####"));
     }

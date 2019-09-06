@@ -3,6 +3,8 @@ package experimentscripts;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
 import persistence.SQLiteConnections;
@@ -17,14 +19,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 public class ExtractDates {
-
-    private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    private final static Logger LOGGER = LogManager.getLogger(ExtractDates.class);
+    private final static Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException, TimeoutException {
         final String property = System.getProperty("user.dir");
-        System.out.println("Working directory=" + property);
+        LOGGER.info("Working directory=" + property);
 
-        Map<String, String> config = gson.fromJson(FileUtils.readFileToString(
+        Map<String, String> config = GSON.fromJson(FileUtils.readFileToString(
                 new File(property + "/config.json"), "UTF-8"),
                 Map.class);
 
@@ -38,8 +40,8 @@ public class ExtractDates {
         createWikiLinks.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
         final List<String> datesSchemas = readDateWorkerFactory.getDatesSchemas();
 
-        System.out.println(datesSchemas.size());
-//        System.out.println(gson.toJson(infoBoxes));
+        LOGGER.info(datesSchemas.size());
+//        LOGGER.info(gson.toJson(infoBoxes));
 
         FileUtils.writeLines(new File(property + "/dates.json"), datesSchemas, "\n");
     }

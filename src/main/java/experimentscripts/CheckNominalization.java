@@ -1,6 +1,7 @@
 package experimentscripts;
 
-import com.google.gson.Gson;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import persistence.SQLiteConnections;
 
 import java.sql.Connection;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 public class CheckNominalization {
+    private final static Logger LOGGER = LogManager.getLogger(CheckNominalization.class);
 
     public static void main(String[] args) throws SQLException {
         String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v6.db";
@@ -31,7 +33,7 @@ public class CheckNominalization {
         Experiment.createMentionsIntersectionReport(uniqueCorefMap);
         Experiment.createMentionsLevinshteinAndIntersectionReport(uniqueCorefMap);
 
-        System.out.println("Average Mentions span=" + averageMentionSpanSize(uniqueCorefMap.get(0)));
+        LOGGER.info("Average Mentions span=" + averageMentionSpanSize(uniqueCorefMap.get(0)));
     }
 
     private static float averageMentionSpanSize(Map<Integer, CorefResultSet> corefsMap) {
@@ -48,10 +50,10 @@ public class CheckNominalization {
     }
 
     private static Map<Integer, CorefResultSet> countVerbs(SQLiteConnections sqlConnection) throws SQLException {
-        System.out.println("Preparing to select all coref mentions by types");
+        LOGGER.info("Preparing to select all coref mentions by types");
         Map<Integer, CorefResultSet> corefMap = new HashMap<>();
         try (Connection conn = sqlConnection.getConnection(); Statement stmt = conn.createStatement()) {
-            System.out.println("Preparing to extract");
+            LOGGER.info("Preparing to extract");
 
             String query = "SELECT coreChainId, mentionText, extractedFromPage, tokenStart, tokenEnd, PartOfSpeech " +
                     "from Mentions INNER JOIN CorefChains ON Mentions.coreChainId=CorefChains.corefId " +
@@ -96,7 +98,7 @@ public class CheckNominalization {
                     } catch (ArrayIndexOutOfBoundsException ex) {
                         break;
                     } catch (StringIndexOutOfBoundsException ex) {
-                        System.out.println();
+                        LOGGER.error(ex);
                     }
                 }
 

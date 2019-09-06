@@ -1,6 +1,8 @@
 package experimentscripts;
 
 import com.google.gson.Gson;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import persistence.SQLiteConnections;
 
 import java.sql.SQLException;
@@ -11,7 +13,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SharedAmongClusters {
-    private static Gson gson = new Gson();
+    private final static Logger LOGGER = LogManager.getLogger(SharedAmongClusters.class);
+    private final static Gson GSON = new Gson();
 
     public static void main(String[] args) throws SQLException {
         String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v7.db";
@@ -22,19 +25,19 @@ public class SharedAmongClusters {
         final Map<String, AtomicInteger> exactStringAmongClusters = countExactStringAmongClusters(clustersUniqueString);
 
         final int[] resultTableForStringAmongClusters = createResultTableForStringAmongClusters(exactStringAmongClusters);
-        System.out.println(gson.toJson(resultTableForStringAmongClusters) + "UNIQUE");
+        LOGGER.info(GSON.toJson(resultTableForStringAmongClusters) + "UNIQUE");
 
         final List<Map<Integer, CorefResultSet>> mapOnlyTextual1 = countClustersOnlyTextual(clustersUniqueString, true);
         final Map<String, AtomicInteger> onlyTextualAmongClusters1 = countExactStringAmongClusters(mapOnlyTextual1);
 
         final int[] resultTableForTextualOnlyAmongClusters1 = createResultTableForStringAmongClusters(onlyTextualAmongClusters1);
-        System.out.println(gson.toJson(resultTableForTextualOnlyAmongClusters1) + "Textual (without Numbers)");
+        LOGGER.info(GSON.toJson(resultTableForTextualOnlyAmongClusters1) + "Textual (without Numbers)");
 
         final List<Map<Integer, CorefResultSet>> mapOnlyTextual2 = countClustersOnlyTextual(clustersUniqueString, false);
         final Map<String, AtomicInteger> onlyTextualAmongClusters2 = countExactStringAmongClusters(mapOnlyTextual2);
 
         final int[] resultTableForTextualOnlyAmongClusters2 = createResultTableForStringAmongClusters(onlyTextualAmongClusters2);
-        System.out.println(gson.toJson(resultTableForTextualOnlyAmongClusters2) + "Textual (No Only Numbers)");
+        LOGGER.info(GSON.toJson(resultTableForTextualOnlyAmongClusters2) + "Textual (No Only Numbers)");
     }
 
     private static <T> int[] createResultTableForStringAmongClusters(final Map<T, AtomicInteger> stringAmongClusterCountByType) {

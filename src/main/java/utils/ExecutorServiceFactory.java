@@ -1,10 +1,12 @@
 package utils;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.concurrent.*;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class ExecutorServiceFactory {
-
+    private final static Logger LOGGER = LogManager.getLogger(ExecutorServiceFactory.class);
     private final ExecutorService elasticSearchPool;
 
     public ExecutorServiceFactory() {
@@ -35,7 +37,7 @@ public class ExecutorServiceFactory {
                     elasticSearchPool.shutdownNow(); // Cancel currently executing tasks
                     // Wait a while for tasks to respond to being cancelled
                     if (!elasticSearchPool.awaitTermination(60, TimeUnit.SECONDS))
-                        System.err.println("Pool did not terminate");
+                        LOGGER.error("Pool did not terminate");
                 }
             } catch (InterruptedException ie) {
                 // (Re-)Cancel if current thread also interrupted

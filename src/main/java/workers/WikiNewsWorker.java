@@ -3,6 +3,8 @@ package workers;
 import data.RawElasticResult;
 import data.WikiLinksCoref;
 import data.WikiNewsMention;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import persistence.SQLQueryApi;
 import wikilinks.WikiLinksExtractor;
 
@@ -14,9 +16,9 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class WikiNewsWorker extends AWorker {
-
-    private static final int COMMIT_MAX_SIZE = 1000000;
-    private static final List<WikiNewsMention> finalToCommit = new ArrayList<>();
+    private final static Logger LOGGER = LogManager.getLogger(WikiNewsWorker.class);
+    private final static  int COMMIT_MAX_SIZE = 1000000;
+    private final static  List<WikiNewsMention> finalToCommit = new ArrayList<>();
 
     private final SQLQueryApi sqlApi;
     private final Map<String, WikiLinksCoref> wikiLinksCorefMap;
@@ -76,13 +78,13 @@ public class WikiNewsWorker extends AWorker {
     }
 
     private void commitCurrent(List<WikiNewsMention> localNewList) {
-        System.out.println("Prepare to inset-" + localNewList.size() + " mentions to SQL");
+        LOGGER.info("Prepare to inset-" + localNewList.size() + " mentions to SQL");
         try {
             if (!this.sqlApi.insertRowsToTable(localNewList)) {
-                System.out.println("Failed to insert mentions Batch!!!!");
+                LOGGER.error("Failed to insert mentions Batch!!!!");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
     }
 }

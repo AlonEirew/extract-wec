@@ -1,6 +1,8 @@
 package wikilinks;
 
 import data.RawElasticResult;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.common.unit.TimeValue;
@@ -19,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class CreateWikiLinks {
+    private final static Logger LOGGER = LogManager.getLogger(CreateWikiLinks.class);
 
     private final IWorkerFactory workerFactory;
     private final ElasticQueryApi elasticApi;
@@ -29,9 +32,9 @@ public class CreateWikiLinks {
     }
 
     public void readAllWikiPagesAndProcess(int totalAmountToExtract) throws IOException, InterruptedException, ExecutionException, TimeoutException {
-        System.out.println("Strating process, Reading all documents from wikipedia (elastic)");
+        LOGGER.info("Strating process, Reading all documents from wikipedia (elastic)");
 
-        ExecutorServiceFactory threadPool = new ExecutorServiceFactory();
+        ExecutorServiceFactory threadPool = new ExecutorServiceFactory(10);
         List<Future<?>> allTasks = new ArrayList<>();
 
         long totalDocsCount = this.elasticApi.getTotalDocsCount();
@@ -51,7 +54,7 @@ public class CreateWikiLinks {
 
             List<RawElasticResult> rawElasticResults = this.elasticApi.getNextScrollResults(searchHits);
             allTasks.add(threadPool.submit(this.workerFactory.createNewWorker(rawElasticResults)));
-            System.out.println((totalDocsCount - count) + " documents to go");
+            LOGGER.info((totalDocsCount - count) + " documents to go");
 
             if(count >= totalAmountToExtract) {
                 break;
@@ -63,7 +66,7 @@ public class CreateWikiLinks {
 
 
         elasticApi.closeScroll(scrollId);
-        System.out.println("Handling last mentions if exists");
+        LOGGER.info("Handling last mentions if exists");
         threadPool.closeService();
         for (Future<?> future : allTasks) {
             future.get(1000, TimeUnit.SECONDS);

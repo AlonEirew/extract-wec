@@ -2,8 +2,9 @@ package wikinews;
 
 import com.google.gson.Gson;
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
-import utils.ExecutorServiceFactory;
 import wikilinks.CreateWikiLinks;
 import workers.WikiNewsRedirectCounterWorker;
 import workers.WikiNewsRedirectCounterWorkerFactory;
@@ -13,15 +14,15 @@ import java.io.IOException;
 import java.util.Map;
 
 public class WikiNewsRedirecectCount {
-
-    private static Gson gson = new Gson();
+    private final static Logger LOGGER = LogManager.getLogger(WikiNewsRedirecectCount.class);
+    private final static Gson GSON = new Gson();
 
     public static void main(String[] args) throws IOException {
 
         final String property = System.getProperty("user.dir");
-        System.out.println("Working directory=" + property);
+        LOGGER.info("Working directory=" + property);
 
-        Map<String, String> config = gson.fromJson(FileUtils.readFileToString(
+        Map<String, String> config = GSON.fromJson(FileUtils.readFileToString(
                 new File(property + "/config.json"), "UTF-8"),
                 Map.class);
 
@@ -34,9 +35,9 @@ public class WikiNewsRedirecectCount {
 
             createWikiLinks.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
 
-            System.out.println("Total redirect pages=" + WikiNewsRedirectCounterWorker.getCounter());
+            LOGGER.info("Total redirect pages=" + WikiNewsRedirectCounterWorker.getCounter());
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.error(ex);
         }
     }
 }

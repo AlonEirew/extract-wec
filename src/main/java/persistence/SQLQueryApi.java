@@ -4,11 +4,14 @@ import com.google.common.collect.Iterables;
 import data.CorefType;
 import data.WikiLinksCoref;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.*;
 import java.util.*;
 
 public class SQLQueryApi {
+    private final static Logger LOGGER = LogManager.getLogger(SQLQueryApi.class);
 
     private static final int MAX_BULK_SIZE = 250;
 
@@ -23,10 +26,10 @@ public class SQLQueryApi {
         try (Connection con = this.sqlConnection.getConnection(); Statement stmt = con.createStatement()) {
             String sqlUse = "USE " + dbName;
             stmt.execute(sqlUse);
-            System.out.println("Now using-" + dbName);
+            LOGGER.info("Now using-" + dbName);
             result = true;
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
 
         return result;
@@ -38,18 +41,18 @@ public class SQLQueryApi {
             try (Connection con = this.sqlConnection.getConnection(); Statement stmt = con.createStatement()) {
 
                 if (isDbExists(dbName)) {
-                    System.out.println("Database already exists");
+                    LOGGER.info("Database already exists");
                     result = true;
                 }
 
                 String sql = "CREATE DATABASE " + dbName;
                 stmt.executeUpdate(sql);
-                System.out.println("Database created successfully...");
+                LOGGER.info("Database created successfully...");
                 result = true;
             }
         }
 
-        System.out.println("Provided name is null or empty!");
+        LOGGER.info("Provided name is null or empty!");
         return result;
     }
 
@@ -57,12 +60,12 @@ public class SQLQueryApi {
         try (Connection con = this.sqlConnection.getConnection(); Statement stmt = con.createStatement()) {
 
             if (!isDbExists(dbName)) {
-                System.out.println("No such data base exists");
+                LOGGER.info("No such data base exists");
             }
 
             String sql = "DROP DATABASE " + dbName;
             stmt.executeUpdate(sql);
-            System.out.println("Database deleted successfully...");
+            LOGGER.info("Database deleted successfully...");
         }
 
         return true;
@@ -76,9 +79,9 @@ public class SQLQueryApi {
                 createTableSql.delete(createTableSql.length() - 1, createTableSql.length());
                 createTableSql.append(");");
                 stmt.executeUpdate(createTableSql.toString());
-                System.out.println("Table created successfully...");
+                LOGGER.info("Table created successfully...");
             } else {
-                System.out.println("Table already exists");
+                LOGGER.info("Table already exists");
             }
         }
 
@@ -90,9 +93,9 @@ public class SQLQueryApi {
             if(isTableExists(repObject)) {
                 String deleteTableSql = "DROP TABLE " + repObject.getTableName();
                 stmt.executeUpdate(deleteTableSql);
-                System.out.println("Table deleted successfully...");
+                LOGGER.info("Table deleted successfully...");
             } else {
-                System.out.println("No Such Table");
+                LOGGER.info("No Such Table");
             }
         }
 
@@ -102,7 +105,7 @@ public class SQLQueryApi {
     public <T extends ISQLObject> boolean insertRowsToTable(List<T> insertRows) throws SQLException {
         if(insertRows != null && !insertRows.isEmpty()) {
             int totalToPersist = insertRows.size();
-            System.out.println("Praper to persist " + totalToPersist + " rows");
+            LOGGER.info("Praper to persist " + totalToPersist + " rows");
             final T objRep = insertRows.get(0);
 
             try (Connection con = this.sqlConnection.getConnection(); PreparedStatement stmt =
@@ -116,9 +119,9 @@ public class SQLQueryApi {
                     }
 
                     stmt.executeBatch();
-                    System.out.println("rows added successfully");
+                    LOGGER.info("rows added successfully");
                     totalToPersist = totalToPersist - partRows.size();
-                    System.out.println(totalToPersist + " rows remaining");
+                    LOGGER.info(totalToPersist + " rows remaining");
                 }
             }
         }
@@ -139,7 +142,7 @@ public class SQLQueryApi {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
 
         return resultList;
@@ -187,7 +190,7 @@ public class SQLQueryApi {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
             return false;
         }
 
@@ -227,7 +230,7 @@ public class SQLQueryApi {
     }
 
     public void persistAllCorefs() {
-        System.out.println("Persisting corefs tables values");
+        LOGGER.info("Persisting corefs tables values");
         final Collection<WikiLinksCoref> allCorefs = WikiLinksCoref.getGlobalCorefMap().values();
         final Iterator<WikiLinksCoref> corefIterator = allCorefs.iterator();
 
@@ -241,10 +244,10 @@ public class SQLQueryApi {
 
         try {
             if (!insertRowsToTable(new ArrayList<>(allCorefs))) {
-                System.out.println("Failed to insert Corefs!!!!");
+                LOGGER.info("Failed to insert Corefs!!!!");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
     }
 }

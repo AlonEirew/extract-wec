@@ -6,6 +6,6 @@ gradle
 # Ignore Gradle build output directory
 build
 out
-
+logs
 output
 src/service/node_modules

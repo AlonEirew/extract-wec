@@ -3,6 +3,8 @@ package experimentscripts;
 import com.google.gson.Gson;
 import javafx.util.Pair;
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import persistence.SQLiteConnections;
 
 import java.io.File;
@@ -14,7 +16,7 @@ import java.sql.Statement;
 import java.util.*;
 
 public class ExtractTopicsInfo {
-    private static Gson gson = new Gson();
+    private final static Logger LOGGER = LogManager.getLogger(ExtractTopicsInfo.class);
 
     public static void main(String[] args) throws SQLException, IOException {
         String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v7.db";
@@ -52,10 +54,10 @@ public class ExtractTopicsInfo {
     }
 
     static Map<Integer, CorefResultSet> getAllCorefs(SQLiteConnections sqlConnection) throws SQLException {
-        System.out.println("Preparing to select all coref mentions by types");
+        LOGGER.info("Preparing to select all coref mentions by types");
         Map<Integer, CorefResultSet> corefMap = new HashMap<>();
         try (Connection conn = sqlConnection.getConnection(); Statement stmt = conn.createStatement()) {
-            System.out.println("Preparing to extract");
+            LOGGER.info("Preparing to extract");
 
             String query = "SELECT coreChainId, mentionText, extractedFromPage, tokenStart, " +
                     "tokenEnd, corefValue, corefType, PartOfSpeech, context " +
