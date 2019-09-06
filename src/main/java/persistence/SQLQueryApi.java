@@ -108,11 +108,9 @@ public class SQLQueryApi {
             LOGGER.info("Praper to persist " + totalToPersist + " rows");
             final T objRep = insertRows.get(0);
 
-            try (Connection con = this.sqlConnection.getConnection(); PreparedStatement stmt =
-                    con.prepareStatement(objRep.getPrepareInsertStatementQuery(objRep.getTableName()))) {
-                Iterator<List<T>> subSets = Iterables.partition(insertRows, MAX_BULK_SIZE).iterator();
-                while(subSets.hasNext()) {
-                    List<T> partRows = subSets.next();
+            try (Connection con = this.sqlConnection.getConnection();
+                 PreparedStatement stmt = con.prepareStatement(objRep.getPrepareInsertStatementQuery(objRep.getTableName()))) {
+                for (List<T> partRows : Iterables.partition(insertRows, MAX_BULK_SIZE)) {
                     for (ISQLObject sqlObject : partRows) {
                         sqlObject.setPrepareInsertStatementValues(stmt);
                         stmt.addBatch();
@@ -130,7 +128,7 @@ public class SQLQueryApi {
     }
 
     public Map<String, WikiLinksCoref> readCorefTableToMap() {
-        Map<String, WikiLinksCoref> resultList = new HashMap();
+        Map<String, WikiLinksCoref> resultList = new HashMap<>();
         String query = "Select * from " + WikiLinksCoref.TABLE_COREF;
         try (Connection conn = this.sqlConnection.getConnection();
              Statement stmt = conn.createStatement()) {
@@ -232,15 +230,10 @@ public class SQLQueryApi {
     public void persistAllCorefs() {
         LOGGER.info("Persisting corefs tables values");
         final Collection<WikiLinksCoref> allCorefs = WikiLinksCoref.getGlobalCorefMap().values();
-        final Iterator<WikiLinksCoref> corefIterator = allCorefs.iterator();
 
-        while(corefIterator.hasNext()) {
-            final WikiLinksCoref wikiLinksCoref = corefIterator.next();
-            if(wikiLinksCoref.getMentionsCount() < 2 || wikiLinksCoref.getCorefType() == CorefType.NA ||
-                    wikiLinksCoref.isMarkedForRemoval()) {
-                corefIterator.remove();
-            }
-        }
+        allCorefs.removeIf(wikiLinksCoref -> wikiLinksCoref.getMentionsCount() < 2 ||
+                wikiLinksCoref.getCorefType() == CorefType.NA ||
+                wikiLinksCoref.isMarkedForRemoval());
 
         try {
             if (!insertRowsToTable(new ArrayList<>(allCorefs))) {
