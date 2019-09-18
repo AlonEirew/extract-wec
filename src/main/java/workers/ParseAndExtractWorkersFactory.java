@@ -25,10 +25,10 @@ public class ParseAndExtractWorkersFactory implements IWorkerFactory {
 
     @Override
     public void finalizeIfNeeded() {
-        final ParseAndExtractMentionsWorker parseAndExtractMentionsWorker = new
-                ParseAndExtractMentionsWorker(new ArrayList<>(),
-                this.sqlApi, this.elasticApi, new PersonOrEventFilter());
-
-        parseAndExtractMentionsWorker.handle(new ArrayList<>(), true);
+//        final ParseAndExtractMentionsWorker parseAndExtractMentionsWorker = new
+//                ParseAndExtractMentionsWorker(new ArrayList<>(),
+//                this.sqlApi, this.elasticApi, new PersonOrEventFilter());
+//
+//        parseAndExtractMentionsWorker.handle(new ArrayList<>(), true);
     }
 }

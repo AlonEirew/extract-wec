@@ -34,7 +34,6 @@ public class CreateWikiLinks {
     public void readAllWikiPagesAndProcess(int totalAmountToExtract) throws IOException, InterruptedException, ExecutionException, TimeoutException {
         LOGGER.info("Strating process, Reading all documents from wikipedia (elastic)");
 
-        ExecutorServiceFactory threadPool = new ExecutorServiceFactory(10);
         List<Future<?>> allTasks = new ArrayList<>();
 
         long totalDocsCount = this.elasticApi.getTotalDocsCount();
@@ -53,7 +52,7 @@ public class CreateWikiLinks {
             scrollId = searchResponse.getScrollId();
 
             List<RawElasticResult> rawElasticResults = this.elasticApi.getNextScrollResults(searchHits);
-            allTasks.add(threadPool.submit(this.workerFactory.createNewWorker(rawElasticResults)));
+            allTasks.add(ExecutorServiceFactory.submit(this.workerFactory.createNewWorker(rawElasticResults)));
             LOGGER.info((totalDocsCount - count) + " documents to go");
 
             if(count >= totalAmountToExtract) {
@@ -67,7 +66,6 @@ public class CreateWikiLinks {
 
         elasticApi.closeScroll(scrollId);
         LOGGER.info("Handling last mentions if exists");
-        threadPool.closeService();
         for (Future<?> future : allTasks) {
             future.get(1000, TimeUnit.SECONDS);
         }

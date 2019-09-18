@@ -21,7 +21,7 @@ public class WikiLinksMention implements ISQLObject {
     private String extractedFromPage = "";
     private List<String> mentionTokens = new ArrayList<>();
     private List<String> mentionTokensPos = new ArrayList<>();
-    private List<String> context;
+    private MentionContext context;
 
     public WikiLinksMention() {
     }
@@ -31,7 +31,7 @@ public class WikiLinksMention implements ISQLObject {
     }
 
     public WikiLinksMention(WikiLinksCoref coref, String mentionText,
-                            int tokenStart, int tokenEnd, String extractedFromPage, List<String> context) {
+                            int tokenStart, int tokenEnd, String extractedFromPage, MentionContext context) {
         this.coreChain = coref;
         this.mentionText = mentionText;
         this.tokenStart = tokenStart;
@@ -69,18 +69,18 @@ public class WikiLinksMention implements ISQLObject {
     }
 
     public void setCorefChain(String corefChainValue) {
-        this.coreChain = WikiLinksCoref.getAndSetIfNotExistCorefChain(corefChainValue);
+        this.coreChain = WikiLinksCoref.getAndSetIfNotExist(corefChainValue);
     }
 
     public void setCorefChain(WikiLinksCoref corefChainValue) {
         this.coreChain = corefChainValue;
     }
 
-    public List<String> getContext() {
+    public MentionContext getContext() {
         return context;
     }
 
-    public void setContext(List<String> context) {
+    public void setContext(MentionContext context) {
         this.context = context;
     }
 
@@ -117,18 +117,11 @@ public class WikiLinksMention implements ISQLObject {
                 this.tokenStart == -1 || this.tokenEnd == -1 ||
                 this.mentionTokens.size() == 0 ||
                 ((this.tokenEnd - this.tokenStart + 1) != this.mentionTokens.size()) ||
-                this.context.contains("#") ||
-                this.context.contains("jpg") ||
-                this.context.contains("{") ||
-                this.context.contains("}")) {
+                !this.context.isValid()) {
             return false;
         }
 
         return true;
-    }
-
-    private String getContextAsSQLBlob() {
-        return String.join(" ", this.context);
     }
 
     private int isVerb() {
@@ -170,7 +163,7 @@ public class WikiLinksMention implements ISQLObject {
                 tokenStart + "," +
                 tokenEnd + "," +
                 "'" + extractedFromPage + "'" +  "," +
-                "'" + getContextAsSQLBlob() + "'" +
+                "'" + this.context.getContextAsSQLBlob() + "'" +
                 "'" + String.join(", ", this.mentionTokensPos) + "'";
     }
 
@@ -187,7 +180,7 @@ public class WikiLinksMention implements ISQLObject {
         preparedStatement.setInt(4, this.tokenStart);
         preparedStatement.setInt(5, this.tokenEnd);
         preparedStatement.setString(6, this.extractedFromPage);
-        preparedStatement.setString(7, this.getContextAsSQLBlob());
+        preparedStatement.setInt(7, this.context.getContextId());
         preparedStatement.setString(8, String.join(", ", this.mentionTokensPos));
     }
 

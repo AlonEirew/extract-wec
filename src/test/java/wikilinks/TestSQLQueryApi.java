@@ -1,9 +1,9 @@
 package wikilinks;
 
+import data.MentionContext;
 import data.WikiLinksCoref;
 import data.WikiLinksMention;
 import org.junit.Assert;
-import org.junit.Test;
 import persistence.*;
 
 import java.sql.SQLException;
@@ -33,21 +33,22 @@ public class TestSQLQueryApi {
         testCreateTable(api);
         List<ISQLObject> objList = new ArrayList<>();
         String[] context = { "bolb", "bolo", "blogb", "blob"};
+        final MentionContext newAndAddToSet = MentionContext.createNewAndAddToSet(Arrays.asList(context));
         objList.add(new WikiLinksMention(
-                WikiLinksCoref.getAndSetIfNotExistCorefChain("test1"),
+                WikiLinksCoref.getAndSetIfNotExist("test1"),
                 "test",
                 0,
                 1,
                 "Test",
-                Arrays.asList(context)));
+                newAndAddToSet));
 
         objList.add(new WikiLinksMention(
-                WikiLinksCoref.getAndSetIfNotExistCorefChain("test1"),
+                WikiLinksCoref.getAndSetIfNotExist("test1"),
                 "test",
                 0,
                 1,
                 "Test",
-                Arrays.asList(context)));
+                newAndAddToSet));
 
         final boolean b = api.insertRowsToTable(objList);
         Assert.assertTrue(b);

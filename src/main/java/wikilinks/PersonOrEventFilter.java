@@ -25,25 +25,25 @@ public class PersonOrEventFilter implements ICorefFilter {
             final boolean isInfoBoxEvent = WikiLinksExtractor.hasDateAndLocation(result.getText());
 
             if (isPerson) {
-                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.PERSON);
+                WikiLinksCoref.getAndSetIfNotExist(result.getTitle()).setCorefType(CorefType.PERSON);
             } else if (isDisaster) {
-                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.DISASTER_EVENT);
+                WikiLinksCoref.getAndSetIfNotExist(result.getTitle()).setCorefType(CorefType.DISASTER_EVENT);
             } else if (isElection) {
-                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.ELECTION_EVENT);
+                WikiLinksCoref.getAndSetIfNotExist(result.getTitle()).setCorefType(CorefType.ELECTION_EVENT);
             } else if (isCivilAttack) {
-                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.CIVIL_ATTACK_EVENT);
+                WikiLinksCoref.getAndSetIfNotExist(result.getTitle()).setCorefType(CorefType.CIVIL_ATTACK_EVENT);
             } else if (isAccidentEvent) {
-                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.ACCIDENT_EVENT);
+                WikiLinksCoref.getAndSetIfNotExist(result.getTitle()).setCorefType(CorefType.ACCIDENT_EVENT);
             } else if (isSportEvent) {
-                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.SPORT_EVENT);
+                WikiLinksCoref.getAndSetIfNotExist(result.getTitle()).setCorefType(CorefType.SPORT_EVENT);
             } else if (isAwardEvent) {
-                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.AWARD_EVENT);
+                WikiLinksCoref.getAndSetIfNotExist(result.getTitle()).setCorefType(CorefType.AWARD_EVENT);
             } else if (isConcreteGeneralEvent) {
-                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.CONCRETE_GENERAL_EVENT);
+                WikiLinksCoref.getAndSetIfNotExist(result.getTitle()).setCorefType(CorefType.CONCRETE_GENERAL_EVENT);
             } else if (isHistoricalEvent) {
-                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.HISTORICAL_EVENT);
+                WikiLinksCoref.getAndSetIfNotExist(result.getTitle()).setCorefType(CorefType.HISTORICAL_EVENT);
             } else if (isGeneralEvent || isInfoBoxEvent) {
-                WikiLinksCoref.getAndSetIfNotExistCorefChain(result.getTitle()).setCorefType(CorefType.EVENT_UNK);
+                WikiLinksCoref.getAndSetIfNotExist(result.getTitle()).setCorefType(CorefType.EVENT_UNK);
             }
 
             retCond = isPerson || isDisaster || isElection || isCivilAttack || isAccidentEvent || isSportEvent

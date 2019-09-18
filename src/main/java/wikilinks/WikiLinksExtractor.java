@@ -1,5 +1,6 @@
 package wikilinks;
 
+import data.MentionContext;
 import data.WikiLinksMention;
 import data.WikiNewsMention;
 import edu.stanford.nlp.ling.CoreAnnotations;
@@ -7,7 +8,6 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.CoreDocument;
 import edu.stanford.nlp.pipeline.CoreSentence;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
-import javafx.util.Pair;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -404,7 +404,8 @@ public class WikiLinksExtractor {
     }
 
     private static <T extends WikiLinksMention> void setMentionsContext(List<T> mentions, String context) {
-        final List<String> mentContext = new ArrayList<>();
+        final List<String> contextAsStringList = new ArrayList<>();
+        MentionContext mentionContext = null;
         CoreDocument doc = new CoreDocument(context);
         pipelineNoPos.annotate(doc);
         if (doc.sentences().size() > 0) {
@@ -414,15 +415,16 @@ public class WikiLinksExtractor {
                     if (token.originalText().matches("[|\\[\\]\\*^\\+]")) {
                         continue;
                     }
-                    mentContext.add(token.originalText());
+                    contextAsStringList.add(token.originalText());
                 }
             }
 
+            mentionContext = new MentionContext(contextAsStringList);
             Set<Integer> usedStartIndexes = new HashSet<>();
             Iterator<T> iterator = mentions.iterator();
             while (iterator.hasNext()) {
                 final T mention = iterator.next();
-                mention.setContext(mentContext);
+                mention.setContext(mentionContext);
                 CoreDocument mentionCoreDoc = new CoreDocument(mention.getMentionText());
                 pipelineWithPos.annotate(mentionCoreDoc);
                 if (mentionCoreDoc.sentences().size() > 0) {
@@ -431,16 +433,16 @@ public class WikiLinksExtractor {
                         mention.addMentionToken(label.originalText(), label.get(CoreAnnotations.PartOfSpeechAnnotation.class));
                     }
 
-                    for (int i = 0; i < mentContext.size(); i++) {
+                    for (int i = 0; i < contextAsStringList.size(); i++) {
                         if (!usedStartIndexes.contains(i)) {
-                            if (mentContext.get(i).equals(mentTokens.get(0).originalText())) {
+                            if (contextAsStringList.get(i).equals(mentTokens.get(0).originalText())) {
                                 mention.setTokenStart(i);
                                 usedStartIndexes.add(i);
                                 if (mentTokens.size() == 1) {
                                     mention.setTokenEnd(i);
                                     break;
                                 }
-                            } else if (mention.getTokenStart() != -1 && mentContext.get(i).equals(mentTokens.get(mentTokens.size() - 1).originalText())) {
+                            } else if (mention.getTokenStart() != -1 && contextAsStringList.get(i).equals(mentTokens.get(mentTokens.size() - 1).originalText())) {
                                 mention.setTokenEnd(i);
                                 break;
                             }
@@ -457,6 +459,11 @@ public class WikiLinksExtractor {
             }
         } else {
             mentions.clear();
+        }
+
+        if(!mentions.isEmpty()) {
+            mentionContext.addLinkedMention(mentions.size());
+            MentionContext.addContextToSet(mentionContext);
         }
     }
 

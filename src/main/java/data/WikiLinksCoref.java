@@ -25,7 +25,7 @@ public class WikiLinksCoref implements ISQLObject {
         this.corefValue = corefValue;
     }
 
-    public static synchronized WikiLinksCoref getAndSetIfNotExistCorefChain(String corefValue) {
+    public static synchronized WikiLinksCoref getAndSetIfNotExist(String corefValue) {
         if(!globalCorefIds.containsKey(corefValue)) {
             globalCorefIds.put(corefValue, new WikiLinksCoref(corefValue));
         }

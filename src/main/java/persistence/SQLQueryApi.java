@@ -2,7 +2,9 @@ package persistence;
 
 import com.google.common.collect.Iterables;
 import data.CorefType;
+import data.MentionContext;
 import data.WikiLinksCoref;
+import data.WikiLinksMention;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,7 +23,7 @@ public class SQLQueryApi {
         this.sqlConnection = sqlConnection;
     }
 
-    public boolean useDataBase(String dbName) {
+    public synchronized boolean useDataBase(String dbName) {
         boolean result = false;
         try (Connection con = this.sqlConnection.getConnection(); Statement stmt = con.createStatement()) {
             String sqlUse = "USE " + dbName;
@@ -35,7 +37,7 @@ public class SQLQueryApi {
         return result;
     }
 
-    public boolean createDataBase(String dbName) throws SQLException {
+    public synchronized boolean createDataBase(String dbName) throws SQLException {
         boolean result = false;
         if(dbName != null && !dbName.isEmpty()) {
             try (Connection con = this.sqlConnection.getConnection(); Statement stmt = con.createStatement()) {
@@ -56,7 +58,7 @@ public class SQLQueryApi {
         return result;
     }
 
-    public boolean deleteDataBase(String dbName) throws SQLException {
+    public synchronized boolean deleteDataBase(String dbName) throws SQLException {
         try (Connection con = this.sqlConnection.getConnection(); Statement stmt = con.createStatement()) {
 
             if (!isDbExists(dbName)) {
@@ -71,7 +73,7 @@ public class SQLQueryApi {
         return true;
     }
 
-    public <T extends ISQLObject> boolean createTable(T objectRep) throws SQLException {
+    public synchronized <T extends ISQLObject> boolean createTable(T objectRep) throws SQLException {
         try (Connection con = this.sqlConnection.getConnection(); Statement stmt = con.createStatement()) {
             if(!isTableExists(objectRep)) {
                 StringBuilder createTableSql = new StringBuilder();
@@ -88,7 +90,7 @@ public class SQLQueryApi {
         return true;
     }
 
-    public <T extends ISQLObject> boolean deleteTable(T repObject) throws SQLException {
+    public synchronized <T extends ISQLObject> boolean deleteTable(T repObject) throws SQLException {
         try (Connection con = this.sqlConnection.getConnection(); Statement stmt = con.createStatement()) {
             if(isTableExists(repObject)) {
                 String deleteTableSql = "DROP TABLE " + repObject.getTableName();
@@ -102,7 +104,7 @@ public class SQLQueryApi {
         return true;
     }
 
-    public <T extends ISQLObject> boolean insertRowsToTable(List<T> insertRows) throws SQLException {
+    public synchronized <T extends ISQLObject> boolean insertRowsToTable(List<T> insertRows) throws SQLException {
         if(insertRows != null && !insertRows.isEmpty()) {
             int totalToPersist = insertRows.size();
             LOGGER.info("Praper to persist " + totalToPersist + " rows");
@@ -146,7 +148,7 @@ public class SQLQueryApi {
         return resultList;
     }
 
-    public boolean updateCorefTable(String tableName, Map<Integer, WikiLinksCoref> corefs) {
+    public synchronized boolean updateCorefTable(String tableName, Map<Integer, WikiLinksCoref> corefs) {
         String query = "Select * from CorefChains where corefid in";
         try (Connection conn = this.sqlConnection.getConnection();
                 Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
@@ -174,7 +176,7 @@ public class SQLQueryApi {
 
             conn.setAutoCommit(true);
 
-            WikiLinksCoref tmp = WikiLinksCoref.getAndSetIfNotExistCorefChain("####TEMP####");
+            WikiLinksCoref tmp = WikiLinksCoref.getAndSetIfNotExist("####TEMP####");
 
             if(!copyCoref.isEmpty()) {
                 try (PreparedStatement ps = conn.prepareStatement(tmp.getPrepareInsertStatementQuery(tableName))) {
@@ -227,7 +229,7 @@ public class SQLQueryApi {
         return result;
     }
 
-    public void persistAllCorefs() {
+    public synchronized void persistAllCorefs() {
         LOGGER.info("Persisting corefs tables values");
         final Collection<WikiLinksCoref> allCorefs = WikiLinksCoref.getGlobalCorefMap().values();
 
@@ -235,12 +237,42 @@ public class SQLQueryApi {
                 wikiLinksCoref.getCorefType() == CorefType.NA ||
                 wikiLinksCoref.isMarkedForRemoval());
 
+        LOGGER.info("Preparing to add " + allCorefs.size() + " corefs tables values");
         try {
             if (!insertRowsToTable(new ArrayList<>(allCorefs))) {
-                LOGGER.info("Failed to insert Corefs!!!!");
+                LOGGER.error("Failed to insert Corefs!!!!");
             }
         } catch (SQLException e) {
             LOGGER.error(e);
+        }
+    }
+
+    public synchronized void persistAllContexts() {
+        LOGGER.info("Persisting contexts tables values");
+        final Map<Integer, MentionContext> allContexts = MentionContext.getAllContexts();
+
+        try {
+            if (!insertRowsToTable(new ArrayList<>(allContexts.values()))) {
+                LOGGER.info("Failed to insert context!!!!");
+            }
+        } catch (SQLException e) {
+            LOGGER.error(e);
+        }
+    }
+
+    /**
+     * Commit the final mentions to SQL DB (Lock is necessary for SQLite)
+     */
+    public synchronized void commitMentions(List<WikiLinksMention> mentions) {
+        if(!mentions.isEmpty()) {
+            LOGGER.info("Prepare to inset-" + mentions.size() + " mentions to SQL");
+            try {
+                if (!insertRowsToTable(mentions)) {
+                    LOGGER.error("Failed to insert mentions batch!!!!");
+                }
+            } catch (SQLException e) {
+                LOGGER.error("SQLException", e);
+            }
         }
     }
 }

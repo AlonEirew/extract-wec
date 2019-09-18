@@ -4,32 +4,45 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class ExecutorServiceFactory {
     private final static Logger LOGGER = LogManager.getLogger(ExecutorServiceFactory.class);
-    private final ExecutorService elasticSearchPool;
 
-    public ExecutorServiceFactory() {
-        this(Runtime.getRuntime().availableProcessors());
+    private static ExecutorService elasticSearchPool;
+    private static ReentrantLock lock = new ReentrantLock();
 
+    public static void initExecutorService() {
+        initExecutorService(Runtime.getRuntime().availableProcessors());
     }
 
-    public ExecutorServiceFactory(int capacity) {
-        elasticSearchPool = new ThreadPoolExecutor(capacity, capacity,
-                0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(100),
-                new ThreadPoolExecutor.CallerRunsPolicy());
+    public static void initExecutorService(int poolSize) {
+        lock.lock();
+        if (elasticSearchPool == null) {
+            LOGGER.info("Starting new ExecutorService...");
+            elasticSearchPool = new ThreadPoolExecutor(
+                    poolSize,
+                    poolSize,
+                    0L,
+                    TimeUnit.MILLISECONDS,
+                    new ArrayBlockingQueue<>(poolSize * 2),
+                    new ThreadPoolExecutor.CallerRunsPolicy());
+        }
+        lock.unlock();
     }
 
-    public Future<?> submit(Runnable runnable) {
+    public static Future<?> submit(Runnable runnable) {
         return elasticSearchPool.submit(runnable);
     }
 
-    public <T> Future<T> submit(Callable<T> callable) {
+    public static <T> Future<T> submit(Callable<T> callable) {
         return elasticSearchPool.submit(callable);
     }
 
-    public void closeService() {
+    public static void closeService() {
+        lock.lock();
         if(elasticSearchPool != null) {
+            LOGGER.info("Closing the ExecutorService...");
             try {
                 elasticSearchPool.shutdown();
                 // Wait a while for existing tasks to terminate
@@ -45,6 +58,9 @@ public class ExecutorServiceFactory {
                 // Preserve interrupt status
                 Thread.currentThread().interrupt();
             }
+
+            elasticSearchPool = null;
+            lock.unlock();
         }
     }
 }
