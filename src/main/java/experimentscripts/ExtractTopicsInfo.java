@@ -71,7 +71,7 @@ public class ExtractTopicsInfo {
                 final int tokenStart = rs.getInt("tokenStart");
                 final int tokenEnd = rs.getInt("tokenEnd");
                 final String partOfSpeech = rs.getString("PartOfSpeech");
-                final String context = rs.getString("context");
+                final int context = rs.getInt("context");
                 final int corefType = rs.getInt("corefType");
                 final String corefValue = rs.getString("corefValue");
 

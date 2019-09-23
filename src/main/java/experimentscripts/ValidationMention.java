@@ -53,7 +53,7 @@ public class ValidationMention implements ISQLObject {
         statement.setInt(4, this.mentionResultSet.getTokenStart());
         statement.setInt(5, this.mentionResultSet.getTokenEnd());
         statement.setString(6, this.mentionResultSet.getExtractedFromPage());
-        statement.setString(7, this.mentionResultSet.getContext());
+        statement.setInt(7, this.mentionResultSet.getContext());
         statement.setString(8, String.join(", ", this.mentionResultSet.getPos()));
     }
 

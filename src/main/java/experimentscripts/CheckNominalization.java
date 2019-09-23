@@ -78,7 +78,7 @@ public class CheckNominalization {
                 if (mentionTokens.length == 1) {
                     if (posList[0].matches("VB[DGNPZ]?")) {
                         MentionResultSet ment = new MentionResultSet(corefId, mentionText, extractedFromPage,
-                                tokenStart, tokenEnd, null, partOfSpeech);
+                                tokenStart, tokenEnd, -1, partOfSpeech);
                         corefMap.get(corefId).addMention(ment);
                     }
                     continue;
@@ -92,7 +92,7 @@ public class CheckNominalization {
 
                         if (posList[j].matches("VB[DGNPZ]?") && !Character.isUpperCase(mentionTokens[i].charAt(0))) {
                             MentionResultSet ment = new MentionResultSet(corefId, mentionText, extractedFromPage,
-                                    tokenStart, tokenEnd, null, partOfSpeech);
+                                    tokenStart, tokenEnd, -1, partOfSpeech);
                             corefMap.get(corefId).addMention(ment);
                         }
                     } catch (ArrayIndexOutOfBoundsException ex) {

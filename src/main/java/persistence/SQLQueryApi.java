@@ -15,7 +15,9 @@ import java.util.*;
 public class SQLQueryApi {
     private final static Logger LOGGER = LogManager.getLogger(SQLQueryApi.class);
 
-    private static final int MAX_BULK_SIZE = 250;
+    private static final int MAX_BULK_SIZE = 500;
+    private static final int MAX_MENTIONS_ACCUMULATED_SIZE = 100000;
+    private static final List<WikiLinksMention> accumulatedMentions = new ArrayList<>();
 
     private ISQLConnection sqlConnection;
 
@@ -265,14 +267,33 @@ public class SQLQueryApi {
      */
     public synchronized void commitMentions(List<WikiLinksMention> mentions) {
         if(!mentions.isEmpty()) {
-            LOGGER.info("Prepare to inset-" + mentions.size() + " mentions to SQL");
-            try {
-                if (!insertRowsToTable(mentions)) {
-                    LOGGER.error("Failed to insert mentions batch!!!!");
+            LOGGER.info("accumulating-" + mentions.size() + " mentions before inserting to SQL");
+            accumulatedMentions.addAll(mentions);
+            if(accumulatedMentions.size() >= MAX_MENTIONS_ACCUMULATED_SIZE) {
+                LOGGER.info("Prepare to inset-" + accumulatedMentions.size() + " mentions to SQL");
+                try {
+                    if (!insertRowsToTable(accumulatedMentions)) {
+                        LOGGER.error("Failed to insert mentions batch!!!!");
+                    }
+                } catch (SQLException e) {
+                    LOGGER.error("SQLException", e);
+                } finally {
+                    accumulatedMentions.clear();
                 }
-            } catch (SQLException e) {
-                LOGGER.error("SQLException", e);
             }
+        }
+    }
+
+    public synchronized void persistAllMentions() {
+        LOGGER.info("Prepare to inset-" + accumulatedMentions.size() + " mentions to SQL");
+        try {
+            if (!insertRowsToTable(accumulatedMentions)) {
+                LOGGER.error("Failed to insert mentions batch!!!!");
+            }
+        } catch (SQLException e) {
+            LOGGER.error("SQLException", e);
+        } finally {
+            accumulatedMentions.clear();
         }
     }
 }

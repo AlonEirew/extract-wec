@@ -1,4 +1,5 @@
 {
+  "pool_size": "10",
   "elastic_host": "localhost",
   "elastic_port": "9200",
   "elastic_wiki_index": "enwiki_v2",

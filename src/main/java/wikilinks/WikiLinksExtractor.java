@@ -85,30 +85,30 @@ public class WikiLinksExtractor {
         if (firstSentenceStartIndex >= 0) {
             relText = textClean.substring(firstSentenceStartIndex);
             String[] textLines = relText.split("\\.\n\n");
-            for (String context : textLines) {
-                finalResults.addAll(extractTextBodyMentions(pageName, context));
+            for (String paragraph : textLines) {
+                finalResults.addAll(extractTextBodyMentions(pageName, paragraph));
             }
         }
 
         return finalResults;
     }
 
-    private static List<WikiLinksMention> extractTextBodyMentions(String pageName, String context) {
-        String[] contextLines = context.split("\n");
-        for (int i = 0; i < contextLines.length; i++) {
-            if (contextLines[i] != null && !contextLines[i].isEmpty() && isValidLine(contextLines[i])) {
-                contextLines[i] = contextLines[i]
+    private static List<WikiLinksMention> extractTextBodyMentions(String pageName, String paragraph) {
+        String[] paragraphLines = paragraph.split("\n");
+        for (int i = 0; i < paragraphLines.length; i++) {
+            if (paragraphLines[i] != null && !paragraphLines[i].isEmpty() && isValidLine(paragraphLines[i])) {
+                paragraphLines[i] = paragraphLines[i]
                         .replaceAll("\\*.*?\n", "")
                         .replaceAll("\n", " ")
                         .replaceAll("\\<.*?>", "")
                         .replaceAll("\\s+", " ").trim();
             } else {
-                contextLines[i] = "";
+                paragraphLines[i] = "";
             }
         }
 
-        String fixedContext = String.join("\n", contextLines);
-        return extractFromLine(pageName, fixedContext);
+        String fixedParagraph = String.join("\n", paragraphLines);
+        return extractFromParagraph(pageName, fixedParagraph);
     }
 
     private static String cleanTextField(String text) {
@@ -338,10 +338,10 @@ public class WikiLinksExtractor {
         return false;
     }
 
-    static List<WikiLinksMention> extractFromLine(String pageName, String lineToExtractFrom) {
+    static List<WikiLinksMention> extractFromParagraph(String pageName, String paragraphToExtractFrom) {
         List<WikiLinksMention> mentions = new ArrayList<>();
 
-        Matcher linkMatcher = LINK_PATTERN_2.matcher(lineToExtractFrom);
+        Matcher linkMatcher = LINK_PATTERN_2.matcher(paragraphToExtractFrom);
         while (linkMatcher.find()) {
             String match1 = linkMatcher.group(1);
             String match2 = linkMatcher.group(2);

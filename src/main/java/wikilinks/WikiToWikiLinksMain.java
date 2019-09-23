@@ -57,9 +57,10 @@ public class WikiToWikiLinksMain {
             LOGGER.error(ex);
         } finally {
             elasticApi.close();
+            ExecutorServiceFactory.closeService();
+            sqlApi.persistAllMentions();
             sqlApi.persistAllCorefs();
             sqlApi.persistAllContexts();
-            ExecutorServiceFactory.closeService();
 
             long end = System.currentTimeMillis();
             LOGGER.info("Process Done, took-" + (end - start) + "ms to run");

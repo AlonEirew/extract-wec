@@ -108,7 +108,7 @@ public class ExtractSampleForValidation {
                 final String partOfSpeech = rs.getString("PartOfSpeech");
                 final int corefType = rs.getInt("corefType");
                 final String corefValue = rs.getString("corefValue");
-                final String context = rs.getString("context");
+                final int context = rs.getInt("context");
 
                 final MentionResultSet mention = new MentionResultSet(corefId, mentionId, mentionText, extractedFromPage,
                         tokenStart, tokenEnd, context, partOfSpeech);
