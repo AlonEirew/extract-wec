@@ -2,7 +2,6 @@ package persistence;
 
 import com.google.common.collect.Iterables;
 import data.CorefType;
-import data.MentionContext;
 import data.WikiLinksCoref;
 import data.WikiLinksMention;
 import org.apache.commons.lang3.StringUtils;
@@ -243,19 +242,6 @@ public class SQLQueryApi {
         try {
             if (!insertRowsToTable(new ArrayList<>(allCorefs))) {
                 LOGGER.error("Failed to insert Corefs!!!!");
-            }
-        } catch (SQLException e) {
-            LOGGER.error(e);
-        }
-    }
-
-    public synchronized void persistAllContexts() {
-        LOGGER.info("Persisting contexts tables values");
-        final Map<Integer, MentionContext> allContexts = MentionContext.getAllContexts();
-
-        try {
-            if (!insertRowsToTable(new ArrayList<>(allContexts.values()))) {
-                LOGGER.info("Failed to insert context!!!!");
             }
         } catch (SQLException e) {
             LOGGER.error(e);

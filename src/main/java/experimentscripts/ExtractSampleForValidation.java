@@ -15,6 +15,10 @@ import java.util.stream.Collectors;
 public class ExtractSampleForValidation {
     private final static Logger LOGGER = LogManager.getLogger(ExtractSampleForValidation.class);
 
+    private static final int CLUSTER_SIZE_LIMIT = 1;
+    private static final int MAX_SINGLETONES = 0;
+    private static final int MAX_CLUSTER_NONE_UNIQE = 3;
+
     public static void main(String[] args) throws SQLException {
         String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v7.db";
         SQLiteConnections sqLiteConnections = new SQLiteConnections(connectionUrl);
@@ -23,7 +27,7 @@ public class ExtractSampleForValidation {
         sqlApi.createTable(new ValidationMention());
 
         final Map<Integer, CorefResultSet> countPerType = getAllCorefs(sqLiteConnections);
-        countPerType.entrySet().removeIf(entry -> entry.getValue().getMentions().size() < 3);
+        countPerType.entrySet().removeIf(entry -> entry.getValue().getMentions().size() < CLUSTER_SIZE_LIMIT);
 
         List<ValidationMention> toCommit = fromMapToList(countPerType);
 
@@ -75,7 +79,7 @@ public class ExtractSampleForValidation {
         List<ValidationMention> validationMentions = new ArrayList<>();
         for(int i = 0 ; i < perType.length ; i++) {
             Collections.shuffle(perType[i]);
-            perType[i] = perType[i].stream().limit(10).collect(Collectors.toList());
+//            perType[i] = perType[i].stream().limit(10).collect(Collectors.toList());
             for(CorefResultSet resultSet : perType[i]) {
                 for(MentionResultSet mentionResultSet : resultSet.getMentions()) {
                     validationMentions.add(new ValidationMention(mentionResultSet));
@@ -101,14 +105,18 @@ public class ExtractSampleForValidation {
             while (rs.next()) {
                 final int mentionId = rs.getInt("mentionId");
                 final int corefId = rs.getInt("coreChainId");
-                final String mentionText = rs.getString("mentionText").toLowerCase();
+                final String mentionText = rs.getString("mentionText");
                 final String extractedFromPage = rs.getString("extractedFromPage");
                 final int tokenStart = rs.getInt("tokenStart");
                 final int tokenEnd = rs.getInt("tokenEnd");
                 final String partOfSpeech = rs.getString("PartOfSpeech");
                 final int corefType = rs.getInt("corefType");
                 final String corefValue = rs.getString("corefValue");
-                final int context = rs.getInt("context");
+                final String context = rs.getString("context");
+
+                if(mentionText.trim().isEmpty() || !mentionText.matches("[A-Za-z\\s]+")) {
+                    continue;
+                }
 
                 final MentionResultSet mention = new MentionResultSet(corefId, mentionId, mentionText, extractedFromPage,
                         tokenStart, tokenEnd, context, partOfSpeech);
@@ -119,7 +127,7 @@ public class ExtractSampleForValidation {
                     corefMap.put(corefId, corefResultSet);
                 } else {
                     final CorefResultSet corefResultSet = corefMap.get(corefId);
-                    corefResultSet.addNoneIntersectionUniqueMention(mention);
+                    corefResultSet.addNoneIntersectionUniqueMention(mention, MAX_CLUSTER_NONE_UNIQE);
                 }
             }
         }

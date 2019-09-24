@@ -61,7 +61,6 @@ public class ParseAndExtractMentionsWorker extends AWorker {
 
             RawElasticResult rawElasticResult = new RawElasticResult(corefValue, pageText);
             if (ment.getCorefChain().isMarkedForRemoval() || this.filter.isConditionMet(rawElasticResult)) {
-                ment.getContext().removeLinkedMention();
                 iterator.remove();
             }
         }

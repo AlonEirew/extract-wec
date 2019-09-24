@@ -1,6 +1,5 @@
 package wikilinks;
 
-import data.MentionContext;
 import data.WikiLinksMention;
 import data.WikiNewsMention;
 import edu.stanford.nlp.ling.CoreAnnotations;
@@ -341,32 +340,38 @@ public class WikiLinksExtractor {
     static List<WikiLinksMention> extractFromParagraph(String pageName, String paragraphToExtractFrom) {
         List<WikiLinksMention> mentions = new ArrayList<>();
 
-        Matcher linkMatcher = LINK_PATTERN_2.matcher(paragraphToExtractFrom);
-        while (linkMatcher.find()) {
-            String match1 = linkMatcher.group(1);
-            String match2 = linkMatcher.group(2);
-            if (!match1.contains("#")) {
-                WikiLinksMention mention = new WikiLinksMention(pageName);
-                if (!match1.isEmpty()) {
-                    mention.setMentionText(match2);
-                    mention.setCorefChain(match1);
-                } else {
-                    mention.setMentionText(match2);
-                    mention.setCorefChain(match2);
+        CoreDocument doc = new CoreDocument(paragraphToExtractFrom);
+        pipelineNoPos.annotate(doc);
+        if (doc.sentences().size() > 0) {
+            for (CoreSentence sentence : doc.sentences()) {
+                Matcher linkMatcher = LINK_PATTERN_2.matcher(sentence.text());
+                while (linkMatcher.find()) {
+                    String match1 = linkMatcher.group(1);
+                    String match2 = linkMatcher.group(2);
+                    if (!match1.contains("#")) {
+                        WikiLinksMention mention = new WikiLinksMention(pageName);
+                        if (!match1.isEmpty()) {
+                            mention.setMentionText(match2);
+                            mention.setCorefChain(match1);
+                        } else {
+                            mention.setMentionText(match2);
+                            mention.setCorefChain(match2);
+                        }
+
+                        mentions.add(mention);
+                    }
                 }
 
-                mentions.add(mention);
+                String context = linkMatcher
+                        .replaceAll("$2")
+                        .replaceAll("\\s+", " ").trim();
+                if (context.matches("'''(.*?)'''(.*?)")) {
+                    context = context.replaceAll("'''(.*?)'''(.*?)", "$1");
+                }
+
+                setMentionsContext(mentions, context);
             }
         }
-
-        String context = linkMatcher
-                .replaceAll("$2")
-                .replaceAll("\\s+", " ").trim();
-        if (context.matches("'''(.*?)'''(.*?)")) {
-            context = context.replaceAll("'''(.*?)'''(.*?)", "$1");
-        }
-
-        setMentionsContext(mentions, context);
         return mentions;
     }
 
@@ -405,7 +410,6 @@ public class WikiLinksExtractor {
 
     private static <T extends WikiLinksMention> void setMentionsContext(List<T> mentions, String context) {
         final List<String> contextAsStringList = new ArrayList<>();
-        MentionContext mentionContext = null;
         CoreDocument doc = new CoreDocument(context);
         pipelineNoPos.annotate(doc);
         if (doc.sentences().size() > 0) {
@@ -419,12 +423,11 @@ public class WikiLinksExtractor {
                 }
             }
 
-            mentionContext = new MentionContext(contextAsStringList);
             Set<Integer> usedStartIndexes = new HashSet<>();
             Iterator<T> iterator = mentions.iterator();
             while (iterator.hasNext()) {
                 final T mention = iterator.next();
-                mention.setContext(mentionContext);
+                mention.setContext(contextAsStringList);
                 CoreDocument mentionCoreDoc = new CoreDocument(mention.getMentionText());
                 pipelineWithPos.annotate(mentionCoreDoc);
                 if (mentionCoreDoc.sentences().size() > 0) {
@@ -459,11 +462,6 @@ public class WikiLinksExtractor {
             }
         } else {
             mentions.clear();
-        }
-
-        if(!mentions.isEmpty()) {
-            mentionContext.addLinkedMention(mentions.size());
-            MentionContext.addContextToSet(mentionContext);
         }
     }
 

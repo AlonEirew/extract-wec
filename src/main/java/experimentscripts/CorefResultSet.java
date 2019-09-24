@@ -29,10 +29,14 @@ public class CorefResultSet {
         this.mentions.add(newMention);
     }
 
-    public void addNoneIntersectionUniqueMention(MentionResultSet mention) {
+    public void addNoneIntersectionUniqueMention(MentionResultSet mention, int maxAllowed) {
+        int conditionMet = 0;
         for(MentionResultSet localMentions : this.mentions) {
             if(isIntersecting(localMentions, mention) || isLevenshteinDistanceApply(localMentions, mention, 2)) {
-                return;
+                conditionMet++;
+                if(conditionMet >= maxAllowed) {
+                    return;
+                }
             }
         }
 

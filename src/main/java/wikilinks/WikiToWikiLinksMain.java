@@ -1,7 +1,6 @@
 package wikilinks;
 
 import com.google.gson.Gson;
-import data.MentionContext;
 import data.WikiLinksCoref;
 import data.WikiLinksMention;
 import org.apache.commons.io.FileUtils;
@@ -16,7 +15,6 @@ import workers.ParseAndExtractWorkersFactory;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Map;
 
 public class WikiToWikiLinksMain {
@@ -60,7 +58,6 @@ public class WikiToWikiLinksMain {
             ExecutorServiceFactory.closeService();
             sqlApi.persistAllMentions();
             sqlApi.persistAllCorefs();
-            sqlApi.persistAllContexts();
 
             long end = System.currentTimeMillis();
             LOGGER.info("Process Done, took-" + (end - start) + "ms to run");
@@ -70,7 +67,6 @@ public class WikiToWikiLinksMain {
     private static boolean createSQLWikiLinksTables(SQLQueryApi sqlApi) throws SQLException {
         LOGGER.info("Creating SQL Tables");
         return sqlApi.createTable(new WikiLinksMention()) &&
-                sqlApi.createTable(WikiLinksCoref.getAndSetIfNotExist("####TEMP####")) &&
-                sqlApi.createTable(new MentionContext(new ArrayList<>()));
+                sqlApi.createTable(WikiLinksCoref.getAndSetIfNotExist("####TEMP####"));
     }
 }

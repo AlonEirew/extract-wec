@@ -1,6 +1,5 @@
 package wikilinks;
 
-import data.MentionContext;
 import data.WikiLinksCoref;
 import data.WikiLinksMention;
 import org.junit.Assert;
@@ -33,14 +32,13 @@ public class TestSQLQueryApi {
         testCreateTable(api);
         List<ISQLObject> objList = new ArrayList<>();
         String[] context = { "bolb", "bolo", "blogb", "blob"};
-        final MentionContext newAndAddToSet = MentionContext.createNewAndAddToSet(Arrays.asList(context));
         objList.add(new WikiLinksMention(
                 WikiLinksCoref.getAndSetIfNotExist("test1"),
                 "test",
                 0,
                 1,
                 "Test",
-                newAndAddToSet));
+                Arrays.asList(context)));
 
         objList.add(new WikiLinksMention(
                 WikiLinksCoref.getAndSetIfNotExist("test1"),
@@ -48,7 +46,7 @@ public class TestSQLQueryApi {
                 0,
                 1,
                 "Test",
-                newAndAddToSet));
+                Arrays.asList(context)));
 
         final boolean b = api.insertRowsToTable(objList);
         Assert.assertTrue(b);

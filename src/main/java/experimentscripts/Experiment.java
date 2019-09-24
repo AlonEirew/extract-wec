@@ -222,7 +222,7 @@ public class Experiment {
                     final String extractedFromPage = rs.getString("extractedFromPage");
                     final int tokenStart = rs.getInt("tokenStart");
                     final int tokenEnd = rs.getInt("tokenEnd");
-                    final int context = rs.getInt("context");
+                    final String context = rs.getString("context");
                     if(!countMapString.containsKey(corefId)) {
                         countMapString.put(corefId, new CorefResultSet(corefId));
                     }

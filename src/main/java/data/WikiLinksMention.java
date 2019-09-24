@@ -21,7 +21,7 @@ public class WikiLinksMention implements ISQLObject {
     private String extractedFromPage = "";
     private List<String> mentionTokens = new ArrayList<>();
     private List<String> mentionTokensPos = new ArrayList<>();
-    private MentionContext context;
+    private List<String> context;
 
     public WikiLinksMention() {
     }
@@ -31,7 +31,7 @@ public class WikiLinksMention implements ISQLObject {
     }
 
     public WikiLinksMention(WikiLinksCoref coref, String mentionText,
-                            int tokenStart, int tokenEnd, String extractedFromPage, MentionContext context) {
+                            int tokenStart, int tokenEnd, String extractedFromPage, List<String> context) {
         this.coreChain = coref;
         this.mentionText = mentionText;
         this.tokenStart = tokenStart;
@@ -76,11 +76,11 @@ public class WikiLinksMention implements ISQLObject {
         this.coreChain = corefChainValue;
     }
 
-    public MentionContext getContext() {
+    public List<String> getContext() {
         return context;
     }
 
-    public void setContext(MentionContext context) {
+    public void setContext(List<String> context) {
         this.context = context;
     }
 
@@ -117,7 +117,18 @@ public class WikiLinksMention implements ISQLObject {
                 this.tokenStart == -1 || this.tokenEnd == -1 ||
                 this.mentionTokens.size() == 0 ||
                 ((this.tokenEnd - this.tokenStart + 1) != this.mentionTokens.size()) ||
-                !this.context.isValid()) {
+                !this.isContextValid()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean isContextValid() {
+        if(this.context.contains("#") ||
+                this.context.contains("jpg") ||
+                this.context.contains("{") ||
+                this.context.contains("}")) {
             return false;
         }
 
@@ -163,8 +174,12 @@ public class WikiLinksMention implements ISQLObject {
                 tokenStart + "," +
                 tokenEnd + "," +
                 "'" + extractedFromPage + "'" +  "," +
-                "'" + this.context.getContextAsSQLBlob() + "'" +
+                "'" + getContextAsSQLBlob() + "'" +
                 "'" + String.join(", ", this.mentionTokensPos) + "'";
+    }
+
+    private String getContextAsSQLBlob() {
+        return String.join(" ", this.context);
     }
 
     @Override
@@ -180,7 +195,7 @@ public class WikiLinksMention implements ISQLObject {
         preparedStatement.setInt(4, this.tokenStart);
         preparedStatement.setInt(5, this.tokenEnd);
         preparedStatement.setString(6, this.extractedFromPage);
-        preparedStatement.setInt(7, this.context.getContextId());
+        preparedStatement.setString(7, getContextAsSQLBlob());
         preparedStatement.setString(8, String.join(", ", this.mentionTokensPos));
     }
 
