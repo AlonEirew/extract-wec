@@ -7,30 +7,35 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 public class ValidationMention implements ISQLObject {
-
+    public enum SPLIT {NA, TEST, VALIDATION, TRAIN}
     private static WikiLinksMention mention = new WikiLinksMention();
+
     private MentionResultSet mentionResultSet;
+    private SPLIT split = SPLIT.NA;
+
 
     public ValidationMention() {
     }
 
-    public ValidationMention(MentionResultSet mentionResultSet) {
+    public ValidationMention(MentionResultSet mentionResultSet, SPLIT split) {
         this.mentionResultSet = mentionResultSet;
+        this.split = split;
     }
 
     @Override
     public String getColumnNames() {
-        return mention.getColumnNames();
+        return "split," + mention.getColumnNames();
     }
 
     @Override
     public String getColumnNamesAndValues() {
-        return mention.getColumnNamesAndValues();
+        return "split VARCHAR(10)," + mention.getColumnNamesAndValues();
     }
 
     @Override
     public String getValues() {
-        return this.mentionResultSet.getMentionId() + "," +
+        return this.split.name() + "," +
+                this.mentionResultSet.getMentionId() + "," +
                 this.mentionResultSet.getCorefId() + "," +
                 "'" + mentionResultSet.getMentionString() + "'" + "," +
                 mentionResultSet.getTokenStart() + "," +
@@ -47,14 +52,15 @@ public class ValidationMention implements ISQLObject {
 
     @Override
     public void setPrepareInsertStatementValues(PreparedStatement statement) throws SQLException {
-        statement.setLong(1, this.mentionResultSet.getMentionId());
-        statement.setInt(2, this.mentionResultSet.getCorefId());
-        statement.setString(3, this.mentionResultSet.getMentionString());
-        statement.setInt(4, this.mentionResultSet.getTokenStart());
-        statement.setInt(5, this.mentionResultSet.getTokenEnd());
-        statement.setString(6, this.mentionResultSet.getExtractedFromPage());
-        statement.setString(7, this.mentionResultSet.getContext());
-        statement.setString(8, String.join(", ", this.mentionResultSet.getPos()));
+        statement.setString(1, this.split.name());
+        statement.setLong(2, this.mentionResultSet.getMentionId());
+        statement.setInt(3, this.mentionResultSet.getCorefId());
+        statement.setString(4, this.mentionResultSet.getMentionString());
+        statement.setInt(5, this.mentionResultSet.getTokenStart());
+        statement.setInt(6, this.mentionResultSet.getTokenEnd());
+        statement.setString(7, this.mentionResultSet.getExtractedFromPage());
+        statement.setString(8, this.mentionResultSet.getContext());
+        statement.setString(9, String.join(", ", this.mentionResultSet.getPos()));
     }
 
     @Override
@@ -64,7 +70,7 @@ public class ValidationMention implements ISQLObject {
                 .append(tableName).append(" ")
                 .append("(").append(getColumnNames()).append(")").append(" ")
                 .append("VALUES").append(" ")
-                .append("(?,?,?,?,?,?,?,?)")
+                .append("(?,?,?,?,?,?,?,?,?)")
                 .append(";");
 
         return query.toString();

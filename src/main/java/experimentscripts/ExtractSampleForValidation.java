@@ -1,5 +1,6 @@
 package experimentscripts;
 
+import com.google.common.collect.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import persistence.SQLQueryApi;
@@ -16,11 +17,10 @@ public class ExtractSampleForValidation {
     private final static Logger LOGGER = LogManager.getLogger(ExtractSampleForValidation.class);
 
     private static final int CLUSTER_SIZE_LIMIT = 1;
-    private static final int MAX_SINGLETONES = 0;
     private static final int MAX_CLUSTER_NONE_UNIQE = 3;
 
     public static void main(String[] args) throws SQLException {
-        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v7.db";
+        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v8.db";
         SQLiteConnections sqLiteConnections = new SQLiteConnections(connectionUrl);
         SQLQueryApi sqlApi = new SQLQueryApi(sqLiteConnections);
 
@@ -48,43 +48,24 @@ public class ExtractSampleForValidation {
     }
 
     private static List<ValidationMention> fromMapToList(Map<Integer, CorefResultSet> countPerType) {
-        List<CorefResultSet>[] perType = new List[6];
-        for(int i = 0 ; i < perType.length ; i++) {
-            perType[i] = new ArrayList();
-        }
-
-        for(CorefResultSet resultSet : countPerType.values()) {
-            switch (resultSet.getCorefType()) {
-                case 2:
-                    perType[0].add(resultSet);
-                    break;
-                case 3:
-                    perType[1].add(resultSet);
-                    break;
-                case 4:
-                    perType[2].add(resultSet);
-                    break;
-                case 6:
-                    perType[3].add(resultSet);
-                    break;
-                case 7:
-                    perType[4].add(resultSet);
-                    break;
-                case 8:
-                    perType[5].add(resultSet);
-                    break;
-            }
-        }
-
         List<ValidationMention> validationMentions = new ArrayList<>();
-        for(int i = 0 ; i < perType.length ; i++) {
-            Collections.shuffle(perType[i]);
-//            perType[i] = perType[i].stream().limit(10).collect(Collectors.toList());
-            for(CorefResultSet resultSet : perType[i]) {
-                for(MentionResultSet mentionResultSet : resultSet.getMentions()) {
-                    validationMentions.add(new ValidationMention(mentionResultSet));
-                }
+        int marker = 0;
+        ValidationMention.SPLIT split;
+        List<CorefResultSet> corefResultSetList = new ArrayList<>(countPerType.values());
+        Collections.shuffle(corefResultSetList);
+        for(CorefResultSet corefResultSet : corefResultSetList) {
+            if(marker < 3000) {
+                split = ValidationMention.SPLIT.VALIDATION;
+            } else if(marker >= 3000 && marker < 6000) {
+                split = ValidationMention.SPLIT.TEST;
+            } else {
+                split = ValidationMention.SPLIT.TRAIN;
             }
+
+            for(MentionResultSet mentionResultSet : corefResultSet.getMentions()) {
+                validationMentions.add(new ValidationMention(mentionResultSet, split));
+            }
+            marker ++;
         }
 
         return validationMentions;
@@ -114,7 +95,7 @@ public class ExtractSampleForValidation {
                 final String corefValue = rs.getString("corefValue");
                 final String context = rs.getString("context");
 
-                if(mentionText.trim().isEmpty() || !mentionText.matches("[A-Za-z\\s]+")) {
+                if(mentionText.trim().isEmpty() || !mentionText.matches("[A-Za-z0-9\\s]+")) {
                     continue;
                 }
 

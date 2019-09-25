@@ -154,13 +154,12 @@ public class WikiLinksMention implements ISQLObject {
 
     @Override
     public String getColumnNamesAndValues() {
-        return "" +
-                "mentionId INT," +
-                "coreChainId INT, " +
-                "mentionText VARCHAR(500), " +
-                "tokenStart INT, " +
-                "tokenEnd INT, " +
-                "extractedFromPage VARCHAR(500), " +
+        return "mentionId INT," +
+                "coreChainId INT," +
+                "mentionText VARCHAR(500)," +
+                "tokenStart INT," +
+                "tokenEnd INT," +
+                "extractedFromPage VARCHAR(500)," +
                 "context TEXT," +
                 "PartOfSpeech TEXT," +
                 "PRIMARY KEY (mentionId)";
