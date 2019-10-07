@@ -3,12 +3,13 @@ package data;
 import persistence.ISQLObject;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class WikiLinksMention implements ISQLObject {
+public class WikiLinksMention implements ISQLObject<WikiLinksMention> {
     private static final String TABLE_MENTIONS = "Mentions";
 
     private static volatile AtomicInteger runningId = new AtomicInteger();
@@ -209,5 +210,10 @@ public class WikiLinksMention implements ISQLObject {
                 .append(";");
 
         return query.toString();
+    }
+
+    @Override
+    public WikiLinksMention resultSetToObject(ResultSet rs) throws SQLException {
+        return null;
     }
 }

@@ -340,38 +340,32 @@ public class WikiLinksExtractor {
     static List<WikiLinksMention> extractFromParagraph(String pageName, String paragraphToExtractFrom) {
         List<WikiLinksMention> mentions = new ArrayList<>();
 
-        CoreDocument doc = new CoreDocument(paragraphToExtractFrom);
-        pipelineNoPos.annotate(doc);
-        if (doc.sentences().size() > 0) {
-            for (CoreSentence sentence : doc.sentences()) {
-                Matcher linkMatcher = LINK_PATTERN_2.matcher(sentence.text());
-                while (linkMatcher.find()) {
-                    String match1 = linkMatcher.group(1);
-                    String match2 = linkMatcher.group(2);
-                    if (!match1.contains("#")) {
-                        WikiLinksMention mention = new WikiLinksMention(pageName);
-                        if (!match1.isEmpty()) {
-                            mention.setMentionText(match2);
-                            mention.setCorefChain(match1);
-                        } else {
-                            mention.setMentionText(match2);
-                            mention.setCorefChain(match2);
-                        }
-
-                        mentions.add(mention);
-                    }
+        Matcher linkMatcher = LINK_PATTERN_2.matcher(paragraphToExtractFrom);
+        while (linkMatcher.find()) {
+            String match1 = linkMatcher.group(1);
+            String match2 = linkMatcher.group(2);
+            if (!match1.contains("#")) {
+                WikiLinksMention mention = new WikiLinksMention(pageName);
+                if (!match1.isEmpty()) {
+                    mention.setMentionText(match2);
+                    mention.setCorefChain(match1);
+                } else {
+                    mention.setMentionText(match2);
+                    mention.setCorefChain(match2);
                 }
 
-                String context = linkMatcher
-                        .replaceAll("$2")
-                        .replaceAll("\\s+", " ").trim();
-                if (context.matches("'''(.*?)'''(.*?)")) {
-                    context = context.replaceAll("'''(.*?)'''(.*?)", "$1");
-                }
-
-                setMentionsContext(mentions, context);
+                mentions.add(mention);
             }
         }
+
+        String context = linkMatcher
+                .replaceAll("$2")
+                .replaceAll("\\s+", " ").trim();
+        if (context.matches("'''(.*?)'''(.*?)")) {
+            context = context.replaceAll("'''(.*?)'''(.*?)", "$1");
+        }
+
+        setMentionsContext(mentions, context);
         return mentions;
     }
 

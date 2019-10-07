@@ -24,13 +24,13 @@ public class Experiment {
 
     public static void main(String[] args) throws SQLException {
 
-        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v7.db";
+        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v8.db";
         SQLiteConnections sqLiteConnections = new SQLiteConnections(connectionUrl);
 
-        final List<Map<Integer, CorefResultSet>> countPerType = extractClustersString(sqLiteConnections);
-//        final Map<Integer, CorefResultSet> allCorefs = ExtractTopicsInfo.getAllCorefs(sqLiteConnections);
-//        List<Map<Integer, CorefResultSet>> countPerType = new ArrayList<>();
-//        countPerType.add(allCorefs);
+//        final List<Map<Integer, CorefResultSet>> countPerType = extractClustersString(sqLiteConnections);
+        final Map<Integer, CorefResultSet> allCorefs = getAllCorefs(sqLiteConnections, "Validation");
+        List<Map<Integer, CorefResultSet>> countPerType = new ArrayList<>();
+        countPerType.add(allCorefs);
         final List<Map<Integer, CorefResultSet>> clustersUniqueString = countClustersUniqueString(countPerType);
 
         printResults(countPerType, "PURE");
@@ -288,5 +288,39 @@ public class Experiment {
             tableResult[i] = resultTable;
         }
         return tableResult;
+    }
+
+    static Map<Integer, CorefResultSet> getAllCorefs(SQLiteConnections sqlConnection, String tableName) throws SQLException {
+        LOGGER.info("Preparing to select all coref mentions by types");
+        Map<Integer, CorefResultSet> corefMap = new HashMap<>();
+        try (Connection conn = sqlConnection.getConnection(); Statement stmt = conn.createStatement()) {
+            LOGGER.info("Preparing to extract");
+
+            String query = "SELECT * from " + tableName + " INNER JOIN CorefChains ON " +
+                    tableName + ".coreChainId=CorefChains.corefId " + "where corefType>=2 and corefType<=8;";
+
+            ResultSet rs = stmt.executeQuery(query);
+            while (rs.next()) {
+                final int corefId = rs.getInt("coreChainId");
+                final String mentionText = rs.getString("mentionText").toLowerCase();
+                final String extractedFromPage = rs.getString("extractedFromPage");
+                final int tokenStart = rs.getInt("tokenStart");
+                final int tokenEnd = rs.getInt("tokenEnd");
+                final String partOfSpeech = rs.getString("PartOfSpeech");
+                final String context = rs.getString("context");
+                final int corefType = rs.getInt("corefType");
+                final String corefValue = rs.getString("corefValue");
+                final String split = rs.getString("split");
+
+                if(!corefMap.containsKey(corefId)) {
+                    corefMap.put(corefId, new CorefResultSet(corefId, corefType, corefValue));
+                }
+
+                corefMap.get(corefId).addMention(new MentionResultSet(corefId, mentionText, extractedFromPage,
+                        tokenStart, tokenEnd, context, partOfSpeech, split));
+            }
+        }
+
+        return corefMap;
     }
 }

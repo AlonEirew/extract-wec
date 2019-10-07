@@ -11,6 +11,7 @@ import persistence.SQLiteConnections;
 import workers.WikiNewsWorker;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,8 +34,15 @@ public class TestWikiNewsExtractor {
         List<RawElasticResult> elasticResults = new ArrayList<>();
         elasticResults.add(new RawElasticResult(pair.getKey(), pair.getValue()));
         SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections("jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v5.db"));
-        final Map<String, WikiLinksCoref> wikiLinksCorefMap = sqlApi.readCorefTableToMap();
-        WikiNewsWorker worker = new WikiNewsWorker(elasticResults, null, wikiLinksCorefMap);
+        final List<WikiLinksCoref> wikiLinksCorefMap = sqlApi.readTable(WikiLinksCoref.TABLE_COREF,
+                new WikiLinksCoref("NA"));
+
+        final Map<String, WikiLinksCoref> corefMap = new HashMap<>();
+        for(WikiLinksCoref coref : wikiLinksCorefMap) {
+            corefMap.put(coref.getCorefValue(), coref);
+        }
+
+        WikiNewsWorker worker = new WikiNewsWorker(elasticResults, null, corefMap);
         worker.run();
         Assert.assertEquals(6, WikiNewsWorker.getFinalToCommit().size());
         System.out.println();

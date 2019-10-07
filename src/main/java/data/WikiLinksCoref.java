@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class WikiLinksCoref implements ISQLObject {
+public class WikiLinksCoref implements ISQLObject<WikiLinksCoref> {
     public static final String TABLE_COREF = "CorefChains";
 
     private static volatile AtomicInteger runningId = new AtomicInteger();
@@ -21,7 +21,7 @@ public class WikiLinksCoref implements ISQLObject {
     private CorefType corefType = CorefType.NA;
     private boolean markedForRemoval = false;
 
-    private WikiLinksCoref(String corefValue) {
+    public WikiLinksCoref(String corefValue) {
         this.corefValue = corefValue;
     }
 
@@ -132,7 +132,8 @@ public class WikiLinksCoref implements ISQLObject {
         return query.toString();
     }
 
-    public static WikiLinksCoref resultSetToObject(ResultSet rs) throws SQLException {
+    @Override
+    public WikiLinksCoref resultSetToObject(ResultSet rs) throws SQLException {
         final int corefId = rs.getInt("corefId");
         final String corefValue = rs.getString("corefValue");
         final int mentionsCount = rs.getInt("mentionsCount");

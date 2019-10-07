@@ -14,6 +14,8 @@ import workers.WikiNewsWorkerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class WikiNewsToWikiLinksMain {
@@ -35,11 +37,16 @@ public class WikiNewsToWikiLinksMain {
             SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections(config.get("sql_connection_url")));
 
             sqlApi.createTable(new WikiNewsMention());
+            final List<WikiLinksCoref> wikiLinksCorefMap = sqlApi.readTable(WikiLinksCoref.TABLE_COREF,
+                    new WikiLinksCoref("NA"));
 
-            final Map<String, WikiLinksCoref> wikiLinksCorefMap = sqlApi.readCorefTableToMap();
+            final Map<String, WikiLinksCoref> corefMap = new HashMap<>();
+            for(WikiLinksCoref coref : wikiLinksCorefMap) {
+                corefMap.put(coref.getCorefValue(), coref);
+            }
 
             CreateWikiLinks createWikiLinks = new CreateWikiLinks(elasticApi,
-                    new WikiNewsWorkerFactory(wikiLinksCorefMap, sqlApi));
+                    new WikiNewsWorkerFactory(corefMap, sqlApi));
 
             createWikiLinks.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
         } catch (Exception ex) {

@@ -4,9 +4,10 @@ import data.WikiLinksMention;
 import persistence.ISQLObject;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class ValidationMention implements ISQLObject {
+public class ValidationMention implements ISQLObject<ValidationMention> {
     public enum SPLIT {NA, TEST, VALIDATION, TRAIN}
     private static WikiLinksMention mention = new WikiLinksMention();
 
@@ -74,5 +75,10 @@ public class ValidationMention implements ISQLObject {
                 .append(";");
 
         return query.toString();
+    }
+
+    @Override
+    public ValidationMention resultSetToObject(ResultSet rs) throws SQLException {
+        return null;
     }
 }

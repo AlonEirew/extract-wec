@@ -21,7 +21,7 @@ public class ExtractTopicsInfo {
         String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v7.db";
         SQLiteConnections sqLiteConnections = new SQLiteConnections(connectionUrl);
 
-        final Map<Integer, CorefResultSet> allCorefs = getAllCorefs(sqLiteConnections);
+        final Map<Integer, CorefResultSet> allCorefs = getAllCorefs(sqLiteConnections, "Mentions");
         final Map<String, List<MentionResultSet>> topicsMap = countTopicsMentions(allCorefs);
 
         List<Pair<String, Integer>> printTopicsBySize = new ArrayList<>();
@@ -52,16 +52,14 @@ public class ExtractTopicsInfo {
         return topics;
     }
 
-    static Map<Integer, CorefResultSet> getAllCorefs(SQLiteConnections sqlConnection) throws SQLException {
+    static Map<Integer, CorefResultSet> getAllCorefs(SQLiteConnections sqlConnection, String tableName) throws SQLException {
         LOGGER.info("Preparing to select all coref mentions by types");
         Map<Integer, CorefResultSet> corefMap = new HashMap<>();
         try (Connection conn = sqlConnection.getConnection(); Statement stmt = conn.createStatement()) {
             LOGGER.info("Preparing to extract");
 
-            String query = "SELECT coreChainId, mentionText, extractedFromPage, tokenStart, " +
-                    "tokenEnd, corefValue, corefType, PartOfSpeech, context " +
-                    "from Mentions INNER JOIN CorefChains ON Mentions.coreChainId=CorefChains.corefId " +
-                    "where corefType>=2 and corefType<=8";
+            String query = "SELECT * from " + tableName + " INNER JOIN CorefChains ON " +
+                    tableName + ".coreChainId=CorefChains.corefId " + "where corefType>=2 and corefType<=8";
 
             ResultSet rs = stmt.executeQuery(query);
             while (rs.next()) {

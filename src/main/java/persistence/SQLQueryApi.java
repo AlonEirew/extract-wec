@@ -130,16 +130,16 @@ public class SQLQueryApi {
         return true;
     }
 
-    public Map<String, WikiLinksCoref> readCorefTableToMap() {
-        Map<String, WikiLinksCoref> resultList = new HashMap<>();
-        String query = "Select * from " + WikiLinksCoref.TABLE_COREF;
+    public <T extends ISQLObject<T>> List<T> readTable(String table, T resultObjectRef) {
+        List<T> resultList = new ArrayList<>();
+        String query = "Select * from " + table;
         try (Connection conn = this.sqlConnection.getConnection();
              Statement stmt = conn.createStatement()) {
 
             try(ResultSet rs = stmt.executeQuery(query)) {
                 while (rs.next()) {
-                    final WikiLinksCoref coref = WikiLinksCoref.resultSetToObject(rs);
-                    resultList.put(coref.getCorefValue(), coref);
+                    final T coref = resultObjectRef.resultSetToObject(rs);
+                    resultList.add(coref);
                 }
             }
         } catch (SQLException e) {

@@ -12,6 +12,7 @@ public class MentionResultSet {
     private String context;
     private boolean markedForDelete = false;
     private String pos;
+    private String split = null;
 
     public MentionResultSet(int corefId, String mentionString, String extractedFromPage,
                             int tokenStart, int tokenEnd, String context, String pos) {
@@ -24,6 +25,12 @@ public class MentionResultSet {
         this.pos = pos;
     }
 
+    public MentionResultSet(int corefId, String mentionString, String extractedFromPage,
+                            int tokenStart, int tokenEnd, String context, String pos, String split) {
+        this(corefId, mentionString, extractedFromPage, tokenStart, tokenEnd, context, pos);
+        this.split = split;
+    }
+
     public MentionResultSet(MentionResultSet mention) {
         this.corefId = mention.corefId;
         this.mentionString = mention.mentionString;
@@ -32,6 +39,7 @@ public class MentionResultSet {
         this.tokenEnd = mention.tokenEnd;
         this.context = mention.context;
         this.pos = mention.pos;
+        this.split = mention.split;
     }
 
     public MentionResultSet(int corefId, int mentionId, String mentionText, String extractedFromPage, int tokenStart, int tokenEnd, String context, String partOfSpeech) {

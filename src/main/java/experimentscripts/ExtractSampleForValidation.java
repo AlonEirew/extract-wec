@@ -27,7 +27,9 @@ public class ExtractSampleForValidation {
         sqlApi.createTable(new ValidationMention());
 
         final Map<Integer, CorefResultSet> countPerType = getAllCorefs(sqLiteConnections);
-        countPerType.entrySet().removeIf(entry -> entry.getValue().getMentions().size() < CLUSTER_SIZE_LIMIT);
+        countPerType.entrySet().removeIf(entry -> entry.getValue().getMentions().isEmpty());
+        countPerType.entrySet().removeIf(entry -> entry.getValue().getCorefType() == 6 &&
+                entry.getValue().getMentions().size() < 3);
 
         List<ValidationMention> toCommit = fromMapToList(countPerType);
 
@@ -95,7 +97,8 @@ public class ExtractSampleForValidation {
                 final String corefValue = rs.getString("corefValue");
                 final String context = rs.getString("context");
 
-                if(mentionText.trim().isEmpty() || !mentionText.matches("[A-Za-z0-9\\s]+")) {
+                if(mentionText.trim().isEmpty() || mentionText.matches("\\d+") || !mentionText.matches("[A-Za-z0-9\\s]+") ||
+                        mentionText.equals(corefValue)) {
                     continue;
                 }
 
