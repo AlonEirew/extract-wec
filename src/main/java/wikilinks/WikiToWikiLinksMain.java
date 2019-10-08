@@ -52,7 +52,7 @@ public class WikiToWikiLinksMain {
 
             createWikiLinks.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
         } catch (Exception ex) {
-            LOGGER.error(ex);
+            LOGGER.error("Could not start process", ex);
         } finally {
             elasticApi.close();
             ExecutorServiceFactory.closeService();

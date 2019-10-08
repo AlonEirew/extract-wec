@@ -1,5 +1,9 @@
 package data;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import persistence.ISQLObject;
 
 import java.sql.PreparedStatement;
@@ -7,11 +11,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class WikiLinksMention implements ISQLObject<WikiLinksMention> {
     private static final String TABLE_MENTIONS = "Mentions";
 
+    private static final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
     private static volatile AtomicInteger runningId = new AtomicInteger();
 
     private final long mentionId = runningId.incrementAndGet();
@@ -22,7 +29,7 @@ public class WikiLinksMention implements ISQLObject<WikiLinksMention> {
     private String extractedFromPage = "";
     private List<String> mentionTokens = new ArrayList<>();
     private List<String> mentionTokensPos = new ArrayList<>();
-    private List<String> context;
+    private List<List<Map.Entry<String, Integer>>> context;
 
     public WikiLinksMention() {
     }
@@ -32,7 +39,7 @@ public class WikiLinksMention implements ISQLObject<WikiLinksMention> {
     }
 
     public WikiLinksMention(WikiLinksCoref coref, String mentionText,
-                            int tokenStart, int tokenEnd, String extractedFromPage, List<String> context) {
+                            int tokenStart, int tokenEnd, String extractedFromPage, List<List<Map.Entry<String, Integer>>> context) {
         this.coreChain = coref;
         this.mentionText = mentionText;
         this.tokenStart = tokenStart;
@@ -77,11 +84,11 @@ public class WikiLinksMention implements ISQLObject<WikiLinksMention> {
         this.coreChain = corefChainValue;
     }
 
-    public List<String> getContext() {
+    public List<List<Map.Entry<String, Integer>>> getContext() {
         return context;
     }
 
-    public void setContext(List<String> context) {
+    public void setContext(List<List<Map.Entry<String, Integer>>> context) {
         this.context = context;
     }
 
@@ -126,13 +133,16 @@ public class WikiLinksMention implements ISQLObject<WikiLinksMention> {
     }
 
     public boolean isContextValid() {
-        if(this.context.contains("#") ||
-                this.context.contains("jpg") ||
-                this.context.contains("{") ||
-                this.context.contains("}")) {
-            return false;
+        for(List<Map.Entry<String, Integer>> sentence : this.context) {
+            for (Map.Entry<String, Integer> entry : sentence) {
+                if (entry.getKey().toLowerCase().contains("#") ||
+                        entry.getKey().toLowerCase().contains("jpg") ||
+                        entry.getKey().toLowerCase().contains("{") ||
+                        entry.getKey().toLowerCase().contains("}")) {
+                    return false;
+                }
+            }
         }
-
         return true;
     }
 
@@ -179,7 +189,21 @@ public class WikiLinksMention implements ISQLObject<WikiLinksMention> {
     }
 
     private String getContextAsSQLBlob() {
-        return String.join(" ", this.context);
+        StringBuilder sb = new StringBuilder();
+        JsonArray rootArray = new JsonArray();
+        for(int i = 0 ; i < this.context.size(); i++) {
+            List<Map.Entry<String, Integer>> sentence = this.context.get(i);
+            sb.append("[");
+            JsonArray jsonArray = new JsonArray();
+            for (int j = 0; j < sentence.size(); j++) {
+                JsonObject jsonObject = new JsonObject();
+                Map.Entry<String, Integer> entry = sentence.get(j);
+                jsonObject.addProperty(entry.getKey(), entry.getValue());
+                jsonArray.add(jsonObject);
+            }
+            rootArray.add(jsonArray);
+        }
+        return gson.toJson(rootArray);
     }
 
     @Override
@@ -215,5 +239,26 @@ public class WikiLinksMention implements ISQLObject<WikiLinksMention> {
     @Override
     public WikiLinksMention resultSetToObject(ResultSet rs) throws SQLException {
         return null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WikiLinksMention mention = (WikiLinksMention) o;
+        return mentionId == mention.mentionId &&
+                tokenStart == mention.tokenStart &&
+                tokenEnd == mention.tokenEnd &&
+                Objects.equals(mentionText, mention.mentionText) &&
+                Objects.equals(coreChain, mention.coreChain) &&
+                Objects.equals(extractedFromPage, mention.extractedFromPage) &&
+                Objects.equals(mentionTokens, mention.mentionTokens) &&
+                Objects.equals(mentionTokensPos, mention.mentionTokensPos) &&
+                Objects.equals(context, mention.context);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mentionId, mentionText, tokenStart, tokenEnd, coreChain, extractedFromPage, mentionTokens, mentionTokensPos, context);
     }
 }

@@ -15,7 +15,7 @@ public class SQLQueryApi {
     private final static Logger LOGGER = LogManager.getLogger(SQLQueryApi.class);
 
     private static final int MAX_BULK_SIZE = 500;
-    private static final int MAX_MENTIONS_ACCUMULATED_SIZE = 100000;
+    private static final int MAX_MENTIONS_ACCUMULATED_SIZE = 500000;
     private static final List<WikiLinksMention> accumulatedMentions = new ArrayList<>();
 
     private ISQLConnection sqlConnection;

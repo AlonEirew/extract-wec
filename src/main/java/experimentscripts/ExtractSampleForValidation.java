@@ -20,7 +20,7 @@ public class ExtractSampleForValidation {
     private static final int MAX_CLUSTER_NONE_UNIQE = 3;
 
     public static void main(String[] args) throws SQLException {
-        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v8.db";
+        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v8_single_sent.db";
         SQLiteConnections sqLiteConnections = new SQLiteConnections(connectionUrl);
         SQLQueryApi sqlApi = new SQLQueryApi(sqLiteConnections);
 

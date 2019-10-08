@@ -95,17 +95,22 @@ public class ElasticQueryApi implements Closeable {
                 multiSearchRequest.add(searchRequest);
 
                 index++;
-                if (index % 500 == 0) {
-                    this.asyncRequests.incrementAndGet();
-                    actionListener.incAsyncRequest();
-                    elasticClient.multiSearchAsync(multiSearchRequest, actionListener);
-                    multiSearchRequest = new MultiSearchRequest();
-                    LOGGER.info("Done extracting " + index + " coref pages");
+                if (index % 100 == 0) {
+                    if(!multiSearchRequest.requests().isEmpty()) {
+                        this.asyncRequests.incrementAndGet();
+                        actionListener.incAsyncRequest();
+                        elasticClient.multiSearchAsync(multiSearchRequest, actionListener);
+                        multiSearchRequest = new MultiSearchRequest();
+                        LOGGER.info("Done extracting " + index + " coref pages");
+                    }
                 }
             }
-            actionListener.incAsyncRequest();
-            this.asyncRequests.incrementAndGet();
-            elasticClient.multiSearchAsync(multiSearchRequest, actionListener);
+
+            if(!multiSearchRequest.requests().isEmpty()) {
+                actionListener.incAsyncRequest();
+                this.asyncRequests.incrementAndGet();
+                elasticClient.multiSearchAsync(multiSearchRequest, actionListener);
+            }
 
         } catch (Exception e) {
             LOGGER.error(e);
