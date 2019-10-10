@@ -31,14 +31,21 @@ public class TestSQLQueryApi {
     public void testInsertToTable(SQLQueryApi api) throws SQLException {
         testCreateTable(api);
         List<ISQLObject> objList = new ArrayList<>();
-        String[] context = { "bolb", "bolo", "blogb", "blob"};
+        Map.Entry[] contextSent = {
+                new AbstractMap.SimpleEntry<>("bolb", 0),
+                new AbstractMap.SimpleEntry<>("bolb", 1),
+                new AbstractMap.SimpleEntry<>("blogb", 2),
+                new AbstractMap.SimpleEntry<>("blob", 3)
+        };
+        List<List<Map.Entry<String, Integer>>> context = new ArrayList<>();
+        context.add(Arrays.asList(contextSent));
         objList.add(new WikiLinksMention(
                 WikiLinksCoref.getAndSetIfNotExist("test1"),
                 "test",
                 0,
                 1,
                 "Test",
-                Arrays.asList(context)));
+                context));
 
         objList.add(new WikiLinksMention(
                 WikiLinksCoref.getAndSetIfNotExist("test1"),
@@ -46,7 +53,7 @@ public class TestSQLQueryApi {
                 0,
                 1,
                 "Test",
-                Arrays.asList(context)));
+                context));
 
         final boolean b = api.insertRowsToTable(objList);
         Assert.assertTrue(b);
