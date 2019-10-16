@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import data.RawElasticResult;
 import data.WikiLinksMention;
+import data.WikiNewsMention;
 import javafx.util.Pair;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
@@ -31,6 +32,15 @@ public class TestWikiLinksExtractor {
             int expected = jo.get("expected").getAsInt();
             final List<WikiLinksMention> extractMentions1 = WikiLinksExtractor.extractFromWikipedia(title, pageText);
             Assert.assertEquals(title, expected, extractMentions1.size());
+        }
+    }
+
+    @Test
+    public void testExtractTmp() {
+        List<Pair<String, String>> pageTexts = TestUtils.getTextAndTitle("wiki_links/tmp.json");
+        for(Pair<String, String> text : pageTexts) {
+            final List<WikiNewsMention> wikiNewsMentions = WikiLinksExtractor.extractFromWikiNews(text.getKey(), text.getValue());
+            System.out.println();
         }
     }
 

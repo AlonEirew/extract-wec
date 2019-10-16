@@ -24,7 +24,7 @@ public class Experiment {
 
     public static void main(String[] args) throws SQLException {
 
-        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v8.db";
+        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v9.db";
         SQLiteConnections sqLiteConnections = new SQLiteConnections(connectionUrl);
 
 //        final List<Map<Integer, CorefResultSet>> countPerType = extractClustersString(sqLiteConnections);
@@ -297,7 +297,7 @@ public class Experiment {
             LOGGER.info("Preparing to extract");
 
             String query = "SELECT * from " + tableName + " INNER JOIN CorefChains ON " +
-                    tableName + ".coreChainId=CorefChains.corefId " + "where corefType>=2 and corefType<=8;";
+                    tableName + ".coreChainId=CorefChains.corefId " + "where corefType>=2 and corefType<=8 and split=\"TRAIN\";";
 
             ResultSet rs = stmt.executeQuery(query);
             while (rs.next()) {

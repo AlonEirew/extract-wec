@@ -53,6 +53,7 @@ public class ParseAndExtractMentionsWorker extends AWorker {
     }
 
     public void onResponse(Map<String, String> pagesResults) {
+        LOGGER.info("processing returned results from elastic MultiSearchRequest");
         final Iterator<WikiLinksMention> iterator = this.finalToCommit.iterator();
         while (iterator.hasNext()) {
             WikiLinksMention ment = iterator.next();

@@ -17,7 +17,7 @@ public class CheckNominalization {
     private final static Logger LOGGER = LogManager.getLogger(CheckNominalization.class);
 
     public static void main(String[] args) throws SQLException {
-        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v6.db";
+        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v9.db";
         SQLiteConnections sqLiteConnections = new SQLiteConnections(connectionUrl);
 
         final Map<Integer, CorefResultSet> mentionResultSets = countVerbs(sqLiteConnections);
@@ -56,7 +56,7 @@ public class CheckNominalization {
             LOGGER.info("Preparing to extract");
 
             String query = "SELECT coreChainId, mentionText, extractedFromPage, tokenStart, tokenEnd, PartOfSpeech " +
-                    "from Mentions INNER JOIN CorefChains ON Mentions.coreChainId=CorefChains.corefId " +
+                    "from Validation INNER JOIN CorefChains ON Validation.coreChainId=CorefChains.corefId " +
                     "where corefType>=2 and corefType<=8";
 
             ResultSet rs = stmt.executeQuery(query);

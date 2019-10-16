@@ -434,27 +434,7 @@ public class WikiLinksExtractor {
                         mention.addMentionToken(label.originalText(), label.get(CoreAnnotations.PartOfSpeechAnnotation.class));
                     }
 
-                    int index = 0;
-                    for(int i = 0 ; i < contextAsStringList.size() ; i++) {
-                        List<Map.Entry<String, Integer>> sentenceToken = contextAsStringList.get(i);
-                        for (int j = 0; j < sentenceToken.size(); j++) {
-                            if (!usedStartIndexes.contains(index)) {
-                                if (sentenceToken.get(j).getKey().equals(mentTokens.get(0).originalText())) {
-                                    mention.setTokenStart(index);
-                                    usedStartIndexes.add(index);
-                                    if (mentTokens.size() == 1) {
-                                        mention.setTokenEnd(index);
-                                        break;
-                                    }
-                                } else if (mention.getTokenStart() != -1 && sentenceToken.get(j).getKey()
-                                        .equals(mentTokens.get(mentTokens.size() - 1).originalText())) {
-                                    mention.setTokenEnd(index);
-                                    break;
-                                }
-                            }
-                            index++;
-                        }
-                    }
+                    setMentionStartEndTokenIndex(mention, usedStartIndexes, mentTokens);
 
                     if (!mention.isValid()) {
                         iterator.remove();
@@ -466,6 +446,30 @@ public class WikiLinksExtractor {
             }
         } else {
             mentions.clear();
+        }
+    }
+
+    private static <T extends WikiLinksMention> void setMentionStartEndTokenIndex(T mention, Set<Integer> usedStartIndexes, List<CoreLabel> mentTokens) {
+        int index = 0;
+        for(int i = 0 ; i < mention.getContext().size() ; i++) {
+            List<Map.Entry<String, Integer>> sentenceToken = mention.getContext().get(i);
+            for (int j = 0; j < sentenceToken.size(); j++) {
+                if (!usedStartIndexes.contains(index)) {
+                    if (sentenceToken.get(j).getKey().equals(mentTokens.get(0).originalText())) {
+                        mention.setTokenStart(index);
+                        usedStartIndexes.add(index);
+                        if (mentTokens.size() == 1) {
+                            mention.setTokenEnd(index);
+                            break;
+                        }
+                    } else if (mention.getTokenStart() != -1 && sentenceToken.get(j).getKey()
+                            .equals(mentTokens.get(mentTokens.size() - 1).originalText())) {
+                        mention.setTokenEnd(index);
+                        return;
+                    }
+                }
+                index++;
+            }
         }
     }
 
