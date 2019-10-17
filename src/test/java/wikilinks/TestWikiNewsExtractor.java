@@ -27,7 +27,7 @@ public class TestWikiNewsExtractor {
 
     }
 
-    @Test
+//    @Test
     public void testNewsWorker() {
         final List<Pair<String, String>> textAndTitle = TestUtils.getTextAndTitle("wiki_news/colombia.json");
         Pair<String, String> pair = textAndTitle.get(0);

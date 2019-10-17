@@ -34,6 +34,12 @@ public class ParseAndExtractMentionsWorker extends AWorker {
         this.filter = filter;
     }
 
+    // Constructor for testing purposes
+    ParseAndExtractMentionsWorker(List<WikiLinksMention> finalToCommit, ICorefFilter filter) {
+        this(new ArrayList<>(), null, null, filter);
+        this.finalToCommit.addAll(finalToCommit);
+    }
+
     @Override
     public void run() {
         LOGGER.info("Parsing the wikipedia pages and extracting mentions");
@@ -51,26 +57,37 @@ public class ParseAndExtractMentionsWorker extends AWorker {
             }
         }
 
+        LOGGER.info("Sending-" + corefTitleSet.size() + " coref titles to be retrieved");
         ExecutorServiceFactory.submit(() -> this.elasticApi.getAllWikiPagesTitleAndTextAsync(corefTitleSet, this));
     }
 
     public void onResponse(Map<String, String> pagesResults) {
         LOGGER.info("processing returned results from elastic MultiSearchRequest");
+        filterUnwantedMentions(pagesResults);
+        ExecutorServiceFactory.submit(() -> sqlApi.commitMentions(finalToCommit));
+    }
+
+    void filterUnwantedMentions(Map<String, String> pagesResults) {
         final Iterator<WikiLinksMention> iterator = this.finalToCommit.iterator();
         while (iterator.hasNext()) {
             WikiLinksMention ment = iterator.next();
-            ment.getCorefChain().setWasRetrived(true);
 
-            final String corefValue = ment.getCorefChain().getCorefValue();
-            final String pageText = pagesResults.get(corefValue);
-
-            RawElasticResult rawElasticResult = new RawElasticResult(corefValue, pageText);
-            if (ment.getCorefChain().isMarkedForRemoval() || this.filter.isConditionMet(rawElasticResult)) {
-                ment.getCorefChain().setMarkedForRemoval(true);
+            if(ment.getCorefChain().isMarkedForRemoval()) {
                 iterator.remove();
+            } else if(!ment.getCorefChain().wasRetrived()) {
+                ment.getCorefChain().setWasRetrived(true);
+                final String corefValue = ment.getCorefChain().getCorefValue();
+                final String pageText = pagesResults.get(corefValue);
+                RawElasticResult rawElasticResult = new RawElasticResult(corefValue, pageText);
+                if(this.filter.isConditionMet(rawElasticResult)) {
+                    ment.getCorefChain().setMarkedForRemoval(true);
+                    iterator.remove();
+                }
             }
         }
+    }
 
-        ExecutorServiceFactory.submit(() -> sqlApi.commitMentions(finalToCommit));
+    List<WikiLinksMention> getFinalToCommit() {
+        return finalToCommit;
     }
 }
