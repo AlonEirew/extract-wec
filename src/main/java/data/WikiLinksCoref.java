@@ -20,6 +20,7 @@ public class WikiLinksCoref implements ISQLObject<WikiLinksCoref> {
     private AtomicInteger mentionsCount = new AtomicInteger(0);
     private CorefType corefType = CorefType.NA;
     private boolean markedForRemoval = false;
+    private boolean wasRetrived = false;
 
     public WikiLinksCoref(String corefValue) {
         this.corefValue = corefValue;
@@ -81,6 +82,14 @@ public class WikiLinksCoref implements ISQLObject<WikiLinksCoref> {
 
     public void setMarkedForRemoval(boolean markedForRemoval) {
         this.markedForRemoval = markedForRemoval;
+    }
+
+    public boolean wasRetrived() {
+        return wasRetrived;
+    }
+
+    public void setWasRetrived(boolean wasRetrived) {
+        this.wasRetrived = wasRetrived;
     }
 
     @Override

@@ -40,7 +40,9 @@ public class WikiToWikiLinksMain {
         SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections(config.get("sql_connection_url")));
         long start = System.currentTimeMillis();
         ElasticQueryApi elasticApi = new ElasticQueryApi(config.get("elastic_wiki_index"),
-                Integer.parseInt(config.get("elastic_search_interval")), config.get("elastic_host"),
+                Integer.parseInt(config.get("elastic_search_interval")),
+                Integer.parseInt(config.get("multi_request_interval")),
+                config.get("elastic_host"),
                 Integer.parseInt(config.get("elastic_port")));
         try {
             CreateWikiLinks createWikiLinks = new CreateWikiLinks(elasticApi, new ParseAndExtractWorkersFactory(sqlApi, elasticApi));

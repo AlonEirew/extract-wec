@@ -116,7 +116,9 @@ public class TestWikiLinksExtractor {
         Map<String, String> config = getConfigFile();
 
         ElasticQueryApi elasticQueryApi = new ElasticQueryApi(config.get("elastic_wiki_index"),
-                Integer.parseInt(config.get("elastic_search_interval")), config.get("elastic_host"),
+                Integer.parseInt(config.get("elastic_search_interval")),
+                Integer.parseInt(config.get("multi_request_interval")),
+                config.get("elastic_host"),
                 Integer.parseInt(config.get("elastic_port")));
         final String alan_turing = elasticQueryApi.getPageText("Alan Turing");
         final String infoBox = WikiLinksExtractor.extractPageInfoBox(alan_turing);

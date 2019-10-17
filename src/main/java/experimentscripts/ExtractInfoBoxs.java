@@ -29,7 +29,9 @@ public class ExtractInfoBoxs {
 
         ReadInfoBoxWorkerFactory readInfoBoxWorkerFactory = new ReadInfoBoxWorkerFactory();
         try (ElasticQueryApi elasticApi = new ElasticQueryApi(config.get("elastic_wiki_index"),
-                Integer.parseInt(config.get("elastic_search_interval")), config.get("elastic_host"),
+                Integer.parseInt(config.get("elastic_search_interval")),
+                Integer.parseInt(config.get("multi_request_interval")),
+                config.get("elastic_host"),
                 Integer.parseInt(config.get("elastic_port")))) {
 
             CreateWikiLinks createWikiLinks = new CreateWikiLinks(elasticApi, readInfoBoxWorkerFactory);

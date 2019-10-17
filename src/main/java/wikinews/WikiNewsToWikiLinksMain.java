@@ -31,7 +31,9 @@ public class WikiNewsToWikiLinksMain {
                 Map.class);
 
         try (ElasticQueryApi elasticApi = new ElasticQueryApi(config.get("elastic_wikinews_index"),
-                Integer.parseInt(config.get("elastic_search_interval")), config.get("elastic_host"),
+                Integer.parseInt(config.get("elastic_search_interval")),
+                Integer.parseInt(config.get("multi_request_interval")),
+                config.get("elastic_host"),
                 Integer.parseInt(config.get("elastic_port")))) {
 
             SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections(config.get("sql_connection_url")));

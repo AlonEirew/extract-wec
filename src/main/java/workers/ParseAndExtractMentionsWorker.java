@@ -40,13 +40,15 @@ public class ParseAndExtractMentionsWorker extends AWorker {
         for(RawElasticResult rowResult : this.rawElasticResults) {
             List<WikiLinksMention> wikiLinksMentions = WikiLinksExtractor.extractFromWikipedia(rowResult.getTitle(), rowResult.getText());
             wikiLinksMentions.forEach(wikiLinksMention -> wikiLinksMention.getCorefChain().incMentionsCount());
-            finalToCommit.addAll(wikiLinksMentions);
+            this.finalToCommit.addAll(wikiLinksMentions);
         }
 
         LOGGER.info("Handle all worker mentions...in total-" + finalToCommit.size() + " will be handled");
         final Set<String> corefTitleSet = new HashSet<>();
-        for(WikiLinksMention mention : finalToCommit) {
-            corefTitleSet.add(mention.getCorefChain().getCorefValue());
+        for(WikiLinksMention mention : this.finalToCommit) {
+            if(!mention.getCorefChain().wasRetrived()) {
+                corefTitleSet.add(mention.getCorefChain().getCorefValue());
+            }
         }
 
         ExecutorServiceFactory.submit(() -> this.elasticApi.getAllWikiPagesTitleAndTextAsync(corefTitleSet, this));
@@ -57,11 +59,14 @@ public class ParseAndExtractMentionsWorker extends AWorker {
         final Iterator<WikiLinksMention> iterator = this.finalToCommit.iterator();
         while (iterator.hasNext()) {
             WikiLinksMention ment = iterator.next();
+            ment.getCorefChain().setWasRetrived(true);
+
             final String corefValue = ment.getCorefChain().getCorefValue();
             final String pageText = pagesResults.get(corefValue);
 
             RawElasticResult rawElasticResult = new RawElasticResult(corefValue, pageText);
             if (ment.getCorefChain().isMarkedForRemoval() || this.filter.isConditionMet(rawElasticResult)) {
+                ment.getCorefChain().setMarkedForRemoval(true);
                 iterator.remove();
             }
         }

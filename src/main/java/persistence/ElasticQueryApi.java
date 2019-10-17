@@ -29,12 +29,14 @@ public class ElasticQueryApi implements Closeable {
     private final RestHighLevelClient elasticClient;
     private final String elasticIndex;
     private final int queryInterval;
+    private final int multiRequestInterval;
 
     private final AtomicInteger asyncRequests = new AtomicInteger(0);
 
-    public ElasticQueryApi(String elasticIndex, int queryInterval, String host, int port) {
+    public ElasticQueryApi(String elasticIndex, int queryInterval, int multiRequestInterval, String host, int port) {
         this.elasticIndex = elasticIndex;
         this.queryInterval = queryInterval;
+        this.multiRequestInterval = multiRequestInterval;
 
         this.elasticClient = new RestHighLevelClient(
                 RestClient.builder(new HttpHost(host,
@@ -95,7 +97,7 @@ public class ElasticQueryApi implements Closeable {
                 multiSearchRequest.add(searchRequest);
 
                 index++;
-                if (index % 100 == 0) {
+                if (index % this.multiRequestInterval == 0) {
                     if(!multiSearchRequest.requests().isEmpty()) {
                         this.asyncRequests.incrementAndGet();
                         actionListener.incAsyncRequest();
