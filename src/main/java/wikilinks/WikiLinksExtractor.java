@@ -406,6 +406,7 @@ public class WikiLinksExtractor {
         final List<List<Map.Entry<String, Integer>>> contextAsStringList = new ArrayList<>();
         CoreDocument doc = new CoreDocument(context);
         pipelineNoPos.annotate(doc);
+        int runningId = 0;
         if (doc.sentences().size() > 0) {
             for (CoreSentence sentence : doc.sentences()) {
                 List<Map.Entry<String, Integer>> sentenceTokens = new ArrayList<>();
@@ -414,8 +415,8 @@ public class WikiLinksExtractor {
                     if (token.originalText().matches("[|\\[\\]\\*^\\+]")) {
                         continue;
                     }
-                    sentenceTokens.add(new AbstractMap.SimpleEntry<>(token.originalText(),
-                            token.get(CoreAnnotations.TokenBeginAnnotation.class)));
+                    sentenceTokens.add(new AbstractMap.SimpleEntry<>(token.originalText(), runningId));
+                    runningId++;
                 }
 
                 contextAsStringList.add(sentenceTokens);
@@ -456,7 +457,7 @@ public class WikiLinksExtractor {
             for (int j = 0; j < sentenceToken.size(); j++) {
                 if (!usedStartIndexes.contains(index)) {
                     if (sentenceToken.get(j).getKey().equals(mentTokens.get(0).originalText())) {
-                        mention.setTokenStart(index);
+                        mention.setTokenStart(sentenceToken.get(j).getValue());
                         usedStartIndexes.add(index);
                         if (mentTokens.size() == 1) {
                             mention.setTokenEnd(index);
@@ -464,7 +465,7 @@ public class WikiLinksExtractor {
                         }
                     } else if (mention.getTokenStart() != -1 && sentenceToken.get(j).getKey()
                             .equals(mentTokens.get(mentTokens.size() - 1).originalText())) {
-                        mention.setTokenEnd(index);
+                        mention.setTokenEnd(sentenceToken.get(j).getValue());
                         return;
                     }
                 }

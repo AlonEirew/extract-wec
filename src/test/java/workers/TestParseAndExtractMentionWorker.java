@@ -2,11 +2,9 @@ package workers;
 
 import data.WikiLinksCoref;
 import data.WikiLinksMention;
-import experimentscripts.CorefResultSet;
 import org.junit.Assert;
 import org.junit.Test;
 import wikilinks.PersonOrEventFilter;
-import workers.ParseAndExtractMentionsWorker;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,24 +27,24 @@ public class TestParseAndExtractMentionWorker {
 
         // Mention SHOULD be filtered
         WikiLinksCoref crs1 = WikiLinksCoref.getAndSetIfNotExist("TEST1");
-        crs1.setWasRetrived(true);
+        crs1.setWasAlreadyRetrived(true);
         crs1.setMarkedForRemoval(true);
         mention1.setCorefChain(crs1);
 
         // Mention SHOULD NOT be filtered
         WikiLinksCoref crs2 = WikiLinksCoref.getAndSetIfNotExist("TEST2");
-        crs2.setWasRetrived(true);
+        crs2.setWasAlreadyRetrived(true);
         crs2.setMarkedForRemoval(false);
         mention2.setCorefChain(crs2);
 
         // Mention SHOULD NOT be filtered (MAP with valid key)
         WikiLinksCoref crs3 = WikiLinksCoref.getAndSetIfNotExist("TEST3");
-        crs3.setWasRetrived(false);
+        crs3.setWasAlreadyRetrived(false);
         mention3.setCorefChain(crs3);
 
         // Mention SHOULD be filtered (MAP with invalid key)
         WikiLinksCoref crs4 = WikiLinksCoref.getAndSetIfNotExist("TEST4");
-        crs4.setWasRetrived(false);
+        crs4.setWasAlreadyRetrived(false);
         mention4.setCorefChain(crs4);
 
         ParseAndExtractMentionsWorker worker = new ParseAndExtractMentionsWorker(mentions, new PersonOrEventFilter());

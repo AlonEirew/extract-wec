@@ -4,18 +4,13 @@ import data.RawElasticResult;
 import data.WikiLinksMention;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.elasticsearch.action.search.MultiSearchResponse;
-import org.elasticsearch.search.SearchHit;
 import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
 import utils.ExecutorServiceFactory;
 import wikilinks.ICorefFilter;
 import wikilinks.WikiLinksExtractor;
 
-import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class ParseAndExtractMentionsWorker extends AWorker {
     private final static Logger LOGGER = LogManager.getLogger(ParseAndExtractMentionsWorker.class);
@@ -52,19 +47,25 @@ public class ParseAndExtractMentionsWorker extends AWorker {
         LOGGER.info("Handle all worker mentions...in total-" + finalToCommit.size() + " will be handled");
         final Set<String> corefTitleSet = new HashSet<>();
         for(WikiLinksMention mention : this.finalToCommit) {
-            if(!mention.getCorefChain().wasRetrived()) {
+            if(!mention.getCorefChain().wasAlreadyRetrived()) {
                 corefTitleSet.add(mention.getCorefChain().getCorefValue());
             }
         }
 
-        LOGGER.info("Sending-" + corefTitleSet.size() + " coref titles to be retrieved");
-        ExecutorServiceFactory.submit(() -> this.elasticApi.getAllWikiPagesTitleAndTextAsync(corefTitleSet, this));
+        if(!corefTitleSet.isEmpty()) {
+            LOGGER.info("Sending-" + corefTitleSet.size() + " coref titles to be retrieved");
+            ExecutorServiceFactory.submit(() -> this.elasticApi.getAllWikiPagesTitleAndTextAsync(corefTitleSet, this));
+        } else {
+            onResponse(new HashMap<>());
+        }
     }
 
     public void onResponse(Map<String, String> pagesResults) {
         LOGGER.info("processing returned results from elastic MultiSearchRequest");
         filterUnwantedMentions(pagesResults);
-        ExecutorServiceFactory.submit(() -> sqlApi.commitMentions(finalToCommit));
+        if(!this.finalToCommit.isEmpty()) {
+            ExecutorServiceFactory.submit(() -> sqlApi.commitMentions(finalToCommit));
+        }
     }
 
     void filterUnwantedMentions(Map<String, String> pagesResults) {
@@ -74,8 +75,8 @@ public class ParseAndExtractMentionsWorker extends AWorker {
 
             if(ment.getCorefChain().isMarkedForRemoval()) {
                 iterator.remove();
-            } else if(!ment.getCorefChain().wasRetrived()) {
-                ment.getCorefChain().setWasRetrived(true);
+            } else if(!ment.getCorefChain().wasAlreadyRetrived()) {
+                ment.getCorefChain().setWasAlreadyRetrived(true);
                 final String corefValue = ment.getCorefChain().getCorefValue();
                 final String pageText = pagesResults.get(corefValue);
                 RawElasticResult rawElasticResult = new RawElasticResult(corefValue, pageText);

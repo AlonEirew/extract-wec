@@ -84,11 +84,11 @@ public class WikiLinksCoref implements ISQLObject<WikiLinksCoref> {
         this.markedForRemoval = markedForRemoval;
     }
 
-    public boolean wasRetrived() {
+    public boolean wasAlreadyRetrived() {
         return wasRetrived;
     }
 
-    public void setWasRetrived(boolean wasRetrived) {
+    public void setWasAlreadyRetrived(boolean wasRetrived) {
         this.wasRetrived = wasRetrived;
     }
 
