@@ -7,6 +7,7 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.CoreDocument;
 import edu.stanford.nlp.pipeline.CoreSentence;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import workers.ReadDateWorker;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -358,14 +359,14 @@ public class WikiLinksExtractor {
             }
         }
 
-        String context = linkMatcher
-                .replaceAll("$2")
-                .replaceAll("\\s+", " ").trim();
-        if (context.matches("'''(.*?)'''(.*?)")) {
-            context = context.replaceAll("'''(.*?)'''(.*?)", "$1");
-        }
+//        String context = linkMatcher
+//                .replaceAll("$2")
+//                .replaceAll("\\s+", " ").trim();
+//        if (context.matches("'''(.*?)'''(.*?)")) {
+//            context = context.replaceAll("'''(.*?)'''(.*?)", "$1");
+//        }
 
-        setMentionsContext(mentions, context);
+        setMentionsContext(mentions, paragraphToExtractFrom);
         return mentions;
     }
 
@@ -400,6 +401,16 @@ public class WikiLinksExtractor {
         }
 
         return uniqueDates;
+    }
+
+    public static boolean isDaySpan(String infobox) {
+        ReadDateWorker rdw = new ReadDateWorker();
+        Date date = rdw.extractDate(infobox);
+        if(date == null) {
+            return false;
+        }
+
+        return true;
     }
 
     private static <T extends WikiLinksMention> void setMentionsContext(List<T> mentions, String context) {

@@ -43,6 +43,20 @@ public class CorefResultSet {
         this.mentions.add(mention);
     }
 
+    public void addUniqueMention(MentionResultSet mention, int maxAllowed) {
+        int conditionMet = 0;
+        for(MentionResultSet localMentions : this.mentions) {
+            if(isLevenshteinDistanceApply(localMentions, mention, 2)) {
+                conditionMet++;
+                if(conditionMet >= maxAllowed) {
+                    return;
+                }
+            }
+        }
+
+        this.mentions.add(mention);
+    }
+
     public int getMentionsSize() {
         return this.mentions.size();
     }

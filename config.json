@@ -1,11 +1,11 @@
 {
-  "pool_size": "10",
+  "pool_size": "2",
   "elastic_host": "localhost",
   "elastic_port": "9200",
   "elastic_wiki_index": "enwiki_v3",
   "elastic_wikinews_index": "wikinews_v1",
   "multi_request_interval" : "100",
   "elastic_search_interval" : "100",
-  "total_amount_to_extract" : "1000",
+  "total_amount_to_extract" : "10000",
   "sql_connection_url": "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksExperiment.db"
 }
