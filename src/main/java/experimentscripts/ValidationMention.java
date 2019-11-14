@@ -13,14 +13,22 @@ public class ValidationMention implements ISQLObject<ValidationMention> {
 
     private MentionResultSet mentionResultSet;
     private SPLIT split = SPLIT.NA;
+    private String tableName = "Validation";
 
 
     public ValidationMention() {
     }
 
-    public ValidationMention(MentionResultSet mentionResultSet, SPLIT split) {
+    public ValidationMention(String tableName) {
+        if (tableName != null && !tableName.isEmpty()) {
+            this.tableName = tableName;
+        }
+    }
+
+    public ValidationMention(MentionResultSet mentionResultSet, SPLIT split, String tableName) {
         this.mentionResultSet = mentionResultSet;
         this.split = split;
+        this.tableName = tableName;
     }
 
     @Override
@@ -48,7 +56,7 @@ public class ValidationMention implements ISQLObject<ValidationMention> {
 
     @Override
     public String getTableName() {
-        return "Validation";
+        return this.tableName;
     }
 
     @Override

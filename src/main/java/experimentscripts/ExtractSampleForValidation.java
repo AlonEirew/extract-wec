@@ -1,6 +1,5 @@
 package experimentscripts;
 
-import com.google.common.collect.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import persistence.SQLQueryApi;
@@ -11,31 +10,32 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ExtractSampleForValidation {
     private final static Logger LOGGER = LogManager.getLogger(ExtractSampleForValidation.class);
 
-    private static final int CLUSTER_SIZE_LIMIT = 1;
-    private static final int MAX_CLUSTER_NONE_UNIQE = 3;
+    private static final int MAX_NONE_UNIQE_BEGIN = 4;
+    private static final int MAX_NONE_UNIQE_END = 6;
+    private static final String VALIDATION_TABLE = "Validation";
 
     public static void main(String[] args) throws SQLException {
-        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksPersonEventFull_v9.db";
+        String connectionUrl = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/EnWikiLinks_v9.db";
         SQLiteConnections sqLiteConnections = new SQLiteConnections(connectionUrl);
         SQLQueryApi sqlApi = new SQLQueryApi(sqLiteConnections);
 
-        sqlApi.createTable(new ValidationMention());
+        for(int i = MAX_NONE_UNIQE_BEGIN; i <= MAX_NONE_UNIQE_END; i++) {
+            final Map<Integer, CorefResultSet> countPerType = getAllCorefs(sqLiteConnections, i);
+            sqlApi.createTable(new ValidationMention(VALIDATION_TABLE + i));
+            countPerType.entrySet().removeIf(entry -> entry.getValue().getMentions().isEmpty());
+            countPerType.entrySet().removeIf(entry -> entry.getValue().getCorefType() == 6 &&
+                    entry.getValue().getMentions().size() < 3);
 
-        final Map<Integer, CorefResultSet> countPerType = getAllCorefs(sqLiteConnections);
-        countPerType.entrySet().removeIf(entry -> entry.getValue().getMentions().isEmpty());
-        countPerType.entrySet().removeIf(entry -> entry.getValue().getCorefType() == 6 &&
-                entry.getValue().getMentions().size() < 3);
+            List<ValidationMention> toCommit = fromMapToList(countPerType, String.valueOf(i));
 
-        List<ValidationMention> toCommit = fromMapToList(countPerType);
+            commitCurrent(toCommit, sqlApi);
+        }
 
-        commitCurrent(toCommit, sqlApi);
-
-        LOGGER.info("");
+        LOGGER.info("Done!");
     }
 
     private static void commitCurrent(List<ValidationMention> localNewList, SQLQueryApi sqlApi) {
@@ -49,7 +49,7 @@ public class ExtractSampleForValidation {
         }
     }
 
-    private static List<ValidationMention> fromMapToList(Map<Integer, CorefResultSet> countPerType) {
+    private static List<ValidationMention> fromMapToList(Map<Integer, CorefResultSet> countPerType, String validationTableSuffix) {
         List<ValidationMention> validationMentions = new ArrayList<>();
         int marker = 0;
         ValidationMention.SPLIT split;
@@ -65,7 +65,7 @@ public class ExtractSampleForValidation {
             }
 
             for(MentionResultSet mentionResultSet : corefResultSet.getMentions()) {
-                validationMentions.add(new ValidationMention(mentionResultSet, split));
+                validationMentions.add(new ValidationMention(mentionResultSet, split, VALIDATION_TABLE + validationTableSuffix));
             }
             marker ++;
         }
@@ -73,7 +73,7 @@ public class ExtractSampleForValidation {
         return validationMentions;
     }
 
-    static Map<Integer, CorefResultSet> getAllCorefs(SQLiteConnections sqlConnection) throws SQLException {
+    static Map<Integer, CorefResultSet> getAllCorefs(SQLiteConnections sqlConnection, int maxNoneUnique) throws SQLException {
         LOGGER.info("Preparing to select all coref mentions by types");
         Map<Integer, CorefResultSet> corefMap = new HashMap<>();
         try (Connection conn = sqlConnection.getConnection(); Statement stmt = conn.createStatement()) {
@@ -111,7 +111,7 @@ public class ExtractSampleForValidation {
                     corefMap.put(corefId, corefResultSet);
                 } else {
                     final CorefResultSet corefResultSet = corefMap.get(corefId);
-                    corefResultSet.addNoneIntersectionUniqueMention(mention, MAX_CLUSTER_NONE_UNIQE);
+                    corefResultSet.addNoneIntersectionUniqueMention(mention, maxNoneUnique);
                 }
             }
         }
