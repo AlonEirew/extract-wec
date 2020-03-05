@@ -2,8 +2,9 @@ package persistence;
 
 import com.google.common.collect.Iterables;
 import data.CorefType;
-import data.WikiLinksCoref;
-import data.WikiLinksMention;
+import data.WECCoref;
+import data.WECMention;
+import experimentscripts.CorefResultSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,7 +17,7 @@ public class SQLQueryApi {
 
     private static final int MAX_BULK_SIZE = 500;
     private static final int MAX_MENTIONS_ACCUMULATED_SIZE = 500000;
-    private static final List<WikiLinksMention> accumulatedMentions = new ArrayList<>();
+    private static final List<WECMention> accumulatedMentions = new ArrayList<>();
 
     private ISQLConnection sqlConnection;
 
@@ -149,14 +150,14 @@ public class SQLQueryApi {
         return resultList;
     }
 
-    public synchronized boolean updateCorefTable(String tableName, Map<Integer, WikiLinksCoref> corefs) {
+    public synchronized boolean updateCorefTable(String tableName, Map<Integer, WECCoref> corefs) {
         String query = "Select * from CorefChains where corefid in";
         try (Connection conn = this.sqlConnection.getConnection();
                 Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
             conn.setAutoCommit(false);
 
             Iterator<List<Integer>> subSets = Iterables.partition(corefs.keySet(), MAX_BULK_SIZE).iterator();
-            Map<Integer, WikiLinksCoref> copyCoref = new HashMap<>(corefs);
+            Map<Integer, WECCoref> copyCoref = new HashMap<>(corefs);
 
             while(subSets.hasNext()) {
                 final List<Integer> next = subSets.next();
@@ -177,11 +178,11 @@ public class SQLQueryApi {
 
             conn.setAutoCommit(true);
 
-            WikiLinksCoref tmp = WikiLinksCoref.getAndSetIfNotExist("####TEMP####");
+            WECCoref tmp = WECCoref.getAndSetIfNotExist("####TEMP####");
 
             if(!copyCoref.isEmpty()) {
                 try (PreparedStatement ps = conn.prepareStatement(tmp.getPrepareInsertStatementQuery(tableName))) {
-                    for (WikiLinksCoref remainCoref : copyCoref.values()) {
+                    for (WECCoref remainCoref : copyCoref.values()) {
                         remainCoref.setPrepareInsertStatementValues(ps);
                         ps.addBatch();
                     }
@@ -232,7 +233,7 @@ public class SQLQueryApi {
 
     public synchronized void persistAllCorefs() {
         LOGGER.info("Persisting corefs tables values");
-        final Collection<WikiLinksCoref> allCorefs = WikiLinksCoref.getGlobalCorefMap().values();
+        final Collection<WECCoref> allCorefs = WECCoref.getGlobalCorefMap().values();
 
         allCorefs.removeIf(wikiLinksCoref -> wikiLinksCoref.getMentionsCount() < 2 ||
                 wikiLinksCoref.getCorefType() == CorefType.NA ||
@@ -251,7 +252,7 @@ public class SQLQueryApi {
     /**
      * Commit the final mentions to SQL DB (Lock is necessary for SQLite)
      */
-    public synchronized void commitMentions(List<WikiLinksMention> mentions) {
+    public synchronized void commitMentions(List<WECMention> mentions) {
         if(!mentions.isEmpty()) {
             LOGGER.info("accumulating-" + mentions.size() + " mentions before inserting to SQL");
             accumulatedMentions.addAll(mentions);
@@ -281,5 +282,23 @@ public class SQLQueryApi {
         } finally {
             accumulatedMentions.clear();
         }
+    }
+
+    public synchronized WECCoref getCorefByText(String corefText, String table) {
+        WECCoref corefResult = new WECCoref();
+        String query = "Select * from " + table + " where corefValue = \"" + corefText + "\"";
+        try (Connection conn = this.sqlConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+
+            try(ResultSet rs = stmt.executeQuery(query)) {
+                if (rs.next()) {
+                    corefResult = corefResult.resultSetToObject(rs);
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.error(e);
+        }
+
+        return corefResult;
     }
 }

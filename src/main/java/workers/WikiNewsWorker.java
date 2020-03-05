@@ -1,12 +1,12 @@
 package workers;
 
 import data.RawElasticResult;
-import data.WikiLinksCoref;
+import data.WECCoref;
 import data.WikiNewsMention;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import persistence.SQLQueryApi;
-import wikilinks.WikiLinksExtractor;
+import wec.WECLinksExtractor;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -21,11 +21,11 @@ public class WikiNewsWorker extends AWorker {
     private final static  List<WikiNewsMention> finalToCommit = new ArrayList<>();
 
     private final SQLQueryApi sqlApi;
-    private final Map<String, WikiLinksCoref> wikiLinksCorefMap;
+    private final Map<String, WECCoref> wikiLinksCorefMap;
     private final ReentrantLock sLock = new ReentrantLock();
 
     public WikiNewsWorker(List<RawElasticResult> rawElasticResults, SQLQueryApi sqlApi,
-                          Map<String, WikiLinksCoref> corefMap) {
+                          Map<String, WECCoref> corefMap) {
         super(rawElasticResults);
         this.sqlApi = sqlApi;
         this.wikiLinksCorefMap = corefMap;
@@ -35,7 +35,7 @@ public class WikiNewsWorker extends AWorker {
     public void run() {
         List<WikiNewsMention> mentions = new ArrayList<>();
         for(RawElasticResult rowResult : this.rawElasticResults) {
-            List<WikiNewsMention> wikiLinksMentions = WikiLinksExtractor.extractFromWikiNews(rowResult.getTitle(), rowResult.getText());
+            List<WikiNewsMention> wikiLinksMentions = WECLinksExtractor.extractFromWikiNews(rowResult.getTitle(), rowResult.getText());
             wikiLinksMentions.stream().forEach(wikiLinksMention -> wikiLinksMention.getCorefChain().incMentionsCount());
             mentions.addAll(wikiLinksMentions);
         }

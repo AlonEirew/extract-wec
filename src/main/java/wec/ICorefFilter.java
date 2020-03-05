@@ -1,4 +1,4 @@
-package wikilinks;
+package wec;
 
 import data.RawElasticResult;
 

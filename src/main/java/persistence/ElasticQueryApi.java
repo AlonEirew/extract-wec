@@ -13,7 +13,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import wikilinks.WikiLinksExtractor;
+import wec.WECLinksExtractor;
 import workers.ParseAndExtractMentionsWorker;
 
 import java.io.Closeable;
@@ -209,7 +209,7 @@ public class ElasticQueryApi implements Closeable {
                 if(hits.length > 0) {
                     final RawElasticResult rawElasticResult = ElasticQueryApi.extractFromHit(hits[0]);
                     if(rawElasticResult != null) {
-                        final String infoBox = WikiLinksExtractor.extractPageInfoBox(rawElasticResult.getText());
+                        final String infoBox = WECLinksExtractor.extractPageInfoBox(rawElasticResult.getText());
                         rawResults.add(new RawElasticResult(rawElasticResult.getTitle(), infoBox));
                     }
                 }

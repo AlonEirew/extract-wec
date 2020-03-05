@@ -1,6 +1,6 @@
-package wikilinks;
+package wec;
 
-import data.WikiLinksMention;
+import data.WECMention;
 import data.WikiNewsMention;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
@@ -13,7 +13,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class WikiLinksExtractor {
+public class WECLinksExtractor {
 
     private static final int MAX_EMPLOYEES = 1000;
 
@@ -53,9 +53,9 @@ public class WikiLinksExtractor {
         text = cleanTextField(text);
         String[] textLines = text.split("\\.\n\n");
         for (String context : textLines) {
-            final List<WikiLinksMention> wikiLinksMentions = extractTextBodyMentions(pageName, context);
-            for (WikiLinksMention wikiLinksMention : wikiLinksMentions) {
-                finalResults.add(new WikiNewsMention(wikiLinksMention));
+            final List<WECMention> WECMentions = extractTextBodyMentions(pageName, context);
+            for (WECMention WECMention : WECMentions) {
+                finalResults.add(new WikiNewsMention(WECMention));
             }
         }
 
@@ -70,8 +70,8 @@ public class WikiLinksExtractor {
         return finalResults;
     }
 
-    public static List<WikiLinksMention> extractFromWikipedia(String pageName, String text) {
-        List<WikiLinksMention> finalResults = new ArrayList<>();
+    public static List<WECMention> extractFromWikipedia(String pageName, String text) {
+        List<WECMention> finalResults = new ArrayList<>();
 
         if (text.toLowerCase().contains("[[category:opinion polling") || text.toLowerCase().contains("[[category:years in") ||
                 text.toLowerCase().contains("[[category:lists of") || text.toLowerCase().contains("[[category:list of")) {
@@ -93,7 +93,7 @@ public class WikiLinksExtractor {
         return finalResults;
     }
 
-    private static List<WikiLinksMention> extractTextBodyMentions(String pageName, String paragraph) {
+    private static List<WECMention> extractTextBodyMentions(String pageName, String paragraph) {
         String[] paragraphLines = paragraph.split("\n");
         for (int i = 0; i < paragraphLines.length; i++) {
             if (paragraphLines[i] != null && !paragraphLines[i].isEmpty() && isValidLine(paragraphLines[i])) {
@@ -338,15 +338,15 @@ public class WikiLinksExtractor {
         return false;
     }
 
-    static List<WikiLinksMention> extractFromParagraph(String pageName, String paragraphToExtractFrom) {
-        List<WikiLinksMention> mentions = new ArrayList<>();
+    static List<WECMention> extractFromParagraph(String pageName, String paragraphToExtractFrom) {
+        List<WECMention> mentions = new ArrayList<>();
 
         Matcher linkMatcher = LINK_PATTERN_2.matcher(paragraphToExtractFrom);
         while (linkMatcher.find()) {
             String match1 = linkMatcher.group(1);
             String match2 = linkMatcher.group(2);
             if (!match1.contains("#")) {
-                WikiLinksMention mention = new WikiLinksMention(pageName);
+                WECMention mention = new WECMention(pageName);
                 if (!match1.isEmpty()) {
                     mention.setMentionText(match2);
                     mention.setCorefChain(match1);
@@ -413,7 +413,7 @@ public class WikiLinksExtractor {
         return true;
     }
 
-    private static <T extends WikiLinksMention> void setMentionsContext(List<T> mentions, String context) {
+    private static <T extends WECMention> void setMentionsContext(List<T> mentions, String context) {
         final List<List<Map.Entry<String, Integer>>> contextAsStringList = new ArrayList<>();
         CoreDocument doc = new CoreDocument(context);
         pipelineNoPos.annotate(doc);
@@ -461,7 +461,7 @@ public class WikiLinksExtractor {
         }
     }
 
-    private static <T extends WikiLinksMention> void setMentionStartEndTokenIndex(T mention, Set<Integer> usedStartIndexes, List<CoreLabel> mentTokens) {
+    private static <T extends WECMention> void setMentionStartEndTokenIndex(T mention, Set<Integer> usedStartIndexes, List<CoreLabel> mentTokens) {
         int index = 0;
         for(int i = 0 ; i < mention.getContext().size() ; i++) {
             List<Map.Entry<String, Integer>> sentenceToken = mention.getContext().get(i);

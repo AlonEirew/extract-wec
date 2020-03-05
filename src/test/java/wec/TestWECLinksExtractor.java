@@ -1,9 +1,9 @@
-package wikilinks;
+package wec;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import data.RawElasticResult;
-import data.WikiLinksMention;
+import data.WECMention;
 import data.WikiNewsMention;
 import javafx.util.Pair;
 import org.apache.commons.io.FileUtils;
@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class TestWikiLinksExtractor {
+public class TestWECLinksExtractor {
 
     private Gson gson = new Gson();
 
@@ -30,7 +30,7 @@ public class TestWikiLinksExtractor {
             String pageText = jo.get("text").getAsString();
             String title = jo.get("title").getAsString();
             int expected = jo.get("expected").getAsInt();
-            final List<WikiLinksMention> extractMentions1 = WikiLinksExtractor.extractFromWikipedia(title, pageText);
+            final List<WECMention> extractMentions1 = WECLinksExtractor.extractFromWikipedia(title, pageText);
             Assert.assertEquals(title, expected, extractMentions1.size());
         }
     }
@@ -39,7 +39,7 @@ public class TestWikiLinksExtractor {
     public void testExtractTmp() {
         List<Pair<String, String>> pageTexts = TestUtils.getTextAndTitle("wiki_links/tmp.json");
         for(Pair<String, String> text : pageTexts) {
-            final List<WikiNewsMention> wikiNewsMentions = WikiLinksExtractor.extractFromWikiNews(text.getKey(), text.getValue());
+            final List<WikiNewsMention> wikiNewsMentions = WECLinksExtractor.extractFromWikiNews(text.getKey(), text.getValue());
             System.out.println();
         }
     }
@@ -48,7 +48,7 @@ public class TestWikiLinksExtractor {
     public void testExtractTypes() {
         List<Pair<String, String>> pageTexts = getCivilAttack();
         for(Pair<String, String> text : pageTexts) {
-            final Set<String> extractMentions = WikiLinksExtractor.extractTypes(text.getValue());
+            final Set<String> extractMentions = WECLinksExtractor.extractTypes(text.getValue());
             System.out.println();
         }
     }
@@ -56,7 +56,7 @@ public class TestWikiLinksExtractor {
     @Test
     public void testInfoBoxExtract() {
         String pageText = getInfoBoxs();
-        final String infoBoxs = WikiLinksExtractor.extractPageInfoBox(pageText);
+        final String infoBoxs = WECLinksExtractor.extractPageInfoBox(pageText);
         System.out.println(infoBoxs);
     }
 
@@ -65,22 +65,22 @@ public class TestWikiLinksExtractor {
 
         List<Pair<String, String>> pageTexts = getCivilAttack();
         for(Pair<String, String> text : pageTexts) {
-            String infoBox = WikiLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WikiLinksExtractor.hasDateAndLocation(infoBox);
+            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            boolean ret = WECLinksExtractor.hasDateAndLocation(infoBox);
             Assert.assertTrue(ret);
             break;
         }
 
         String pageText = getWeddingText();
-        String infoBox = WikiLinksExtractor.extractPageInfoBox(pageText);
-        boolean ret = WikiLinksExtractor.hasDateAndLocation(infoBox);
+        String infoBox = WECLinksExtractor.extractPageInfoBox(pageText);
+        boolean ret = WECLinksExtractor.hasDateAndLocation(infoBox);
         Assert.assertTrue(ret);
         System.out.println();
 
         final List<Pair<String, String>> peopleText = getPeopleText();
         for(Pair<String, String> text : peopleText) {
-            infoBox = WikiLinksExtractor.extractPageInfoBox(text.getValue());
-            ret = WikiLinksExtractor.hasDateAndLocation(infoBox);
+            infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            ret = WECLinksExtractor.hasDateAndLocation(infoBox);
             Assert.assertFalse(ret);
         }
     }
@@ -121,20 +121,20 @@ public class TestWikiLinksExtractor {
                 config.get("elastic_host"),
                 Integer.parseInt(config.get("elastic_port")));
         final String alan_turing = elasticQueryApi.getPageText("Alan Turing");
-        final String infoBox = WikiLinksExtractor.extractPageInfoBox(alan_turing);
-        Assert.assertTrue(WikiLinksExtractor.isPerson(infoBox));
-        Assert.assertTrue(WikiLinksExtractor.extractTypes(infoBox).isEmpty());
+        final String infoBox = WECLinksExtractor.extractPageInfoBox(alan_turing);
+        Assert.assertTrue(WECLinksExtractor.isPerson(infoBox));
+        Assert.assertTrue(WECLinksExtractor.extractTypes(infoBox).isEmpty());
 
         final String sep_11 = elasticQueryApi.getPageText("September 11 attacks");
-        Assert.assertFalse(WikiLinksExtractor.isPerson(sep_11));
-        Assert.assertTrue(!WikiLinksExtractor.extractTypes(sep_11).isEmpty());
+        Assert.assertFalse(WECLinksExtractor.isPerson(sep_11));
+        Assert.assertTrue(!WECLinksExtractor.extractTypes(sep_11).isEmpty());
     }
 
     @Test
     public void testIsPerson() {
         final List<Pair<String, String>> peopleText = getPeopleText();
         for(Pair<String, String> text : peopleText) {
-            boolean ret = WikiLinksExtractor.isPerson(text.getValue());
+            boolean ret = WECLinksExtractor.isPerson(text.getValue());
             Assert.assertTrue(ret);
         }
     }
@@ -143,8 +143,8 @@ public class TestWikiLinksExtractor {
     public void testIsElection() {
         List<Pair<String, String>> pageText = getElectionText();
         for(Pair<String, String> text : pageText) {
-            String infoBox = WikiLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WikiLinksExtractor.isElection(infoBox, text.getKey());
+            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            boolean ret = WECLinksExtractor.isElection(infoBox, text.getKey());
             Assert.assertTrue(ret);
         }
 
@@ -158,8 +158,8 @@ public class TestWikiLinksExtractor {
         other.addAll(getPeopleText());
 
          for(Pair<String, String> text : other) {
-            String infoBox = WikiLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WikiLinksExtractor.isElection(infoBox, text.getKey());
+            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            boolean ret = WECLinksExtractor.isElection(infoBox, text.getKey());
             Assert.assertFalse(ret);
         }
     }
@@ -168,8 +168,8 @@ public class TestWikiLinksExtractor {
     public void testAccident() {
         List<Pair<String, String>> pageTexts = getAccidentText();
         for(Pair<String, String> text : pageTexts) {
-            String infoBox = WikiLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WikiLinksExtractor.isAccident(infoBox);
+            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            boolean ret = WECLinksExtractor.isAccident(infoBox);
             Assert.assertTrue(ret);
         }
 
@@ -183,16 +183,16 @@ public class TestWikiLinksExtractor {
         other.addAll(getPeopleText());
 
         for(Pair<String, String> text : other) {
-            String infoBox = WikiLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WikiLinksExtractor.isAccident(infoBox);
+            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            boolean ret = WECLinksExtractor.isAccident(infoBox);
             Assert.assertFalse(ret);
         }
     }
 
     @Test
     public void testSmallCompany() {
-        String infoBox = WikiLinksExtractor.extractPageInfoBox(getSmallCompanyText());
-        boolean ret = WikiLinksExtractor.isSmallCompanyEvent(infoBox);
+        String infoBox = WECLinksExtractor.extractPageInfoBox(getSmallCompanyText());
+        boolean ret = WECLinksExtractor.isSmallCompanyEvent(infoBox);
         Assert.assertTrue(ret);
     }
 
@@ -201,7 +201,7 @@ public class TestWikiLinksExtractor {
 
         final List<Pair<String, String>> sportText = getSportText();
         for(Pair<String, String> text : sportText) {
-            boolean ret = WikiLinksExtractor.isSportEvent(WikiLinksExtractor.extractPageInfoBox(text.getValue()), text.getKey());
+            boolean ret = WECLinksExtractor.isSportEvent(WECLinksExtractor.extractPageInfoBox(text.getValue()), text.getKey());
             Assert.assertTrue(text.getKey(), ret);
         }
 
@@ -215,8 +215,8 @@ public class TestWikiLinksExtractor {
         other.addAll(getPeopleText());
 
         for(Pair<String, String> text : other) {
-            String infoBox = WikiLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WikiLinksExtractor.isSportEvent(infoBox, text.getKey());
+            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            boolean ret = WECLinksExtractor.isSportEvent(infoBox, text.getKey());
             Assert.assertFalse(text.getKey(), ret);
         }
     }
@@ -226,7 +226,7 @@ public class TestWikiLinksExtractor {
 
         final List<Pair<String, String>> awardPair = getAwards();
         for(Pair<String, String> pair : awardPair) {
-            boolean ret = WikiLinksExtractor.isAwardEvent(WikiLinksExtractor.extractPageInfoBox(pair.getValue()),
+            boolean ret = WECLinksExtractor.isAwardEvent(WECLinksExtractor.extractPageInfoBox(pair.getValue()),
                     pair.getKey());
 
             Assert.assertTrue(ret);
@@ -242,7 +242,7 @@ public class TestWikiLinksExtractor {
         other.addAll(getPeopleText());
 
         for(Pair<String, String> pair : other) {
-            boolean ret = WikiLinksExtractor.isAwardEvent(WikiLinksExtractor.extractPageInfoBox(pair.getValue()),
+            boolean ret = WECLinksExtractor.isAwardEvent(WECLinksExtractor.extractPageInfoBox(pair.getValue()),
                     pair.getKey());
 
             Assert.assertFalse(ret);
@@ -254,7 +254,7 @@ public class TestWikiLinksExtractor {
 
         final List<Pair<String, String>> newsPair = getConcreteGeneralTexts();
         for(Pair<String, String> pair : newsPair) {
-            boolean ret = WikiLinksExtractor.isConcreteGeneralEvent(WikiLinksExtractor.extractPageInfoBox(pair.getValue()),
+            boolean ret = WECLinksExtractor.isConcreteGeneralEvent(WECLinksExtractor.extractPageInfoBox(pair.getValue()),
                     pair.getKey());
 
             Assert.assertTrue(ret);
@@ -270,7 +270,7 @@ public class TestWikiLinksExtractor {
         other.addAll(getPeopleText());
 
         for(Pair<String, String> pair : other) {
-            boolean ret = WikiLinksExtractor.isConcreteGeneralEvent(WikiLinksExtractor.extractPageInfoBox(pair.getValue()),
+            boolean ret = WECLinksExtractor.isConcreteGeneralEvent(WECLinksExtractor.extractPageInfoBox(pair.getValue()),
                     pair.getKey());
 
             Assert.assertFalse(ret);
@@ -281,8 +281,8 @@ public class TestWikiLinksExtractor {
     public void testIsDisaster() {
         final List<Pair<String, String>> disasterText = getDisasterText();
         for(Pair<String, String> text : disasterText) {
-            String infoBox = WikiLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WikiLinksExtractor.isDisaster(infoBox);
+            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            boolean ret = WECLinksExtractor.isDisaster(infoBox);
             Assert.assertTrue(ret);
         }
 
@@ -296,8 +296,8 @@ public class TestWikiLinksExtractor {
         other.addAll(getPeopleText());
 
         for(Pair<String, String> text : other) {
-            String infoBox = WikiLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WikiLinksExtractor.isDisaster(infoBox);
+            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            boolean ret = WECLinksExtractor.isDisaster(infoBox);
             Assert.assertFalse(ret);
         }
     }
@@ -306,8 +306,8 @@ public class TestWikiLinksExtractor {
     public void testIsCivilAttack() {
         final List<Pair<String, String>> civilAttack = getCivilAttack();
         for(Pair<String, String> text : civilAttack) {
-            String infoBox = WikiLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WikiLinksExtractor.isCivilAttack(infoBox);
+            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            boolean ret = WECLinksExtractor.isCivilAttack(infoBox);
             Assert.assertTrue(text.getKey(), ret);
         }
 
@@ -321,8 +321,8 @@ public class TestWikiLinksExtractor {
         other.addAll(getPeopleText());
 
         for(Pair<String, String> text : other) {
-            String infoBox = WikiLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WikiLinksExtractor.isCivilAttack(infoBox);
+            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            boolean ret = WECLinksExtractor.isCivilAttack(infoBox);
             Assert.assertFalse(ret);
         }
     }
@@ -331,27 +331,27 @@ public class TestWikiLinksExtractor {
     public void testReject() {
         final List<Pair<String, String>> rejectTexts = getRejectTexts();
         for(Pair<String, String> pair : rejectTexts) {
-            String infoBox = WikiLinksExtractor.extractPageInfoBox(pair.getValue());
+            String infoBox = WECLinksExtractor.extractPageInfoBox(pair.getValue());
 
-            boolean ret = WikiLinksExtractor.isDisaster(infoBox);
+            boolean ret = WECLinksExtractor.isDisaster(infoBox);
             Assert.assertFalse(pair.getKey(), ret);
 
-            ret = WikiLinksExtractor.isAwardEvent(infoBox, pair.getKey());
+            ret = WECLinksExtractor.isAwardEvent(infoBox, pair.getKey());
             Assert.assertFalse(pair.getKey(), ret);
 
-            ret = WikiLinksExtractor.isConcreteGeneralEvent(infoBox, pair.getKey());
+            ret = WECLinksExtractor.isConcreteGeneralEvent(infoBox, pair.getKey());
             Assert.assertFalse(pair.getKey(), ret);
 
-            ret = WikiLinksExtractor.isAccident(infoBox);
+            ret = WECLinksExtractor.isAccident(infoBox);
             Assert.assertFalse(pair.getKey(), ret);
 
-            ret = WikiLinksExtractor.isSportEvent(infoBox, pair.getKey());
+            ret = WECLinksExtractor.isSportEvent(infoBox, pair.getKey());
             Assert.assertFalse(pair.getKey(), ret);
 
-            ret = WikiLinksExtractor.isCivilAttack(infoBox);
+            ret = WECLinksExtractor.isCivilAttack(infoBox);
             Assert.assertFalse(pair.getKey(), ret);
 
-            ret = WikiLinksExtractor.isElection(infoBox, pair.getKey());
+            ret = WECLinksExtractor.isElection(infoBox, pair.getKey());
             Assert.assertFalse(pair.getKey(), ret);
         }
     }
@@ -363,25 +363,25 @@ public class TestWikiLinksExtractor {
 
         final List<Pair<String, String>> peopleText = getPeopleText();
         for(Pair<String, String> text : peopleText) {
-            RawElasticResult input = new RawElasticResult(text.getKey(), WikiLinksExtractor.extractPageInfoBox(text.getValue()));
+            RawElasticResult input = new RawElasticResult(text.getKey(), WECLinksExtractor.extractPageInfoBox(text.getValue()));
             Assert.assertFalse(filter.isConditionMet(input));
         }
 
         final List<Pair<String, String>> stringList = getCivilAttack();
         for(Pair<String, String> text : stringList) {
-            RawElasticResult input = new RawElasticResult(text.getKey(), WikiLinksExtractor.extractPageInfoBox(text.getValue()));
+            RawElasticResult input = new RawElasticResult(text.getKey(), WECLinksExtractor.extractPageInfoBox(text.getValue()));
             Assert.assertFalse(filter.isConditionMet(input));
         }
 
         final List<Pair<String, String>> accidentText = getAccidentText();
         for(Pair<String, String> text : accidentText) {
-            RawElasticResult input = new RawElasticResult(text.getKey(), WikiLinksExtractor.extractPageInfoBox(text.getValue()));
+            RawElasticResult input = new RawElasticResult(text.getKey(), WECLinksExtractor.extractPageInfoBox(text.getValue()));
             Assert.assertFalse(filter.isConditionMet(input));
         }
 
         final List<Pair<String, String>> disasterText = getDisasterText();
         for(Pair<String, String> text : disasterText) {
-            RawElasticResult input = new RawElasticResult(text.getKey(), WikiLinksExtractor.extractPageInfoBox(text.getValue()));
+            RawElasticResult input = new RawElasticResult(text.getKey(), WECLinksExtractor.extractPageInfoBox(text.getValue()));
             Assert.assertFalse(filter.isConditionMet(input));
         }
     }

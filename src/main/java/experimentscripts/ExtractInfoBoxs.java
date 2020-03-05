@@ -6,7 +6,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
-import wikilinks.CreateWikiLinks;
+import wec.CreateWEC;
 import workers.ReadInfoBoxWorkerFactory;
 
 import java.io.File;
@@ -34,8 +34,8 @@ public class ExtractInfoBoxs {
                 config.get("elastic_host"),
                 Integer.parseInt(config.get("elastic_port")))) {
 
-            CreateWikiLinks createWikiLinks = new CreateWikiLinks(elasticApi, readInfoBoxWorkerFactory);
-            createWikiLinks.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
+            CreateWEC createWEC = new CreateWEC(elasticApi, readInfoBoxWorkerFactory);
+            createWEC.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
         } catch (Exception ex) {
             LOGGER.error(ex);
         }

@@ -1,4 +1,4 @@
-package wikilinks;
+package wec;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -15,7 +15,7 @@ public class TestUtils {
     private static Gson gson = new Gson();
 
     public static List<Pair<String, String>> getTextAndTitle(String fileName) {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream(fileName);
+        InputStream inputStreamNlp = TestWECLinksExtractor.class.getClassLoader().getResourceAsStream(fileName);
         JsonArray inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonArray.class);
 
         List<Pair<String, String>> retTexts = new ArrayList<>();
@@ -29,7 +29,7 @@ public class TestUtils {
     }
 
     public static List<JsonObject> getTextTitleAndExpected(String fileName) {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream(fileName);
+        InputStream inputStreamNlp = TestWECLinksExtractor.class.getClassLoader().getResourceAsStream(fileName);
         JsonArray inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonArray.class);
 
         List<JsonObject> retTexts = new ArrayList<>();
@@ -42,7 +42,7 @@ public class TestUtils {
     }
 
     public static String getText(String fileNme) {
-        InputStream inputStreamNlp = TestWikiLinksExtractor.class.getClassLoader().getResourceAsStream(fileNme);
+        InputStream inputStreamNlp = TestWECLinksExtractor.class.getClassLoader().getResourceAsStream(fileNme);
         JsonObject inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
         return inputJsonNlp.get("text").getAsString();
     }

@@ -1,7 +1,7 @@
-package wikilinks;
+package wec;
 
-import data.WikiLinksCoref;
-import data.WikiLinksMention;
+import data.WECCoref;
+import data.WECMention;
 import org.junit.Assert;
 import persistence.*;
 
@@ -17,13 +17,13 @@ public class TestSQLQueryApi {
     }
 
     public void testCreateTable(SQLQueryApi api) throws SQLException {
-        WikiLinksMention columns = new WikiLinksMention();
+        WECMention columns = new WECMention();
         final boolean table = api.createTable( columns);
         Assert.assertTrue(table);
     }
 
     public void testDeleteTable(SQLQueryApi api) throws SQLException {
-        WikiLinksMention columns = new WikiLinksMention();
+        WECMention columns = new WECMention();
         final boolean testTable = api.deleteTable(columns);
         Assert.assertTrue(testTable);
     }
@@ -39,16 +39,16 @@ public class TestSQLQueryApi {
         };
         List<List<Map.Entry<String, Integer>>> context = new ArrayList<>();
         context.add(Arrays.asList(contextSent));
-        objList.add(new WikiLinksMention(
-                WikiLinksCoref.getAndSetIfNotExist("test1"),
+        objList.add(new WECMention(
+                WECCoref.getAndSetIfNotExist("test1"),
                 "test",
                 0,
                 1,
                 "Test",
                 context));
 
-        objList.add(new WikiLinksMention(
-                WikiLinksCoref.getAndSetIfNotExist("test1"),
+        objList.add(new WECMention(
+                WECCoref.getAndSetIfNotExist("test1"),
                 "test",
                 0,
                 1,

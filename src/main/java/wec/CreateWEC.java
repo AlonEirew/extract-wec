@@ -1,4 +1,4 @@
-package wikilinks;
+package wec;
 
 import data.RawElasticResult;
 import org.apache.logging.log4j.LogManager;
@@ -20,13 +20,13 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class CreateWikiLinks {
-    private final static Logger LOGGER = LogManager.getLogger(CreateWikiLinks.class);
+public class CreateWEC {
+    private final static Logger LOGGER = LogManager.getLogger(CreateWEC.class);
 
     private final IWorkerFactory workerFactory;
     private final ElasticQueryApi elasticApi;
 
-    public CreateWikiLinks(ElasticQueryApi elasticApi, IWorkerFactory workerFactory) {
+    public CreateWEC(ElasticQueryApi elasticApi, IWorkerFactory workerFactory) {
         this.elasticApi = elasticApi;
         this.workerFactory = workerFactory;
     }

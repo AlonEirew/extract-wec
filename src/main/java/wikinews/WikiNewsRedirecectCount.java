@@ -5,7 +5,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
-import wikilinks.CreateWikiLinks;
+import wec.CreateWEC;
 import workers.WikiNewsRedirectCounterWorker;
 import workers.WikiNewsRedirectCounterWorkerFactory;
 
@@ -32,10 +32,10 @@ public class WikiNewsRedirecectCount {
                 config.get("elastic_host"),
                 Integer.parseInt(config.get("elastic_port")))) {
 
-            CreateWikiLinks createWikiLinks = new CreateWikiLinks(elasticApi,
+            CreateWEC createWEC = new CreateWEC(elasticApi,
                     new WikiNewsRedirectCounterWorkerFactory());
 
-            createWikiLinks.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
+            createWEC.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
 
             LOGGER.info("Total redirect pages=" + WikiNewsRedirectCounterWorker.getCounter());
         } catch (Exception ex) {

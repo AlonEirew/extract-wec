@@ -9,11 +9,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class WikiLinksCoref implements ISQLObject<WikiLinksCoref> {
+public class WECCoref implements ISQLObject<WECCoref> {
     public static final String TABLE_COREF = "CorefChains";
 
     private static volatile AtomicInteger runningId = new AtomicInteger();
-    private static final ConcurrentHashMap<String, WikiLinksCoref> globalCorefIds = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, WECCoref> globalCorefIds = new ConcurrentHashMap<>();
 
     private int corefId = runningId.incrementAndGet();;
     private String corefValue;
@@ -22,13 +22,15 @@ public class WikiLinksCoref implements ISQLObject<WikiLinksCoref> {
     private boolean markedForRemoval = false;
     private boolean wasRetrived = false;
 
-    public WikiLinksCoref(String corefValue) {
+    public WECCoref() {}
+
+    public WECCoref(String corefValue) {
         this.corefValue = corefValue;
     }
 
-    public static synchronized WikiLinksCoref getAndSetIfNotExist(String corefValue) {
+    public static synchronized WECCoref getAndSetIfNotExist(String corefValue) {
         if(!globalCorefIds.containsKey(corefValue)) {
-            globalCorefIds.put(corefValue, new WikiLinksCoref(corefValue));
+            globalCorefIds.put(corefValue, new WECCoref(corefValue));
         }
 
         return globalCorefIds.get(corefValue);
@@ -40,7 +42,7 @@ public class WikiLinksCoref implements ISQLObject<WikiLinksCoref> {
         }
     }
 
-    public static Map<String, WikiLinksCoref> getGlobalCorefMap() {
+    public static Map<String, WECCoref> getGlobalCorefMap() {
         return globalCorefIds;
     }
 
@@ -142,13 +144,13 @@ public class WikiLinksCoref implements ISQLObject<WikiLinksCoref> {
     }
 
     @Override
-    public WikiLinksCoref resultSetToObject(ResultSet rs) throws SQLException {
+    public WECCoref resultSetToObject(ResultSet rs) throws SQLException {
         final int corefId = rs.getInt("corefId");
         final String corefValue = rs.getString("corefValue");
         final int mentionsCount = rs.getInt("mentionsCount");
         final int corefType = rs.getInt("corefType");
 
-        WikiLinksCoref extractedCoref = new WikiLinksCoref(corefValue);
+        WECCoref extractedCoref = new WECCoref(corefValue);
         extractedCoref.corefId = corefId;
         extractedCoref.mentionsCount = new AtomicInteger(mentionsCount);
         extractedCoref.corefType = CorefType.values()[corefType];

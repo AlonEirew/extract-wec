@@ -7,7 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
 import utils.ExecutorServiceFactory;
-import wikilinks.CreateWikiLinks;
+import wec.CreateWEC;
 import workers.ReadDateWorkerFactory;
 
 import java.io.File;
@@ -39,8 +39,8 @@ public class ExtractDates {
 
         try {
             ReadDateWorkerFactory readDateWorkerFactory = new ReadDateWorkerFactory();
-            CreateWikiLinks createWikiLinks = new CreateWikiLinks(elasticApi, readDateWorkerFactory);
-            createWikiLinks.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
+            CreateWEC createWEC = new CreateWEC(elasticApi, readDateWorkerFactory);
+            createWEC.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
             final List<String> datesSchemas = readDateWorkerFactory.getDatesSchemas();
 
             LOGGER.info(datesSchemas.size());

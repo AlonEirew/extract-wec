@@ -3,7 +3,7 @@ package workers;
 import data.RawElasticResult;
 import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
-import wikilinks.PersonOrEventFilter;
+import wec.PersonOrEventFilter;
 
 import java.util.ArrayList;
 import java.util.List;

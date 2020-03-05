@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class WikiLinksMention implements ISQLObject<WikiLinksMention> {
+public class WECMention implements ISQLObject<WECMention> {
     private static final String TABLE_MENTIONS = "Mentions";
 
     private static final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
@@ -25,21 +25,21 @@ public class WikiLinksMention implements ISQLObject<WikiLinksMention> {
     private String mentionText = "";
     private int tokenStart = -1;
     private int tokenEnd = -1;
-    private WikiLinksCoref coreChain;
+    private WECCoref coreChain;
     private String extractedFromPage = "";
     private List<String> mentionTokens = new ArrayList<>();
     private List<String> mentionTokensPos = new ArrayList<>();
     private List<List<Map.Entry<String, Integer>>> context;
 
-    public WikiLinksMention() {
+    public WECMention() {
     }
 
-    public WikiLinksMention(String extractedFromPage) {
+    public WECMention(String extractedFromPage) {
         this.extractedFromPage = extractedFromPage;
     }
 
-    public WikiLinksMention(WikiLinksCoref coref, String mentionText,
-                            int tokenStart, int tokenEnd, String extractedFromPage, List<List<Map.Entry<String, Integer>>> context) {
+    public WECMention(WECCoref coref, String mentionText,
+                      int tokenStart, int tokenEnd, String extractedFromPage, List<List<Map.Entry<String, Integer>>> context) {
         this.coreChain = coref;
         this.mentionText = mentionText;
         this.tokenStart = tokenStart;
@@ -72,15 +72,15 @@ public class WikiLinksMention implements ISQLObject<WikiLinksMention> {
         this.tokenEnd = tokenEnd;
     }
 
-    public WikiLinksCoref getCorefChain() {
+    public WECCoref getCorefChain() {
         return this.coreChain;
     }
 
     public void setCorefChain(String corefChainValue) {
-        this.coreChain = WikiLinksCoref.getAndSetIfNotExist(corefChainValue);
+        this.coreChain = WECCoref.getAndSetIfNotExist(corefChainValue);
     }
 
-    public void setCorefChain(WikiLinksCoref corefChainValue) {
+    public void setCorefChain(WECCoref corefChainValue) {
         this.coreChain = corefChainValue;
     }
 
@@ -237,7 +237,7 @@ public class WikiLinksMention implements ISQLObject<WikiLinksMention> {
     }
 
     @Override
-    public WikiLinksMention resultSetToObject(ResultSet rs) throws SQLException {
+    public WECMention resultSetToObject(ResultSet rs) throws SQLException {
         return null;
     }
 
@@ -245,7 +245,7 @@ public class WikiLinksMention implements ISQLObject<WikiLinksMention> {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        WikiLinksMention mention = (WikiLinksMention) o;
+        WECMention mention = (WECMention) o;
         return mentionId == mention.mentionId &&
                 tokenStart == mention.tokenStart &&
                 tokenEnd == mention.tokenEnd &&

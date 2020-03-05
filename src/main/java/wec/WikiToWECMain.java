@@ -1,8 +1,8 @@
-package wikilinks;
+package wec;
 
 import com.google.gson.Gson;
-import data.WikiLinksCoref;
-import data.WikiLinksMention;
+import data.WECCoref;
+import data.WECMention;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,8 +17,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Map;
 
-public class WikiToWikiLinksMain {
-    private final static Logger LOGGER = LogManager.getLogger(WikiToWikiLinksMain.class);
+public class WikiToWECMain {
+    private final static Logger LOGGER = LogManager.getLogger(WikiToWECMain.class);
 
     private final static Gson GSON = new Gson();
 
@@ -45,14 +45,14 @@ public class WikiToWikiLinksMain {
                 config.get("elastic_host"),
                 Integer.parseInt(config.get("elastic_port")));
         try {
-            CreateWikiLinks createWikiLinks = new CreateWikiLinks(elasticApi, new ParseAndExtractWorkersFactory(sqlApi, elasticApi));
+            CreateWEC createWEC = new CreateWEC(elasticApi, new ParseAndExtractWorkersFactory(sqlApi, elasticApi));
 
             if (!createSQLWikiLinksTables(sqlApi)) {
                 LOGGER.error("Failed to create Database and tables, finishing process");
                 return;
             }
 
-            createWikiLinks.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
+            createWEC.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
         } catch (Exception ex) {
             LOGGER.error("Could not start process", ex);
         } finally {
@@ -68,7 +68,7 @@ public class WikiToWikiLinksMain {
 
     private static boolean createSQLWikiLinksTables(SQLQueryApi sqlApi) throws SQLException {
         LOGGER.info("Creating SQL Tables");
-        return sqlApi.createTable(new WikiLinksMention()) &&
-                sqlApi.createTable(WikiLinksCoref.getAndSetIfNotExist("####TEMP####"));
+        return sqlApi.createTable(new WECMention()) &&
+                sqlApi.createTable(WECCoref.getAndSetIfNotExist("####TEMP####"));
     }
 }

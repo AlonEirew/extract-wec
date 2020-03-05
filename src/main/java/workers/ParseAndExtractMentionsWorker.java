@@ -1,21 +1,21 @@
 package workers;
 
 import data.RawElasticResult;
-import data.WikiLinksMention;
+import data.WECMention;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
 import utils.ExecutorServiceFactory;
-import wikilinks.ICorefFilter;
-import wikilinks.WikiLinksExtractor;
+import wec.ICorefFilter;
+import wec.WECLinksExtractor;
 
 import java.util.*;
 
 public class ParseAndExtractMentionsWorker extends AWorker {
     private final static Logger LOGGER = LogManager.getLogger(ParseAndExtractMentionsWorker.class);
 
-    private final List<WikiLinksMention> finalToCommit = new ArrayList<>();
+    private final List<WECMention> finalToCommit = new ArrayList<>();
 
     private final SQLQueryApi sqlApi;
     private final ElasticQueryApi elasticApi;
@@ -30,7 +30,7 @@ public class ParseAndExtractMentionsWorker extends AWorker {
     }
 
     // Constructor for testing purposes
-    ParseAndExtractMentionsWorker(List<WikiLinksMention> finalToCommit, ICorefFilter filter) {
+    ParseAndExtractMentionsWorker(List<WECMention> finalToCommit, ICorefFilter filter) {
         this(new ArrayList<>(), null, null, filter);
         this.finalToCommit.addAll(finalToCommit);
     }
@@ -39,14 +39,14 @@ public class ParseAndExtractMentionsWorker extends AWorker {
     public void run() {
         LOGGER.info("Parsing the wikipedia pages and extracting mentions");
         for(RawElasticResult rowResult : this.rawElasticResults) {
-            List<WikiLinksMention> wikiLinksMentions = WikiLinksExtractor.extractFromWikipedia(rowResult.getTitle(), rowResult.getText());
-            wikiLinksMentions.forEach(wikiLinksMention -> wikiLinksMention.getCorefChain().incMentionsCount());
-            this.finalToCommit.addAll(wikiLinksMentions);
+            List<WECMention> WECMentions = WECLinksExtractor.extractFromWikipedia(rowResult.getTitle(), rowResult.getText());
+            WECMentions.forEach(wikiLinksMention -> wikiLinksMention.getCorefChain().incMentionsCount());
+            this.finalToCommit.addAll(WECMentions);
         }
 
         LOGGER.info("Handle all worker mentions...in total-" + finalToCommit.size() + " will be handled");
         final Set<String> corefTitleSet = new HashSet<>();
-        for(WikiLinksMention mention : this.finalToCommit) {
+        for(WECMention mention : this.finalToCommit) {
             if(!mention.getCorefChain().wasAlreadyRetrived()) {
                 corefTitleSet.add(mention.getCorefChain().getCorefValue());
             }
@@ -69,9 +69,9 @@ public class ParseAndExtractMentionsWorker extends AWorker {
     }
 
     void filterUnwantedMentions(Map<String, String> pagesResults) {
-        final Iterator<WikiLinksMention> iterator = this.finalToCommit.iterator();
+        final Iterator<WECMention> iterator = this.finalToCommit.iterator();
         while (iterator.hasNext()) {
-            WikiLinksMention ment = iterator.next();
+            WECMention ment = iterator.next();
 
             if(ment.getCorefChain().isMarkedForRemoval()) {
                 iterator.remove();
@@ -88,7 +88,7 @@ public class ParseAndExtractMentionsWorker extends AWorker {
         }
     }
 
-    List<WikiLinksMention> getFinalToCommit() {
+    List<WECMention> getFinalToCommit() {
         return finalToCommit;
     }
 }

@@ -1,10 +1,10 @@
-package wikilinks;
+package wec;
 
 import org.junit.Assert;
 import org.junit.Test;
 import persistence.SQLQueryApi;
 import persistence.SQLiteConnections;
-import data.WikiLinksMention;
+import data.WECMention;
 
 import java.sql.SQLException;
 
@@ -20,7 +20,7 @@ public class TestSQLiteApi {
     @Test
     public void testDeleteTable() throws SQLException {
         SQLQueryApi api = new SQLQueryApi(new SQLiteConnections());
-        WikiLinksMention columns = new WikiLinksMention();
+        WECMention columns = new WECMention();
         final boolean testTable = api.deleteTable(columns);
         Assert.assertTrue(testTable);
     }

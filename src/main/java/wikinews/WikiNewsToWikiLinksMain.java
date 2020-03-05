@@ -1,7 +1,7 @@
 package wikinews;
 
 import com.google.gson.Gson;
-import data.WikiLinksCoref;
+import data.WECCoref;
 import data.WikiNewsMention;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
@@ -9,7 +9,7 @@ import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
 import persistence.SQLiteConnections;
-import wikilinks.CreateWikiLinks;
+import wec.CreateWEC;
 import workers.WikiNewsWorkerFactory;
 
 import java.io.File;
@@ -39,18 +39,18 @@ public class WikiNewsToWikiLinksMain {
             SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections(config.get("sql_connection_url")));
 
             sqlApi.createTable(new WikiNewsMention());
-            final List<WikiLinksCoref> wikiLinksCorefMap = sqlApi.readTable(WikiLinksCoref.TABLE_COREF,
-                    new WikiLinksCoref("NA"));
+            final List<WECCoref> WECCorefMap = sqlApi.readTable(WECCoref.TABLE_COREF,
+                    new WECCoref("NA"));
 
-            final Map<String, WikiLinksCoref> corefMap = new HashMap<>();
-            for(WikiLinksCoref coref : wikiLinksCorefMap) {
+            final Map<String, WECCoref> corefMap = new HashMap<>();
+            for(WECCoref coref : WECCorefMap) {
                 corefMap.put(coref.getCorefValue(), coref);
             }
 
-            CreateWikiLinks createWikiLinks = new CreateWikiLinks(elasticApi,
+            CreateWEC createWEC = new CreateWEC(elasticApi,
                     new WikiNewsWorkerFactory(corefMap, sqlApi));
 
-            createWikiLinks.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
+            createWEC.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
         } catch (Exception ex) {
             LOGGER.error(ex);
         }

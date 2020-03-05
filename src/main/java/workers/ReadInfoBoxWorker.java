@@ -1,7 +1,7 @@
 package workers;
 
 import data.RawElasticResult;
-import wikilinks.WikiLinksExtractor;
+import wec.WECLinksExtractor;
 
 import java.util.HashSet;
 import java.util.List;
@@ -24,7 +24,7 @@ public class ReadInfoBoxWorker extends AWorker {
     @Override
     public void run() {
         for(RawElasticResult rawResult : this.rawElasticResults) {
-            String infoBox = WikiLinksExtractor.extractPageInfoBox(rawResult.getText());
+            String infoBox = WECLinksExtractor.extractPageInfoBox(rawResult.getText());
             if(infoBox != null && !infoBox.isEmpty()) {
                 infoBox = toReadableString(infoBox);
 

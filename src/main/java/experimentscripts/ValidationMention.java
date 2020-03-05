@@ -1,6 +1,6 @@
 package experimentscripts;
 
-import data.WikiLinksMention;
+import data.WECMention;
 import persistence.ISQLObject;
 
 import java.sql.PreparedStatement;
@@ -9,7 +9,7 @@ import java.sql.SQLException;
 
 public class ValidationMention implements ISQLObject<ValidationMention> {
     public enum SPLIT {NA, TEST, VALIDATION, TRAIN}
-    private static WikiLinksMention mention = new WikiLinksMention();
+    private static WECMention mention = new WECMention();
 
     private MentionResultSet mentionResultSet;
     private SPLIT split = SPLIT.NA;
