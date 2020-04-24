@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -19,6 +20,7 @@ public class WECCoref implements ISQLObject<WECCoref> {
     private String corefValue;
     private AtomicInteger mentionsCount = new AtomicInteger(0);
     private CorefType corefType = CorefType.NA;
+    private CorefSubType corefSubType = CorefSubType.NA;
     private boolean markedForRemoval = false;
     private boolean wasRetrived = false;
 
@@ -78,6 +80,10 @@ public class WECCoref implements ISQLObject<WECCoref> {
         this.corefType = corefType;
     }
 
+    public void setCorefSubType(CorefSubType corefSubType) {
+        this.corefSubType = corefSubType;
+    }
+
     public boolean isMarkedForRemoval() {
         return markedForRemoval;
     }
@@ -96,7 +102,7 @@ public class WECCoref implements ISQLObject<WECCoref> {
 
     @Override
     public String getColumnNames() {
-        return "corefId, corefValue, mentionsCount, corefType";
+        return "corefId, corefValue, mentionsCount, corefType, corefSubType";
     }
 
     @Override
@@ -106,15 +112,17 @@ public class WECCoref implements ISQLObject<WECCoref> {
                 "corefValue VARCHAR(500), " +
                 "mentionsCount INT," +
                 "corefType INT," +
+                "corefSubType INT," +
                 "PRIMARY KEY (corefId)";
     }
 
     @Override
     public String getValues() {
         return corefId + "," +
-                "'" + corefValue + "'" +
-                "," + mentionsCount.get() +
-                "," + corefType.ordinal();
+                "'" + this.corefValue + "'" +
+                "," + this.mentionsCount.get() +
+                "," + this.corefType.ordinal() +
+                "," + this.corefSubType.ordinal() ;
     }
 
     @Override
@@ -128,6 +136,7 @@ public class WECCoref implements ISQLObject<WECCoref> {
         preparedStatement.setString(2, this.corefValue);
         preparedStatement.setInt(3, this.mentionsCount.get());
         preparedStatement.setInt(4, this.corefType.ordinal());
+        preparedStatement.setInt(5, this.corefSubType.ordinal());
     }
 
     @Override
@@ -137,7 +146,7 @@ public class WECCoref implements ISQLObject<WECCoref> {
                 .append(tableName).append(" ")
                 .append("(").append(getColumnNames()).append(")").append(" ")
                 .append("VALUES").append(" ")
-                .append("(?,?,?,?)")
+                .append("(?,?,?,?,?)")
                 .append(";");
 
         return query.toString();
@@ -149,12 +158,33 @@ public class WECCoref implements ISQLObject<WECCoref> {
         final String corefValue = rs.getString("corefValue");
         final int mentionsCount = rs.getInt("mentionsCount");
         final int corefType = rs.getInt("corefType");
+        final int corefSubType = rs.getInt("corefSubType");
 
         WECCoref extractedCoref = new WECCoref(corefValue);
         extractedCoref.corefId = corefId;
         extractedCoref.mentionsCount = new AtomicInteger(mentionsCount);
         extractedCoref.corefType = CorefType.values()[corefType];
+        extractedCoref.corefSubType = CorefSubType.values()[corefSubType];
 
         return extractedCoref;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WECCoref wecCoref = (WECCoref) o;
+        return corefId == wecCoref.corefId &&
+                markedForRemoval == wecCoref.markedForRemoval &&
+                wasRetrived == wecCoref.wasRetrived &&
+                Objects.equals(corefValue, wecCoref.corefValue) &&
+                Objects.equals(mentionsCount, wecCoref.mentionsCount) &&
+                corefType == wecCoref.corefType &&
+                corefSubType == wecCoref.corefSubType;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(corefId, corefValue, mentionsCount, corefType, corefSubType, markedForRemoval, wasRetrived);
     }
 }

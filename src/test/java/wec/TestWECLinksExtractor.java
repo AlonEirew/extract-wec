@@ -2,10 +2,10 @@ package wec;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import data.CorefSubType;
 import data.RawElasticResult;
 import data.WECMention;
 import data.WikiNewsMention;
-import javafx.util.Pair;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -13,10 +13,7 @@ import persistence.ElasticQueryApi;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class TestWECLinksExtractor {
 
@@ -37,8 +34,8 @@ public class TestWECLinksExtractor {
 
     @Test
     public void testExtractTmp() {
-        List<Pair<String, String>> pageTexts = TestUtils.getTextAndTitle("wiki_links/tmp.json");
-        for(Pair<String, String> text : pageTexts) {
+        List<AbstractMap.SimpleEntry<String, String>> pageTexts = TestUtils.getTextAndTitle("wiki_links/tmp.json");
+        for(AbstractMap.SimpleEntry<String, String> text : pageTexts) {
             final List<WikiNewsMention> wikiNewsMentions = WECLinksExtractor.extractFromWikiNews(text.getKey(), text.getValue());
             System.out.println();
         }
@@ -46,8 +43,8 @@ public class TestWECLinksExtractor {
 
     @Test
     public void testExtractTypes() {
-        List<Pair<String, String>> pageTexts = getCivilAttack();
-        for(Pair<String, String> text : pageTexts) {
+        List<AbstractMap.SimpleEntry<String, String>> pageTexts = getCivilAttack();
+        for(AbstractMap.SimpleEntry<String, String> text : pageTexts) {
             final Set<String> extractMentions = WECLinksExtractor.extractTypes(text.getValue());
             System.out.println();
         }
@@ -63,8 +60,8 @@ public class TestWECLinksExtractor {
     @Test
     public void testHasDateAndLocation() {
 
-        List<Pair<String, String>> pageTexts = getCivilAttack();
-        for(Pair<String, String> text : pageTexts) {
+        List<AbstractMap.SimpleEntry<String, String>> pageTexts = getCivilAttack();
+        for(AbstractMap.SimpleEntry<String, String> text : pageTexts) {
             String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
             boolean ret = WECLinksExtractor.hasDateAndLocation(infoBox);
             Assert.assertTrue(ret);
@@ -77,8 +74,8 @@ public class TestWECLinksExtractor {
         Assert.assertTrue(ret);
         System.out.println();
 
-        final List<Pair<String, String>> peopleText = getPeopleText();
-        for(Pair<String, String> text : peopleText) {
+        final List<AbstractMap.SimpleEntry<String, String>> peopleText = getPeopleText();
+        for(AbstractMap.SimpleEntry<String, String> text : peopleText) {
             infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
             ret = WECLinksExtractor.hasDateAndLocation(infoBox);
             Assert.assertFalse(ret);
@@ -122,33 +119,33 @@ public class TestWECLinksExtractor {
                 Integer.parseInt(config.get("elastic_port")));
         final String alan_turing = elasticQueryApi.getPageText("Alan Turing");
         final String infoBox = WECLinksExtractor.extractPageInfoBox(alan_turing);
-        Assert.assertTrue(WECLinksExtractor.isPerson(infoBox));
+        Assert.assertNotSame(WECLinksExtractor.isPerson(infoBox), CorefSubType.NA);
         Assert.assertTrue(WECLinksExtractor.extractTypes(infoBox).isEmpty());
 
         final String sep_11 = elasticQueryApi.getPageText("September 11 attacks");
-        Assert.assertFalse(WECLinksExtractor.isPerson(sep_11));
+        Assert.assertSame(WECLinksExtractor.isPerson(sep_11), CorefSubType.NA);
         Assert.assertTrue(!WECLinksExtractor.extractTypes(sep_11).isEmpty());
     }
 
     @Test
     public void testIsPerson() {
-        final List<Pair<String, String>> peopleText = getPeopleText();
-        for(Pair<String, String> text : peopleText) {
-            boolean ret = WECLinksExtractor.isPerson(text.getValue());
-            Assert.assertTrue(ret);
+        final List<AbstractMap.SimpleEntry<String, String>> peopleText = getPeopleText();
+        for(AbstractMap.SimpleEntry<String, String> text : peopleText) {
+            CorefSubType ret = WECLinksExtractor.isPerson(text.getValue());
+            Assert.assertNotSame(ret, CorefSubType.NA);
         }
     }
 
     @Test
     public void testIsElection() {
-        List<Pair<String, String>> pageText = getElectionText();
-        for(Pair<String, String> text : pageText) {
+        List<AbstractMap.SimpleEntry<String, String>> pageText = getElectionText();
+        for(AbstractMap.SimpleEntry<String, String> text : pageText) {
             String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WECLinksExtractor.isElection(infoBox, text.getKey());
-            Assert.assertTrue(ret);
+            CorefSubType ret = WECLinksExtractor.isElection(infoBox, text.getKey());
+            Assert.assertNotSame(ret, CorefSubType.NA);
         }
 
-        List<Pair<String, String>> other = new ArrayList<>();
+        List<AbstractMap.SimpleEntry<String, String>> other = new ArrayList<>();
         other.addAll(getCivilAttack());
         other.addAll(getAwards());
         other.addAll(getDisasterText());
@@ -157,23 +154,23 @@ public class TestWECLinksExtractor {
         other.addAll(getConcreteGeneralTexts());
         other.addAll(getPeopleText());
 
-         for(Pair<String, String> text : other) {
+         for(AbstractMap.SimpleEntry<String, String> text : other) {
             String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WECLinksExtractor.isElection(infoBox, text.getKey());
-            Assert.assertFalse(ret);
+            CorefSubType ret = WECLinksExtractor.isElection(infoBox, text.getKey());
+            Assert.assertSame(ret, CorefSubType.NA);
         }
     }
 
     @Test
     public void testAccident() {
-        List<Pair<String, String>> pageTexts = getAccidentText();
-        for(Pair<String, String> text : pageTexts) {
+        List<AbstractMap.SimpleEntry<String, String>> pageTexts = getAccidentText();
+        for(AbstractMap.SimpleEntry<String, String> text : pageTexts) {
             String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WECLinksExtractor.isAccident(infoBox);
-            Assert.assertTrue(ret);
+            CorefSubType ret = WECLinksExtractor.isAccident(infoBox);
+            Assert.assertNotSame(ret, CorefSubType.NA);
         }
 
-        List<Pair<String, String>> other = new ArrayList<>();
+        List<AbstractMap.SimpleEntry<String, String>> other = new ArrayList<>();
         other.addAll(getCivilAttack());
         other.addAll(getAwards());
         other.addAll(getDisasterText());
@@ -182,10 +179,10 @@ public class TestWECLinksExtractor {
         other.addAll(getConcreteGeneralTexts());
         other.addAll(getPeopleText());
 
-        for(Pair<String, String> text : other) {
+        for(AbstractMap.SimpleEntry<String, String> text : other) {
             String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WECLinksExtractor.isAccident(infoBox);
-            Assert.assertFalse(ret);
+            CorefSubType ret = WECLinksExtractor.isAccident(infoBox);
+            Assert.assertSame(ret, CorefSubType.NA);
         }
     }
 
@@ -199,13 +196,13 @@ public class TestWECLinksExtractor {
     @Test
     public void testIsSport() {
 
-        final List<Pair<String, String>> sportText = getSportText();
-        for(Pair<String, String> text : sportText) {
-            boolean ret = WECLinksExtractor.isSportEvent(WECLinksExtractor.extractPageInfoBox(text.getValue()), text.getKey());
-            Assert.assertTrue(text.getKey(), ret);
+        final List<AbstractMap.SimpleEntry<String, String>> sportText = getSportText();
+        for(AbstractMap.SimpleEntry<String, String> text : sportText) {
+            CorefSubType ret = WECLinksExtractor.isSportEvent(WECLinksExtractor.extractPageInfoBox(text.getValue()), text.getKey());
+            Assert.assertNotSame(text.getKey(), ret, CorefSubType.NA);
         }
 
-        List<Pair<String, String>> other = new ArrayList<>();
+        List<AbstractMap.SimpleEntry<String, String>> other = new ArrayList<>();
         other.addAll(getCivilAttack());
         other.addAll(getAwards());
         other.addAll(getDisasterText());
@@ -214,25 +211,25 @@ public class TestWECLinksExtractor {
         other.addAll(getConcreteGeneralTexts());
         other.addAll(getPeopleText());
 
-        for(Pair<String, String> text : other) {
+        for(AbstractMap.SimpleEntry<String, String> text : other) {
             String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WECLinksExtractor.isSportEvent(infoBox, text.getKey());
-            Assert.assertFalse(text.getKey(), ret);
+            CorefSubType ret = WECLinksExtractor.isSportEvent(infoBox, text.getKey());
+            Assert.assertSame(text.getKey(), ret, CorefSubType.NA);
         }
     }
 
     @Test
     public void testIsAward() {
 
-        final List<Pair<String, String>> awardPair = getAwards();
-        for(Pair<String, String> pair : awardPair) {
-            boolean ret = WECLinksExtractor.isAwardEvent(WECLinksExtractor.extractPageInfoBox(pair.getValue()),
+        final List<AbstractMap.SimpleEntry<String, String>> awardPair = getAwards();
+        for(AbstractMap.SimpleEntry<String, String> pair : awardPair) {
+            CorefSubType ret = WECLinksExtractor.isAwardEvent(WECLinksExtractor.extractPageInfoBox(pair.getValue()),
                     pair.getKey());
 
-            Assert.assertTrue(ret);
+            Assert.assertNotSame(ret, CorefSubType.NA);
         }
 
-        List<Pair<String, String>> other = new ArrayList<>();
+        List<AbstractMap.SimpleEntry<String, String>> other = new ArrayList<>();
         other.addAll(getCivilAttack());
         other.addAll(getSportText());
         other.addAll(getDisasterText());
@@ -241,26 +238,26 @@ public class TestWECLinksExtractor {
         other.addAll(getConcreteGeneralTexts());
         other.addAll(getPeopleText());
 
-        for(Pair<String, String> pair : other) {
-            boolean ret = WECLinksExtractor.isAwardEvent(WECLinksExtractor.extractPageInfoBox(pair.getValue()),
+        for(AbstractMap.SimpleEntry<String, String> pair : other) {
+            CorefSubType ret = WECLinksExtractor.isAwardEvent(WECLinksExtractor.extractPageInfoBox(pair.getValue()),
                     pair.getKey());
 
-            Assert.assertFalse(ret);
+            Assert.assertSame(ret, CorefSubType.NA);
         }
     }
 
     @Test
     public void testIsConcreteGeneralEvent() {
 
-        final List<Pair<String, String>> newsPair = getConcreteGeneralTexts();
-        for(Pair<String, String> pair : newsPair) {
-            boolean ret = WECLinksExtractor.isConcreteGeneralEvent(WECLinksExtractor.extractPageInfoBox(pair.getValue()),
+        final List<AbstractMap.SimpleEntry<String, String>> newsPair = getConcreteGeneralTexts();
+        for(AbstractMap.SimpleEntry<String, String> pair : newsPair) {
+            CorefSubType ret = WECLinksExtractor.isConcreteGeneralEvent(WECLinksExtractor.extractPageInfoBox(pair.getValue()),
                     pair.getKey());
 
-            Assert.assertTrue(ret);
+            Assert.assertNotSame(ret, CorefSubType.NA);
         }
 
-        List<Pair<String, String>> other = new ArrayList<>();
+        List<AbstractMap.SimpleEntry<String, String>> other = new ArrayList<>();
         other.addAll(getCivilAttack());
         other.addAll(getSportText());
         other.addAll(getDisasterText());
@@ -269,24 +266,24 @@ public class TestWECLinksExtractor {
         other.addAll(getAwards());
         other.addAll(getPeopleText());
 
-        for(Pair<String, String> pair : other) {
-            boolean ret = WECLinksExtractor.isConcreteGeneralEvent(WECLinksExtractor.extractPageInfoBox(pair.getValue()),
+        for(AbstractMap.SimpleEntry<String, String> pair : other) {
+            CorefSubType ret = WECLinksExtractor.isConcreteGeneralEvent(WECLinksExtractor.extractPageInfoBox(pair.getValue()),
                     pair.getKey());
 
-            Assert.assertFalse(ret);
+            Assert.assertSame(ret, CorefSubType.NA);
         }
     }
 
     @Test
     public void testIsDisaster() {
-        final List<Pair<String, String>> disasterText = getDisasterText();
-        for(Pair<String, String> text : disasterText) {
+        final List<AbstractMap.SimpleEntry<String, String>> disasterText = getDisasterText();
+        for(AbstractMap.SimpleEntry<String, String> text : disasterText) {
             String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WECLinksExtractor.isDisaster(infoBox);
-            Assert.assertTrue(ret);
+            CorefSubType ret = WECLinksExtractor.isDisaster(infoBox);
+            Assert.assertNotSame(text.getKey(), ret, CorefSubType.NA);
         }
 
-        List<Pair<String, String>> other = new ArrayList<>();
+        List<AbstractMap.SimpleEntry<String, String>> other = new ArrayList<>();
         other.addAll(getCivilAttack());
         other.addAll(getSportText());
         other.addAll(getConcreteGeneralTexts());
@@ -295,23 +292,23 @@ public class TestWECLinksExtractor {
         other.addAll(getAwards());
         other.addAll(getPeopleText());
 
-        for(Pair<String, String> text : other) {
+        for(AbstractMap.SimpleEntry<String, String> text : other) {
             String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WECLinksExtractor.isDisaster(infoBox);
-            Assert.assertFalse(ret);
+            CorefSubType ret = WECLinksExtractor.isDisaster(infoBox);
+            Assert.assertSame(text.getKey(), ret, CorefSubType.NA);
         }
     }
 
     @Test
     public void testIsCivilAttack() {
-        final List<Pair<String, String>> civilAttack = getCivilAttack();
-        for(Pair<String, String> text : civilAttack) {
+        final List<AbstractMap.SimpleEntry<String, String>> civilAttack = getCivilAttack();
+        for(AbstractMap.SimpleEntry<String, String> text : civilAttack) {
             String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WECLinksExtractor.isCivilAttack(infoBox);
-            Assert.assertTrue(text.getKey(), ret);
+            CorefSubType ret = WECLinksExtractor.isCivilAttack(infoBox);
+            Assert.assertNotSame(text.getKey(), ret, CorefSubType.NA);
         }
 
-        List<Pair<String, String>> other = new ArrayList<>();
+        List<AbstractMap.SimpleEntry<String, String>> other = new ArrayList<>();
         other.addAll(getDisasterText());
         other.addAll(getSportText());
         other.addAll(getConcreteGeneralTexts());
@@ -320,39 +317,39 @@ public class TestWECLinksExtractor {
         other.addAll(getAwards());
         other.addAll(getPeopleText());
 
-        for(Pair<String, String> text : other) {
+        for(AbstractMap.SimpleEntry<String, String> text : other) {
             String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
-            boolean ret = WECLinksExtractor.isCivilAttack(infoBox);
-            Assert.assertFalse(ret);
+            CorefSubType ret = WECLinksExtractor.isCivilAttack(infoBox);
+            Assert.assertSame(ret, CorefSubType.NA);
         }
     }
 
     @Test
     public void testReject() {
-        final List<Pair<String, String>> rejectTexts = getRejectTexts();
-        for(Pair<String, String> pair : rejectTexts) {
+        final List<AbstractMap.SimpleEntry<String, String>> rejectTexts = getRejectTexts();
+        for(AbstractMap.SimpleEntry<String, String> pair : rejectTexts) {
             String infoBox = WECLinksExtractor.extractPageInfoBox(pair.getValue());
 
-            boolean ret = WECLinksExtractor.isDisaster(infoBox);
-            Assert.assertFalse(pair.getKey(), ret);
+            CorefSubType ret = WECLinksExtractor.isDisaster(infoBox);
+            Assert.assertSame(pair.getKey(), ret, CorefSubType.NA);
 
-            ret = WECLinksExtractor.isAwardEvent(infoBox, pair.getKey());
-            Assert.assertFalse(pair.getKey(), ret);
-
-            ret = WECLinksExtractor.isConcreteGeneralEvent(infoBox, pair.getKey());
-            Assert.assertFalse(pair.getKey(), ret);
-
-            ret = WECLinksExtractor.isAccident(infoBox);
-            Assert.assertFalse(pair.getKey(), ret);
-
-            ret = WECLinksExtractor.isSportEvent(infoBox, pair.getKey());
-            Assert.assertFalse(pair.getKey(), ret);
+//            ret = WECLinksExtractor.isAwardEvent(infoBox, pair.getKey());
+//            Assert.assertSame(pair.getKey(), ret, CorefSubType.NA);
+//
+//            ret = WECLinksExtractor.isConcreteGeneralEvent(infoBox, pair.getKey());
+//            Assert.assertSame(pair.getKey(), ret, CorefSubType.NA);
+//
+//            ret = WECLinksExtractor.isAccident(infoBox);
+//            Assert.assertSame(pair.getKey(), ret, CorefSubType.NA);
+//
+//            ret = WECLinksExtractor.isSportEvent(infoBox, pair.getKey());
+//            Assert.assertSame(pair.getKey(), ret, CorefSubType.NA);
 
             ret = WECLinksExtractor.isCivilAttack(infoBox);
-            Assert.assertFalse(pair.getKey(), ret);
+            Assert.assertSame(pair.getKey(), ret, CorefSubType.NA);
 
             ret = WECLinksExtractor.isElection(infoBox, pair.getKey());
-            Assert.assertFalse(pair.getKey(), ret);
+            Assert.assertSame(pair.getKey(), ret, CorefSubType.NA);
         }
     }
 
@@ -361,26 +358,26 @@ public class TestWECLinksExtractor {
         PersonOrEventFilter filter = new PersonOrEventFilter();
 
 
-        final List<Pair<String, String>> peopleText = getPeopleText();
-        for(Pair<String, String> text : peopleText) {
+        final List<AbstractMap.SimpleEntry<String, String>> peopleText = getPeopleText();
+        for(AbstractMap.SimpleEntry<String, String> text : peopleText) {
             RawElasticResult input = new RawElasticResult(text.getKey(), WECLinksExtractor.extractPageInfoBox(text.getValue()));
             Assert.assertFalse(filter.isConditionMet(input));
         }
 
-        final List<Pair<String, String>> stringList = getCivilAttack();
-        for(Pair<String, String> text : stringList) {
+        final List<AbstractMap.SimpleEntry<String, String>> stringList = getCivilAttack();
+        for(AbstractMap.SimpleEntry<String, String> text : stringList) {
             RawElasticResult input = new RawElasticResult(text.getKey(), WECLinksExtractor.extractPageInfoBox(text.getValue()));
             Assert.assertFalse(filter.isConditionMet(input));
         }
 
-        final List<Pair<String, String>> accidentText = getAccidentText();
-        for(Pair<String, String> text : accidentText) {
+        final List<AbstractMap.SimpleEntry<String, String>> accidentText = getAccidentText();
+        for(AbstractMap.SimpleEntry<String, String> text : accidentText) {
             RawElasticResult input = new RawElasticResult(text.getKey(), WECLinksExtractor.extractPageInfoBox(text.getValue()));
             Assert.assertFalse(filter.isConditionMet(input));
         }
 
-        final List<Pair<String, String>> disasterText = getDisasterText();
-        for(Pair<String, String> text : disasterText) {
+        final List<AbstractMap.SimpleEntry<String, String>> disasterText = getDisasterText();
+        for(AbstractMap.SimpleEntry<String, String> text : disasterText) {
             RawElasticResult input = new RawElasticResult(text.getKey(), WECLinksExtractor.extractPageInfoBox(text.getValue()));
             Assert.assertFalse(filter.isConditionMet(input));
         }
@@ -400,19 +397,19 @@ public class TestWECLinksExtractor {
         return TestUtils.getText("wiki_links/mobileye.json");
     }
 
-    private List<Pair<String, String>> getSportText() {
+    private List<AbstractMap.SimpleEntry<String, String>> getSportText() {
         return TestUtils.getTextAndTitle("wiki_links/sport.json");
     }
 
-    private List<Pair<String, String>> getDisasterText() {
+    private List<AbstractMap.SimpleEntry<String, String>> getDisasterText() {
         return TestUtils.getTextAndTitle("wiki_links/disaster.json");
     }
 
-    private List<Pair<String, String>> getCivilAttack() {
+    private List<AbstractMap.SimpleEntry<String, String>> getCivilAttack() {
         return TestUtils.getTextAndTitle("wiki_links/civil_attack.json");
     }
 
-    private List<Pair<String, String>> getPeopleText() {
+    private List<AbstractMap.SimpleEntry<String, String>> getPeopleText() {
         return TestUtils.getTextAndTitle("wiki_links/people.json");
     }
 
@@ -420,19 +417,19 @@ public class TestWECLinksExtractor {
         return TestUtils.getText("wiki_links/wedding.json");
     }
 
-    private List<Pair<String, String>> getElectionText() {
+    private List<AbstractMap.SimpleEntry<String, String>> getElectionText() {
         return TestUtils.getTextAndTitle("wiki_links/election.json");
     }
 
-    private List<Pair<String, String>> getAccidentText() {
+    private List<AbstractMap.SimpleEntry<String, String>> getAccidentText() {
         return TestUtils.getTextAndTitle("wiki_links/accident.json");
     }
 
-    private List<Pair<String, String>> getAwards() {
+    private List<AbstractMap.SimpleEntry<String, String>> getAwards() {
         return TestUtils.getTextAndTitle("wiki_links/award.json");
     }
 
-    private List<Pair<String, String>> getConcreteGeneralTexts() {
+    private List<AbstractMap.SimpleEntry<String, String>> getConcreteGeneralTexts() {
         return TestUtils.getTextAndTitle("wiki_links/concrete_general.json");
     }
 
@@ -440,7 +437,7 @@ public class TestWECLinksExtractor {
         return TestUtils.getTextTitleAndExpected("wiki_links/extractfrompage.json");
     }
 
-    private List<Pair<String, String>> getRejectTexts() {
+    private List<AbstractMap.SimpleEntry<String, String>> getRejectTexts() {
         return TestUtils.getTextAndTitle("wiki_links/reject.json");
     }
 

@@ -1,6 +1,7 @@
 package experimentscripts;
 
-import data.CorefType;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import data.WECCoref;
 import org.apache.commons.io.FileUtils;
 import persistence.SQLQueryApi;
@@ -14,24 +15,102 @@ import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class GoogleWikiLinksExpr {
-    public static void main(String[] args) {
-        String wikilinksFile = "/Users/aeirew/Downloads/data-00001-of-00010";
+    static Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    public static void main(String[] args) throws IOException {
+        SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections("jdbc:sqlite:/Users/aeirew/workspace/DataBase/EnWikiLinks_v9.db"));
+        ExecutorService pool = Executors.newFixedThreadPool(8);
+        Map<String, Map<String, CorefResultSet>> allClusters = new HashMap<>();
+        Map<String, CorefResultSet> corefByText = sqlApi.getAllCorefByText(WECCoref.TABLE_COREF);
+        List<Future> submitted = new ArrayList<>();
+        for(int i = 0 ; i < 10; i++) {
+            String wikilinksFile = "/Users/aeirew/workspace/corpus/wiki/original/data-0000" + i + "-of-00010";
 //        HashMap<String, String> links = readGoogleWikilinksFile(wikilinksFile);
 //        readPage(wikilinksFile);
-        readNotExtendedData(wikilinksFile);
+            submitted.add(pool.submit(() -> readNotExtendedData(corefByText, wikilinksFile, allClusters)));
+        }
+
+        for(Future<?> submit : submitted) {
+            try {
+                System.out.println("Waiting for thread to finish...");
+                submit.get();
+                System.out.println("Thread finished!");
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+
+        pool.shutdown();
+        Map<String, CorefResultSet> mergedLinks = mergeFiles(allClusters);
+        printStats(mergedLinks, "/Users/aeirew/workspace/corpus/wiki/original/wikilinks_full.json",
+                "/Users/aeirew/workspace/corpus/wiki/original/wikilinks_3stem.json");
     }
 
-    private static void readNotExtendedData(String wikilinksFile) {
-        SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections("jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksExperiment.db"));
-        HashMap<String, Set<String>> links = new HashMap<>();
+    private static void printStats(Map<String, CorefResultSet> mergedLinks, String outputFileFull, String outputFileStem) throws IOException {
+        int totalMentions = 0;
+        int singletonClusters = 0;
+        float totalUniqeMentionsInCluster = 0;
+
+        Map<String, CorefResultSet> stemLinks = new HashMap<>();
+
+        for (String corefId : mergedLinks.keySet()) {
+            CorefResultSet corefResultSet = mergedLinks.get(corefId);
+            CorefResultSet newCorefResultSet = new CorefResultSet(corefResultSet.getCorefId(), corefResultSet.getCorefType(), corefResultSet.getCorefValue());
+            stemLinks.put(corefId, newCorefResultSet);
+            CorefResultSet mentions = corefResultSet;
+            if(mentions.getMentionsSize() == 1) {
+                singletonClusters++;
+            }
+            totalMentions += mentions.getMentionsSize();
+            totalUniqeMentionsInCluster += new HashSet<>(mentions.getMentions()).size();
+
+            for(MentionResultSet mentionResultSet : corefResultSet.getMentions()) {
+                newCorefResultSet.addNoneIntersectionUniqueMention(mentionResultSet, 3);
+            }
+        }
+
+        float averageUniqueInCluster = (totalUniqeMentionsInCluster / mergedLinks.size());
+        System.out.println("Total relevant clusters=" + mergedLinks.size());
+        System.out.println("Total relevant mentions=" + totalMentions);
+
+        System.out.println("From relevant clusters, singletons=" + singletonClusters);
+        System.out.println("Average unique mentions in cluster=" + averageUniqueInCluster);
+
+        System.out.println("OutputFile=" + outputFileFull);
+        FileUtils.writeStringToFile(new File(outputFileFull), gson.toJson(mergedLinks), "UTF-8");
+
+        System.out.println("OutputFileStem=" + outputFileStem);
+        FileUtils.writeStringToFile(new File(outputFileStem), gson.toJson(stemLinks), "UTF-8");
+    }
+
+    private static Map<String, CorefResultSet> mergeFiles(Map<String, Map<String, CorefResultSet>> allClusters) {
+        Map<String, CorefResultSet> mergedLinks = new HashMap<>();
+        for(String file : allClusters.keySet()) {
+            Map<String, CorefResultSet> fileClusters = allClusters.get(file);
+            for(String corefId : fileClusters.keySet()) {
+                CorefResultSet currentCorefResultSet = fileClusters.get(corefId);
+                if(!mergedLinks.containsKey(corefId)) {
+                    mergedLinks.put(corefId, new CorefResultSet(
+                            currentCorefResultSet.getCorefId(), currentCorefResultSet.getCorefType(), currentCorefResultSet.getCorefValue()));
+                }
+                mergedLinks.get(corefId).addMentionsCollection(currentCorefResultSet.getMentions());
+            }
+        }
+        return mergedLinks;
+    }
+
+    private static void readNotExtendedData(Map<String, CorefResultSet> corefByText, String wikilinksFile, Map<String, Map<String, CorefResultSet>> allClusters) {
+        String fileName = wikilinksFile.substring(wikilinksFile.lastIndexOf("/"));
+        System.out.println("Extracting from wikilink file-" + fileName);
+        HashMap<String, CorefResultSet> links = new HashMap<>();
         BufferedReader reader;
         int totalMentionsInFile = 0;
         int releveantMentionsInFile = 0;
@@ -41,25 +120,28 @@ public class GoogleWikiLinksExpr {
                     new InputStreamReader(
                             new FileInputStream(wikilinksFile), StandardCharsets.UTF_8));
             String line;
+            String url = null;
             while ((line = reader.readLine()) != null) {
+                if(line.startsWith("URL")) {
+                    url = line.split("\t")[1];
+                    continue;
+                }
                 Matcher m = p.matcher(line);
                 while (m.find()) {
                     totalMentionsInFile++;
-//                    System.out.println("Evaluated-" + totalMentionsInFile);
-                    String corefId = m.group(2).replace("_", " ");
-                    WECCoref corefByText = sqlApi.getCorefByText(corefId, WECCoref.TABLE_COREF);
-                    if (corefByText.getCorefType() != null && corefByText.getCorefType() != CorefType.NA &&
-                            corefByText.getCorefType() != CorefType.PERSON && corefByText.getCorefType() != CorefType.ELECTION_EVENT &&
-                            corefByText.getCorefType() != CorefType.EVENT_UNK) {
-
+                    String corefValue = m.group(2).replace("_", " ");
+                    String mention = m.group(1);
+                    if(corefByText.containsKey(corefValue)) {
+                        CorefResultSet corefResultSet = corefByText.get(corefValue);
+                        MentionResultSet mentionResultSet = new MentionResultSet(
+                                corefResultSet.getCorefId(), mention, url, -1, -1, null, null);
                         releveantMentionsInFile++;
-                        System.out.println("Found Relevent mention-" + corefId + ", " + m.group(1));
-                        if (!links.containsKey(m.group(1))) {
-                            Set<String> set = new HashSet<>();
-                            set.add(m.group(1));
-                            links.put(corefId, set);
+                        if (!links.containsKey(corefValue)) {
+                            CorefResultSet mentList = new CorefResultSet(corefResultSet.getCorefId(), corefResultSet.getCorefType(), corefValue);
+                            mentList.addMention(mentionResultSet);
+                            links.put(corefValue, mentList);
                         } else {
-                            links.get(corefId).add(m.group(1));
+                            links.get(corefValue).addMention(mentionResultSet);
                         }
                     }
                 }
@@ -70,16 +152,10 @@ public class GoogleWikiLinksExpr {
             e.printStackTrace();
         }
 
-        System.out.println("Total Mentions in file=" + totalMentionsInFile);
-        System.out.println("Total relevant mentions=" + releveantMentionsInFile);
-        System.out.println("Total relevant clusters=" + links.size());
-        System.out.println("Mentions:");
-        for (String corefId : links.keySet()) {
-            System.out.println("Mention CorefValue=" + corefId);
-            for (String corefValue : links.get(corefId)) {
-                System.out.println("\t" + corefValue);
-            }
-        }
+        allClusters.put(wikilinksFile, links);
+
+        System.out.println("Total Mentions in " + fileName + ":" + totalMentionsInFile);
+        System.out.println("Total relevant mentions in " + fileName + ":" + releveantMentionsInFile);
     }
 
     private static HashMap<String, String> readGoogleWikilinksFile(String wikilinksFile) {

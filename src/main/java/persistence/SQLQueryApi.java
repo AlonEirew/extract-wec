@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SQLQueryApi {
     private final static Logger LOGGER = LogManager.getLogger(SQLQueryApi.class);
@@ -284,21 +285,24 @@ public class SQLQueryApi {
         }
     }
 
-    public synchronized WECCoref getCorefByText(String corefText, String table) {
-        WECCoref corefResult = new WECCoref();
-        String query = "Select * from " + table + " where corefValue = \"" + corefText + "\"";
+    public synchronized Map<String, CorefResultSet> getAllCorefByText(String table) {
+        Map<String, CorefResultSet> corefs = new HashMap<>();
+        String query = "Select * from " + table + " where corefType in (2,3,4,6,7,8)";
         try (Connection conn = this.sqlConnection.getConnection();
              Statement stmt = conn.createStatement()) {
 
             try(ResultSet rs = stmt.executeQuery(query)) {
-                if (rs.next()) {
-                    corefResult = corefResult.resultSetToObject(rs);
+                while (rs.next()) {
+                    final String corefValue = rs.getString("corefValue");
+                    final int corefId = rs.getInt("corefId");
+                    final int corefType = rs.getInt("corefType");
+                    corefs.put(corefValue, new CorefResultSet(corefId, corefType, corefValue));
                 }
             }
         } catch (SQLException e) {
             LOGGER.error(e);
         }
 
-        return corefResult;
+        return corefs;
     }
 }

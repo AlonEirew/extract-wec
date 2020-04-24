@@ -1,6 +1,5 @@
 package experimentscripts;
 
-import javafx.util.Pair;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,15 +23,15 @@ public class ExtractTopicsInfo {
         final Map<Integer, CorefResultSet> allCorefs = getAllCorefs(sqLiteConnections, "Mentions");
         final Map<String, List<MentionResultSet>> topicsMap = countTopicsMentions(allCorefs);
 
-        List<Pair<String, Integer>> printTopicsBySize = new ArrayList<>();
+        List<AbstractMap.SimpleEntry<String, Integer>> printTopicsBySize = new ArrayList<>();
         for(String key : topicsMap.keySet()) {
             final int size = topicsMap.get(key).size();
             if(size > 1) {
-                printTopicsBySize.add(new Pair<>(key, size));
+                printTopicsBySize.add(new AbstractMap.SimpleEntry<>(key, size));
             }
         }
 
-        Collections.sort(printTopicsBySize, Comparator.comparingInt(Pair::getValue));
+        Collections.sort(printTopicsBySize, Comparator.comparingInt(AbstractMap.SimpleEntry::getValue));
 
         FileUtils.writeLines(new File("output/topics2.txt"), "UTF-8", printTopicsBySize);
     }

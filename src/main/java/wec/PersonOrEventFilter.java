@@ -1,5 +1,6 @@
 package wec;
 
+import data.CorefSubType;
 import data.CorefType;
 import data.RawElasticResult;
 import data.WECCoref;
@@ -12,42 +13,54 @@ public class PersonOrEventFilter implements ICorefFilter {
         boolean retCond = false;
 
         if (result != null && result.getText() != null && !result.getText().isEmpty()) {
-            final boolean isPerson = WECLinksExtractor.isPerson(result.getText());
-            final boolean isDisaster = WECLinksExtractor.isDisaster(result.getText());
-            final boolean isElection = WECLinksExtractor.isElection(result.getText(), result.getTitle());
-            final boolean isCivilAttack = WECLinksExtractor.isCivilAttack(result.getText());
-            final boolean isAccidentEvent = WECLinksExtractor.isAccident(result.getText());
-            final boolean isSportEvent = WECLinksExtractor.isSportEvent(result.getText(), result.getTitle());
-            final boolean isAwardEvent = WECLinksExtractor.isAwardEvent(result.getText(), result.getTitle());
-            final boolean isConcreteGeneralEvent = WECLinksExtractor.isConcreteGeneralEvent(result.getText(), result.getTitle());
-            final boolean isGeneralEvent = WECLinksExtractor.isGeneralEvent(result.getText());
-            final boolean isHistoricalEvent = WECLinksExtractor.isHistoricalEvent(result.getText());
-            final boolean isInfoBoxEvent = WECLinksExtractor.hasDateAndLocation(result.getText());
+            final CorefSubType isPerson = CorefSubType.NA; //WECLinksExtractor.isPerson(result.getText());
+            final CorefSubType isDisaster = WECLinksExtractor.isDisaster(result.getText());
+            final CorefSubType isElection = CorefSubType.NA; //WECLinksExtractor.isElection(result.getText(), result.getTitle());
+            final CorefSubType isCivilAttack = WECLinksExtractor.isCivilAttack(result.getText());
+            final CorefSubType isAccidentEvent = WECLinksExtractor.isAccident(result.getText());
+            final CorefSubType isSportEvent = WECLinksExtractor.isSportEvent(result.getText(), result.getTitle());
+            final CorefSubType isAwardEvent = WECLinksExtractor.isAwardEvent(result.getText(), result.getTitle());
+            final CorefSubType isConcreteGeneralEvent = WECLinksExtractor.isConcreteGeneralEvent(result.getText(), result.getTitle());
+            final boolean isGeneralEvent = false; //WECLinksExtractor.isGeneralEvent(result.getText());
+            final boolean isHistoricalEvent = false; //WECLinksExtractor.isHistoricalEvent(result.getText());
+            final boolean isInfoBoxEvent = false; //WECLinksExtractor.hasDateAndLocation(result.getText());
 
-            if (isPerson) {
-                WECCoref.getAndSetIfNotExist(result.getTitle()).setCorefType(CorefType.PERSON);
-            } else if (isDisaster) {
-                WECCoref.getAndSetIfNotExist(result.getTitle()).setCorefType(CorefType.DISASTER_EVENT);
-            } else if (isElection) {
-                WECCoref.getAndSetIfNotExist(result.getTitle()).setCorefType(CorefType.ELECTION_EVENT);
-            } else if (isCivilAttack) {
-                WECCoref.getAndSetIfNotExist(result.getTitle()).setCorefType(CorefType.CIVIL_ATTACK_EVENT);
-            } else if (isAccidentEvent) {
-                WECCoref.getAndSetIfNotExist(result.getTitle()).setCorefType(CorefType.ACCIDENT_EVENT);
-            } else if (isSportEvent) {
-                WECCoref.getAndSetIfNotExist(result.getTitle()).setCorefType(CorefType.SPORT_EVENT);
-            } else if (isAwardEvent) {
-                WECCoref.getAndSetIfNotExist(result.getTitle()).setCorefType(CorefType.AWARD_EVENT);
-            } else if (isConcreteGeneralEvent) {
-                WECCoref.getAndSetIfNotExist(result.getTitle()).setCorefType(CorefType.CONCRETE_GENERAL_EVENT);
-            } else if (isHistoricalEvent) {
-                WECCoref.getAndSetIfNotExist(result.getTitle()).setCorefType(CorefType.HISTORICAL_EVENT);
-            } else if (isGeneralEvent || isInfoBoxEvent) {
-                WECCoref.getAndSetIfNotExist(result.getTitle()).setCorefType(CorefType.EVENT_UNK);
+            retCond = isPerson != CorefSubType.NA || isDisaster != CorefSubType.NA || isElection != CorefSubType.NA ||
+                    isCivilAttack != CorefSubType.NA || isAccidentEvent != CorefSubType.NA || isSportEvent != CorefSubType.NA ||
+                    isAwardEvent != CorefSubType.NA || isConcreteGeneralEvent != CorefSubType.NA;
+
+            if (retCond) {
+                WECCoref wecCoref = WECCoref.getAndSetIfNotExist(result.getTitle());
+                if (isPerson != CorefSubType.NA) {
+                    wecCoref.setCorefType(CorefType.PERSON);
+                    wecCoref.setCorefSubType(isPerson);
+                } else if (isDisaster != CorefSubType.NA) {
+                    wecCoref.setCorefType(CorefType.DISASTER_EVENT);
+                    wecCoref.setCorefSubType(isDisaster);
+                } else if (isElection != CorefSubType.NA) {
+                    wecCoref.setCorefType(CorefType.ELECTION_EVENT);
+                    wecCoref.setCorefSubType(isElection);
+                } else if (isCivilAttack != CorefSubType.NA) {
+                    wecCoref.setCorefType(CorefType.CIVIL_ATTACK_EVENT);
+                    wecCoref.setCorefSubType(isCivilAttack);
+                } else if (isAccidentEvent != CorefSubType.NA) {
+                    wecCoref.setCorefType(CorefType.ACCIDENT_EVENT);
+                    wecCoref.setCorefSubType(isAccidentEvent);
+                } else if (isSportEvent != CorefSubType.NA) {
+                    wecCoref.setCorefType(CorefType.SPORT_EVENT);
+                    wecCoref.setCorefSubType(isSportEvent);
+                } else if (isAwardEvent != CorefSubType.NA) {
+                    wecCoref.setCorefType(CorefType.AWARD_EVENT);
+                    wecCoref.setCorefSubType(isAwardEvent);
+                } else if (isConcreteGeneralEvent != CorefSubType.NA) {
+                    wecCoref.setCorefType(CorefType.CONCRETE_GENERAL_EVENT);
+                    wecCoref.setCorefSubType(isConcreteGeneralEvent);
+                } else if (isHistoricalEvent) {
+                    wecCoref.setCorefType(CorefType.HISTORICAL_EVENT);
+                } else {
+                    wecCoref.setCorefType(CorefType.EVENT_UNK);
+                }
             }
-
-            retCond = isPerson || isDisaster || isElection || isCivilAttack || isAccidentEvent || isSportEvent
-                    || isAwardEvent || isConcreteGeneralEvent || isGeneralEvent || isHistoricalEvent || isInfoBoxEvent;
         }
 
         return !retCond;

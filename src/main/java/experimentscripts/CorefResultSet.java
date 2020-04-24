@@ -71,6 +71,10 @@ public class CorefResultSet {
         }
     }
 
+    public String getCorefValue() {
+        return corefValue;
+    }
+
     public List<MentionResultSet> getMentions() {
         return mentions;
     }

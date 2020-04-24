@@ -4,23 +4,23 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import javafx.util.Pair;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TestUtils {
     private static Gson gson = new Gson();
 
-    public static List<Pair<String, String>> getTextAndTitle(String fileName) {
+    public static List<AbstractMap.SimpleEntry<String, String>> getTextAndTitle(String fileName) {
         InputStream inputStreamNlp = TestWECLinksExtractor.class.getClassLoader().getResourceAsStream(fileName);
         JsonArray inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonArray.class);
 
-        List<Pair<String, String>> retTexts = new ArrayList<>();
+        List<AbstractMap.SimpleEntry<String, String>> retTexts = new ArrayList<>();
         for(JsonElement jsonObj : inputJsonNlp) {
-            Pair<String, String> pair = new Pair<>(jsonObj.getAsJsonObject().get("title").getAsString(),
+            AbstractMap.SimpleEntry<String, String> pair = new AbstractMap.SimpleEntry<>(jsonObj.getAsJsonObject().get("title").getAsString(),
                     jsonObj.getAsJsonObject().get("text").getAsString());
             retTexts.add(pair);
         }

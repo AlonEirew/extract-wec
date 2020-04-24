@@ -1,5 +1,6 @@
 package wec;
 
+import data.CorefSubType;
 import data.WECMention;
 import data.WikiNewsMention;
 import edu.stanford.nlp.ling.CoreAnnotations;
@@ -188,55 +189,75 @@ public class WECLinksExtractor {
         return finalResults;
     }
 
-    public static boolean isPerson(String text) {
-        return text.contains("birth_name") || text.contains("birth_date") ||
-                text.contains("birth_place");
-    }
-
-    public static boolean isElection(String infoBox, String title) {
-        boolean titleMatch = titleNumberMatch(title);
-        Matcher linkMatcher = ELECTION_PATTERN.matcher(infoBox);
-        if (linkMatcher.find() && titleMatch) {
-            return true;
+    public static CorefSubType isPerson(String text) {
+        if(text.contains("birth_name") || text.contains("birth_date") ||
+                text.contains("birth_place")) {
+            return CorefSubType.PERSON;
         }
 
-        return false;
+        return CorefSubType.NA;
     }
 
-    public static boolean isCivilAttack(String infoBox) {
+    public static CorefSubType isElection(String infoBox, String title) {
+        boolean titleMatch = titleNumberMatch(title);
+        Matcher linkMatcher = ELECTION_PATTERN.matcher(infoBox);
+        if(linkMatcher.find() && titleMatch) {
+            return CorefSubType.ELECTION;
+        }
+
+        return CorefSubType.NA;
+    }
+
+    public static CorefSubType isCivilAttack(String infoBox) {
         final Set<String> uniqueDates = getYears(infoBox);
 
-        if (infoBox.contains("{{infoboxcivilianattack") || infoBox.contains("{{infoboxterroristattack")
-                || infoBox.contains("{{infoboxmilitaryattack") || infoBox.contains("{{infoboxcivilconflict")
-                || infoBox.contains("{{infoboxmilitaryconflict")) {
-            if (uniqueDates != null && uniqueDates.size() < 2) {
-                return true;
+        if (uniqueDates != null && uniqueDates.size() < 2) {
+            if (infoBox.contains("{{infoboxcivilianattack")) {
+                return CorefSubType.CIVILIAN_ATTACK;
+            } else if(infoBox.contains("{{infoboxterroristattack")) {
+                return CorefSubType.TERRORIST_ATTACK;
+            } else if(infoBox.contains("{{infoboxmilitaryattack")) {
+                return CorefSubType.MILITARY_ATTACK;
+            } else if(infoBox.contains("{{infoboxcivilconflict")) {
+                return CorefSubType.CIVIL_CONFLICT;
+            } else if(infoBox.contains("{{infoboxmilitaryconflict")) {
+                return CorefSubType.MILITARY_CONFLICT;
             }
         }
 
-        return false;
+        return CorefSubType.NA;
     }
 
-    public static boolean isAccident(String infoBox) {
-        if (infoBox.contains("{{infoboxaircraftoccurrence") || infoBox.contains("{{infoboxairlinerincident") ||
-                infoBox.contains("{{infoboxrailaccident") || infoBox.contains("{{infoboxairlineraccident") ||
-                infoBox.contains("{{infoboxbusaccident") || infoBox.contains("{{infoboxaircraftcrash")
-                || infoBox.contains("{{infoboxaircraftaccident") || infoBox.contains("{{infoboxaircraftincident")) {
-            return true;
+    public static CorefSubType isAccident(String infoBox) {
+        if(infoBox.contains("{{infoboxairlinerincident") || infoBox.contains("{{infoboxairlineraccident") ||
+                infoBox.contains("{{infoboxaircraftcrash") || infoBox.contains("{{infoboxaircraftaccident") ||
+                infoBox.contains("{{infoboxaircraftincident") || infoBox.contains("{{infoboxaircraftoccurrence")) {
+            return CorefSubType.AIRLINE_ACCIDENT;
+        } else if(infoBox.contains("{{infoboxrailaccident")) {
+            return CorefSubType.RAIL_ACCIDENT;
+        } else if(infoBox.contains("{{infoboxbusaccident")) {
+            return CorefSubType.BUS_ACCIDENT;
         }
 
-        return false;
+        return CorefSubType.NA;
     }
 
-    public static boolean isDisaster(String infoBox) {
-        if (infoBox.contains("{{infoboxearthquake") || infoBox.contains("{{infoboxhurricane")
-                || infoBox.contains("{{infoboxwildfire") || infoBox.contains("infoboxstorm/sandbox") ||
-                infoBox.contains("infoboxflood") || infoBox.contains("infoboxoilspill")
-                || infoBox.contains("infoboxstorm") || infoBox.contains("infoboxeruption")) {
-            return true;
+    public static CorefSubType isDisaster(String infoBox) {
+        if (infoBox.contains("{{infoboxearthquake")) {
+            return CorefSubType.EARTHQUAKE;
+        } else if(infoBox.contains("{{infoboxwildfire")) {
+            return CorefSubType.FIRE;
+        } else if(infoBox.contains("infoboxstorm/sandbox") || infoBox.contains("infoboxstorm") || infoBox.contains("{{infoboxhurricane")) {
+            return CorefSubType.STORM;
+        } else if(infoBox.contains("infoboxflood")) {
+            return CorefSubType.FLOOD;
+        } else if(infoBox.contains("infoboxoilspill")) {
+            return CorefSubType.OIL_SPILL;
+        } else if(infoBox.contains("infoboxeruption")) {
+            return CorefSubType.ERUPTION;
         }
 
-        return false;
+        return CorefSubType.NA;
     }
 
     public static boolean isGeneralEvent(String infoBox) {
@@ -255,16 +276,29 @@ public class WECLinksExtractor {
         return false;
     }
 
-    public static boolean isConcreteGeneralEvent(String infoBox, String title) {
-
+    public static CorefSubType isConcreteGeneralEvent(String infoBox, String title) {
+//        solareclipse|newsevent|concert|weaponstest|explosivetest|summit|convention|conference|summitmeeting|festival
         Matcher concreteMatcher = CONCRETE_EVENT.matcher(infoBox);
         boolean titleMatch = titleNumberMatch(title);
         final Set<String> years = getYears(infoBox);
         if (concreteMatcher.find() && (titleMatch || (years != null && years.size() < 2))) {
-            return true;
+            if(concreteMatcher.group(1).contains("solareclipse")) {
+                return CorefSubType.SOLAR_ECLIPSE;
+            } else if(concreteMatcher.group(1).contains("newsevent")) {
+                return CorefSubType.NEWS_EVENT;
+            } else if(concreteMatcher.group(1).contains("concert")) {
+                return CorefSubType.CONCERT;
+            } else if(concreteMatcher.group(1).contains("weaponstest") || concreteMatcher.group(1).contains("explosivetest")) {
+                return CorefSubType.WEAPONS_TEST;
+            } else if(concreteMatcher.group(1).contains("summit") || concreteMatcher.group(1).contains("convention") ||
+                    concreteMatcher.group(1).contains("conference") || concreteMatcher.group(1).contains("summitmeeting")) {
+                return CorefSubType.MEETING;
+            } else if(concreteMatcher.group(1).contains("festival")) {
+                return CorefSubType.FESTIVAL;
+            }
         }
 
-        return false;
+        return CorefSubType.NA;
     }
 
     public static boolean isSmallCompanyEvent(String infoBox) {
@@ -288,24 +322,86 @@ public class WECLinksExtractor {
         return false;
     }
 
-    public static boolean isSportEvent(String infoBox, String title) {
+    public static CorefSubType isSportEvent(String infoBox, String title) {
         Matcher linkMatcher = SPORT_PATTERN.matcher(infoBox);
         boolean titleMatch = titleNumberMatch(title);
         if (linkMatcher.find() && titleMatch) {
-            return true;
+            if(linkMatcher.group(1).contains("halftimeshow")) {
+                return CorefSubType.HALFTIME_SHOW;
+            } else if(linkMatcher.group(1).contains("match")) {
+                return CorefSubType.MATCH;
+            } else if(linkMatcher.group(1).contains("draft")) {
+                return CorefSubType.DRAFT;
+            } else if(linkMatcher.group(1).contains("racereport") || linkMatcher.group(1).contains("indy500") ||
+                    linkMatcher.group(1).contains("race") || linkMatcher.group(1).contains("daytona500") ||
+                    linkMatcher.group(1).contains("grandprixevent")) {
+                return CorefSubType.RACE;
+            } else if(linkMatcher.group(1).contains("championships")) {
+                return CorefSubType.CHAMPIONSHIPS;
+            } else if(linkMatcher.group(1).contains("athleticscompetition")) {
+                return CorefSubType.ATHLETICS;
+            } else if(linkMatcher.group(1).contains("sailingcompetition")) {
+                return CorefSubType.SAILING;
+            } else if(linkMatcher.group(1).contains("paralympicevent")) {
+                return CorefSubType.PARALYMPIC;
+            } else if(linkMatcher.group(1).contains("tennisevent") || linkMatcher.group(1).contains("grandslamevent")) {
+                return CorefSubType.TENNIS;
+            } else if(linkMatcher.group(1).contains("swimmingevent")) {
+                return CorefSubType.SWIMMING;
+            } else if(linkMatcher.group(1).contains("nflchamp") || linkMatcher.group(1).contains("aflchamp") ||
+                    linkMatcher.group(1).contains("nflgame")) {
+                return CorefSubType.FOOTBALL;
+            } else if(linkMatcher.group(1).contains("ncaabasketballsinglegame") || linkMatcher.group(1).contains("basketballgame") ||
+                    linkMatcher.group(1).contains("all-stargame")) {
+                return CorefSubType.BASKETBALL;
+            } else if(linkMatcher.group(1).contains("wrestlingevent") || linkMatcher.group(1).contains("mmaevent")) {
+                return CorefSubType.WRESTLING;
+            } else if(linkMatcher.group(1).contains("hockeygame")) {
+                return CorefSubType.HOCKEY;
+            } else if(linkMatcher.group(1).contains("frcgame")) {
+                return CorefSubType.FRC;
+            } else if(linkMatcher.group(1).contains("swcevent")) {
+                return CorefSubType.SWC;
+            } else if(linkMatcher.group(1).contains("olympicevent")) {
+                return CorefSubType.OLYMPIC;
+            } else if(linkMatcher.group(1).contains("competitionevent")) {
+                return CorefSubType.COMPETITION;
+            } else if(linkMatcher.group(1).contains("tournamentevent")) {
+                return CorefSubType.TOURNAMENT;
+            } else if(linkMatcher.group(1).contains("gamesevent")) {
+                return CorefSubType.GAMES;
+            } else if(linkMatcher.group(1).contains("sportevent")) {
+                return CorefSubType.SPORT_EVENT;
+            } else if(linkMatcher.group(1).contains("cupfinal")) {
+                return CorefSubType.CUP_FINAL;
+            } else if(linkMatcher.group(1).contains("baseballgame")) {
+                return CorefSubType.BASEBALL;
+            } else if(linkMatcher.group(1).contains("singlegame")) {
+                return CorefSubType.SINGLE_GAME;
+            } else if(linkMatcher.group(1).contains("yearlygame")) {
+                return CorefSubType.SINGLE_GAME;
+            } else if(linkMatcher.group(1).contains("outdoorgame")) {
+                return CorefSubType.SINGLE_GAME;
+            }
         }
 
-        return false;
+        return CorefSubType.NA;
     }
 
-    public static boolean isAwardEvent(String infoBox, String title) {
+    public static CorefSubType isAwardEvent(String infoBox, String title) {
         boolean titleMatch = titleNumberMatch(title);
         Matcher awardMatcher = AWARD_PATTERN.matcher(infoBox);
         if (awardMatcher.find() && titleMatch) {
-            return true;
+            if(awardMatcher.group(1).contains("award") || awardMatcher.group(1).contains("awards")) {
+                return CorefSubType.AWARD;
+            } else if(awardMatcher.group(1).contains("contest")) {
+                return CorefSubType.CONTEST;
+            } else if(awardMatcher.group(1).contains("beautypageant")) {
+                return CorefSubType.BEAUTY_PAGEANT;
+            }
         }
 
-        return false;
+        return CorefSubType.NA;
     }
 
     public static boolean hasDateAndLocation(String infoBox) {
