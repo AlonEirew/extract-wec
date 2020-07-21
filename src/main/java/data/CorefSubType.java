@@ -53,4 +53,7 @@ public enum CorefSubType {
     AWARD, //49
     CONTEST, //50
     BEAUTY_PAGEANT, //51
+    HISTORICAL, //52
+    EVENT, //53
+    COMPANY
 }

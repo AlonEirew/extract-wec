@@ -11,5 +11,6 @@ public enum CorefType {
     AWARD_EVENT, //7
     CONCRETE_GENERAL_EVENT, //8
     HISTORICAL_EVENT, //9
-    EVENT_UNK //10
+    EVENT_UNK, //10
+    COMPANY //11
 }

@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 public class GoogleWikiLinksExpr {
     static Gson gson = new GsonBuilder().setPrettyPrinting().create();
     public static void main(String[] args) throws IOException {
-        SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections("jdbc:sqlite:/Users/aeirew/workspace/DataBase/EnWikiLinks_v9.db"));
+        SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections("jdbc:sqlite:/Users/aeirew/workspace/DataBase/EnWikiLinks_v11.db"));
         ExecutorService pool = Executors.newFixedThreadPool(8);
         Map<String, Map<String, CorefResultSet>> allClusters = new HashMap<>();
         Map<String, CorefResultSet> corefByText = sqlApi.getAllCorefByText(WECCoref.TABLE_COREF);
@@ -50,8 +50,8 @@ public class GoogleWikiLinksExpr {
 
         pool.shutdown();
         Map<String, CorefResultSet> mergedLinks = mergeFiles(allClusters);
-        printStats(mergedLinks, "/Users/aeirew/workspace/corpus/wiki/original/wikilinks_full.json",
-                "/Users/aeirew/workspace/corpus/wiki/original/wikilinks_3stem.json");
+        printStats(mergedLinks, "/Users/aeirew/workspace/cross-doc-coref/resources/wikilinks/wikilinks_full.json",
+                "/Users/aeirew/workspace/cross-doc-coref/resources/wikilinks/wikilinks_3stem.json");
     }
 
     private static void printStats(Map<String, CorefResultSet> mergedLinks, String outputFileFull, String outputFileStem) throws IOException {
