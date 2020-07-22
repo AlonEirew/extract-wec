@@ -8,8 +8,7 @@ import data.WECCoref;
 import java.util.List;
 
 public class PersonOrEventFilter implements ICorefFilter {
-    private List<AInfoboxExtractor> extractors;
-
+    private final List<AInfoboxExtractor> extractors;
 
     public PersonOrEventFilter(List<AInfoboxExtractor> extractors) {
         this.extractors = extractors;

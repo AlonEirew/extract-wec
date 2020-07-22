@@ -11,8 +11,8 @@ import java.util.regex.Pattern;
 
 public abstract class AInfoboxExtractor {
 
-    private CorefSubType[] subTypesArray;
-    private CorefType corefType;
+    final private CorefSubType[] subTypesArray;
+    final private CorefType corefType;
 
     public AInfoboxExtractor(CorefSubType[] subTypesArray, CorefType type) {
         this.subTypesArray = subTypesArray;
@@ -65,7 +65,7 @@ public abstract class AInfoboxExtractor {
         return uniqueDates;
     }
 
-    protected static boolean hasDateAndLocation(String infoBox) {
+    protected boolean hasDateAndLocation(String infoBox) {
         if (infoBox != null) {
             String dateLine = null;
             String locationLine = null;

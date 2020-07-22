@@ -13,8 +13,13 @@ import utils.ExecutorServiceFactory;
 import workers.ParseAndExtractWorkersFactory;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class WikiToWECMain {
@@ -26,33 +31,33 @@ public class WikiToWECMain {
         final String property = System.getProperty("user.dir");
         LOGGER.info("Working directory=" + property);
 
-        Map<String, String> config = GSON.fromJson(FileUtils.readFileToString(
-                new File(property + "/config.json"), "UTF-8"),
-                Map.class);
+        Configuration config = GSON.fromJson(new FileReader(property + "/config.json"), Configuration.class);
 
-        final int pool_size = Integer.parseInt(config.get("pool_size"));
+        final int pool_size = Integer.parseInt(config.getPoolSize());
         if(pool_size > 0) {
             ExecutorServiceFactory.initExecutorService(pool_size);
         } else {
             ExecutorServiceFactory.initExecutorService();
         }
 
-        SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections(config.get("sql_connection_url")));
+        SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections(config.getSqlConnectionUrl()));
         long start = System.currentTimeMillis();
-        ElasticQueryApi elasticApi = new ElasticQueryApi(config.get("elastic_wiki_index"),
-                Integer.parseInt(config.get("elastic_search_interval")),
-                Integer.parseInt(config.get("multi_request_interval")),
-                config.get("elastic_host"),
-                Integer.parseInt(config.get("elastic_port")));
+        ElasticQueryApi elasticApi = new ElasticQueryApi(config.getElasticWikiIndex(),
+                Integer.parseInt(config.getElasticSearchInterval()),
+                Integer.parseInt(config.getMultiRequestInterval()),
+                config.getElasticHost(),
+                Integer.parseInt(config.getElasticPort()));
         try {
-            CreateWEC createWEC = new CreateWEC(elasticApi, new ParseAndExtractWorkersFactory(sqlApi, elasticApi));
+
+            CreateWEC createWEC = new CreateWEC(elasticApi, new ParseAndExtractWorkersFactory(sqlApi, elasticApi,
+                    getPersonOrEventFilter(config.getUseExtractors())));
 
             if (!createSQLWikiLinksTables(sqlApi)) {
                 LOGGER.error("Failed to create Database and tables, finishing process");
                 return;
             }
 
-            createWEC.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
+            createWEC.readAllWikiPagesAndProcess(Integer.parseInt(config.getTotalAmountToExtract()));
         } catch (Exception ex) {
             LOGGER.error("Could not start process", ex);
         } finally {
@@ -70,5 +75,18 @@ public class WikiToWECMain {
         LOGGER.info("Creating SQL Tables");
         return sqlApi.createTable(new WECMention()) &&
                 sqlApi.createTable(WECCoref.getAndSetIfNotExist("####TEMP####"));
+    }
+
+    public static PersonOrEventFilter getPersonOrEventFilter(List<String> extractorClasses) throws ClassNotFoundException,
+            IllegalAccessException, InvocationTargetException, InstantiationException {
+        List<AInfoboxExtractor> extractors = new ArrayList<>();
+
+        for(String className : extractorClasses) {
+            Constructor<?>[] constructors = Class.forName(className).getConstructors();
+            AInfoboxExtractor extractor = (AInfoboxExtractor) constructors[0].newInstance();
+            extractors.add(extractor);
+        }
+
+        return new PersonOrEventFilter(extractors);
     }
 }

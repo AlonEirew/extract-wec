@@ -5,16 +5,16 @@ import data.WECMention;
 import org.junit.Assert;
 import org.junit.Test;
 import wec.PersonOrEventFilter;
+import wec.WikiToWECMain;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 
 public class TestParseAndExtractMentionWorker {
 
     @Test
-    public void testFilterUnwantedMentions() {
+    public void testFilterUnwantedMentions() throws ClassNotFoundException, InvocationTargetException,
+            InstantiationException, IllegalAccessException {
         WECMention mention1 = new WECMention();
         WECMention mention2 = new WECMention();
         WECMention mention3 = new WECMention();
@@ -47,7 +47,15 @@ public class TestParseAndExtractMentionWorker {
         crs4.setWasAlreadyRetrived(false);
         mention4.setCorefChain(crs4);
 
-        ParseAndExtractMentionsWorker worker = new ParseAndExtractMentionsWorker(mentions, new PersonOrEventFilter());
+        String[] extractors = {
+                "wec.extractors.DisasterInfoboxExtractor",
+                "wec.extractors.AttackInfoboxExtractor",
+                "wec.extractors.AccidentInfoboxExtractor",
+                "wec.extractors.AwardInfoboxExtractor",
+                "wec.extractors.GeneralEventInfoboxExtractor"
+        };
+        ParseAndExtractMentionsWorker worker = new ParseAndExtractMentionsWorker(mentions,
+                WikiToWECMain.getPersonOrEventFilter(Arrays.asList(extractors)));
 
         Map<String, String> testMap = new HashMap<>();
         testMap.put("TEST3", "{{infoboxearthquake");

@@ -7,33 +7,21 @@ import wec.AInfoboxExtractor;
 import wec.PersonOrEventFilter;
 import wec.extractors.*;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ParseAndExtractWorkersFactory implements IWorkerFactory {
 
-    private SQLQueryApi sqlApi;
-    private ElasticQueryApi elasticApi;
-    private PersonOrEventFilter filter;
+    private final SQLQueryApi sqlApi;
+    private final ElasticQueryApi elasticApi;
+    private final PersonOrEventFilter filter;
 
-    public ParseAndExtractWorkersFactory(SQLQueryApi sqlApi, ElasticQueryApi elasticApi) {
+    public ParseAndExtractWorkersFactory(SQLQueryApi sqlApi, ElasticQueryApi elasticApi, PersonOrEventFilter filter) {
         this.sqlApi = sqlApi;
         this.elasticApi = elasticApi;
-        List<AInfoboxExtractor> extractors = new ArrayList<>();
-
-        DisasterInfoboxExtractor disasterInfoboxExtractor = new DisasterInfoboxExtractor();
-        AttackInfoboxExtractor attackInfoboxExtractor = new AttackInfoboxExtractor();
-        AccidentInfoboxExtractor accidentInfoboxExtractor = new AccidentInfoboxExtractor();
-        AwardInfoboxExtractor awardInfoboxExtractor = new AwardInfoboxExtractor();
-        GeneralEventInfoboxExtractor generalEventInfoboxExtractor = new GeneralEventInfoboxExtractor();
-
-        extractors.add(disasterInfoboxExtractor);
-        extractors.add(attackInfoboxExtractor);
-        extractors.add(accidentInfoboxExtractor);
-        extractors.add(awardInfoboxExtractor);
-        extractors.add(generalEventInfoboxExtractor);
-
-        this.filter = new PersonOrEventFilter(extractors);
+        this.filter = filter;
     }
 
     @Override
