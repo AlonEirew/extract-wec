@@ -20,6 +20,8 @@ public class ElectionInfoboxExtractor extends AInfoboxExtractor {
     @Override
     public CorefSubType extract(String infobox, String title) {
         boolean titleMatch = titleNumberMatch(title);
+
+        infobox = infobox.toLowerCase().replaceAll(" ", "");
         Matcher linkMatcher = ELECTION_PATTERN.matcher(infobox);
         if(linkMatcher.find() && titleMatch) {
             return CorefSubType.ELECTION;

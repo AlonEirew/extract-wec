@@ -3,7 +3,6 @@ package wec;
 import com.google.gson.Gson;
 import data.WECCoref;
 import data.WECMention;
-import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
@@ -12,7 +11,6 @@ import persistence.SQLiteConnections;
 import utils.ExecutorServiceFactory;
 import workers.ParseAndExtractWorkersFactory;
 
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -20,7 +18,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class WikiToWECMain {
     private final static Logger LOGGER = LogManager.getLogger(WikiToWECMain.class);
@@ -42,12 +39,7 @@ public class WikiToWECMain {
 
         SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections(config.getSqlConnectionUrl()));
         long start = System.currentTimeMillis();
-        ElasticQueryApi elasticApi = new ElasticQueryApi(config.getElasticWikiIndex(),
-                Integer.parseInt(config.getElasticSearchInterval()),
-                Integer.parseInt(config.getMultiRequestInterval()),
-                config.getElasticHost(),
-                Integer.parseInt(config.getElasticPort()));
-        try {
+        try (ElasticQueryApi elasticApi = new ElasticQueryApi(config)) {
 
             CreateWEC createWEC = new CreateWEC(elasticApi, new ParseAndExtractWorkersFactory(sqlApi, elasticApi,
                     getPersonOrEventFilter(config.getUseExtractors())));
@@ -57,11 +49,10 @@ public class WikiToWECMain {
                 return;
             }
 
-            createWEC.readAllWikiPagesAndProcess(Integer.parseInt(config.getTotalAmountToExtract()));
+            createWEC.readAllWikiPagesAndProcess(config.getTotalAmountToExtract());
         } catch (Exception ex) {
             LOGGER.error("Could not start process", ex);
         } finally {
-            elasticApi.close();
             ExecutorServiceFactory.closeService();
             sqlApi.persistAllMentions();
             sqlApi.persistAllCorefs();

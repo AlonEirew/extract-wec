@@ -13,6 +13,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import wec.Configuration;
 import wec.WECLinksExtractor;
 import workers.ParseAndExtractMentionsWorker;
 
@@ -41,6 +42,21 @@ public class ElasticQueryApi implements Closeable {
         this.elasticClient = new RestHighLevelClient(
                 RestClient.builder(new HttpHost(host,
                         port, "http")).setRequestConfigCallback(
+                        requestConfigBuilder -> requestConfigBuilder
+                                .setConnectionRequestTimeout(60*60*10000)
+                                .setConnectTimeout(60*60*10000)
+                                .setSocketTimeout(60*60*10000))
+                        .setMaxRetryTimeoutMillis(60*60*10000));
+    }
+
+    public ElasticQueryApi(Configuration config) {
+        this.elasticIndex = config.getElasticWikiIndex();
+        this.queryInterval = config.getElasticSearchInterval();
+        this.multiRequestInterval = config.getMultiRequestInterval();
+
+        this.elasticClient = new RestHighLevelClient(
+                RestClient.builder(new HttpHost(config.getElasticHost(),
+                        config.getElasticPort(), "http")).setRequestConfigCallback(
                         requestConfigBuilder -> requestConfigBuilder
                                 .setConnectionRequestTimeout(60*60*10000)
                                 .setConnectTimeout(60*60*10000)

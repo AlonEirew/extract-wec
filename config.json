@@ -1,12 +1,12 @@
 {
   "poolSize": "2",
   "elasticHost": "localhost",
-  "elasticPort": "9200",
+  "elasticPort": 9200,
   "elasticWikiIndex": "enwiki_v3",
   "elasticWikinewsIndex": "wikinews_v1",
-  "multiRequestInterval" : "100",
-  "elasticSearchInterval" : "100",
-  "totalAmountToExtract" : "10000",
+  "multiRequestInterval" : 100,
+  "elasticSearchInterval" : 100,
+  "totalAmountToExtract" : 1000000,
   "sqlConnectionUrl": "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksExperiment.db",
   "useExtractors" : [
     "wec.extractors.DisasterInfoboxExtractor",

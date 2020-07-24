@@ -14,6 +14,7 @@ public class PersonInfoboxExtractor extends AInfoboxExtractor {
 
     @Override
     public CorefSubType extract(String infobox, String title) {
+        infobox = infobox.toLowerCase().replaceAll(" ", "");
         if(infobox.contains("birth_name") || infobox.contains("birth_date") ||
                 infobox.contains("birth_place")) {
             return CorefSubType.PERSON;

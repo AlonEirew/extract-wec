@@ -5,12 +5,12 @@ import java.util.List;
 public class Configuration {
     private String poolSize;
     private String elasticHost;
-    private String elasticPort;
+    private int elasticPort;
     private String elasticWikiIndex;
     private String elasticWikinewsIndex;
-    private String multiRequestInterval;
-    private String elasticSearchInterval;
-    private String totalAmountToExtract;
+    private int multiRequestInterval;
+    private int elasticSearchInterval;
+    private int totalAmountToExtract;
     private String sqlConnectionUrl;
     private List<String> useExtractors;
 
@@ -30,11 +30,11 @@ public class Configuration {
         this.elasticHost = elasticHost;
     }
 
-    public String getElasticPort() {
+    public int getElasticPort() {
         return elasticPort;
     }
 
-    public void setElasticPort(String elasticPort) {
+    public void setElasticPort(int elasticPort) {
         this.elasticPort = elasticPort;
     }
 
@@ -54,28 +54,31 @@ public class Configuration {
         this.elasticWikinewsIndex = elasticWikinewsIndex;
     }
 
-    public String getMultiRequestInterval() {
+    public int getMultiRequestInterval() {
         return multiRequestInterval;
     }
 
-    public void setMultiRequestInterval(String multiRequestInterval) {
+    public void setMultiRequestInterval(int multiRequestInterval) {
         this.multiRequestInterval = multiRequestInterval;
     }
 
-    public String getElasticSearchInterval() {
+    public int getElasticSearchInterval() {
         return elasticSearchInterval;
     }
 
-    public void setElasticSearchInterval(String elasticSearchInterval) {
+    public void setElasticSearchInterval(int elasticSearchInterval) {
         this.elasticSearchInterval = elasticSearchInterval;
     }
 
-    public String getTotalAmountToExtract() {
+    public int getTotalAmountToExtract() {
         return totalAmountToExtract;
     }
 
-    public void setTotalAmountToExtract(String totalAmountToExtract) {
+    public void setTotalAmountToExtract(int totalAmountToExtract) {
         this.totalAmountToExtract = totalAmountToExtract;
+
+        if(this.totalAmountToExtract == -1)
+            this.totalAmountToExtract = Integer.MAX_VALUE;
     }
 
     public String getSqlConnectionUrl() {

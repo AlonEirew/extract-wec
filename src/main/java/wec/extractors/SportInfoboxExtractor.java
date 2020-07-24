@@ -29,7 +29,8 @@ public class SportInfoboxExtractor extends AInfoboxExtractor {
     }
 
     @Override
-    protected CorefSubType extract(String infobox, String title) {
+    public CorefSubType extract(String infobox, String title) {
+        infobox = infobox.toLowerCase().replaceAll(" ", "");
         Matcher linkMatcher = SPORT_PATTERN.matcher(infobox);
         boolean titleMatch = titleNumberMatch(title);
         if (linkMatcher.find() && titleMatch) {

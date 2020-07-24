@@ -4,11 +4,9 @@ import data.CorefSubType;
 import data.CorefType;
 import wec.AInfoboxExtractor;
 
-import java.util.Set;
-
 public class AttackInfoboxExtractor extends AInfoboxExtractor {
 
-    private static CorefSubType[] subTypes = {CorefSubType.CIVILIAN_ATTACK, CorefSubType.TERRORIST_ATTACK,
+    private static final CorefSubType[] subTypes = {CorefSubType.CIVILIAN_ATTACK, CorefSubType.TERRORIST_ATTACK,
             CorefSubType.MILITARY_ATTACK, CorefSubType.CIVIL_CONFLICT, CorefSubType.MILITARY_CONFLICT};
 
     public AttackInfoboxExtractor() {
@@ -16,23 +14,23 @@ public class AttackInfoboxExtractor extends AInfoboxExtractor {
     }
 
     @Override
-    protected CorefSubType extract(String infobox, String title) {
-        final Set<String> uniqueDates = this.getYears(infobox);
+    public CorefSubType extract(String infobox, String title) {
+        final boolean isSingleDay = this.isSpanSingleMonth(infobox);
 
-//        if (uniqueDates != null && uniqueDates.size() < 2) {
-        if (infobox.contains("{{infoboxcivilianattack")) {
-            return CorefSubType.CIVILIAN_ATTACK;
-        } else if(infobox.contains("{{infoboxterroristattack")) {
-            return CorefSubType.TERRORIST_ATTACK;
+        String infoboxLow = infobox.toLowerCase().replaceAll(" ", "");
+        if(isSingleDay) {
+            if (infoboxLow.contains("{{infoboxcivilianattack")) {
+                return CorefSubType.CIVILIAN_ATTACK;
+            } else if (infoboxLow.contains("{{infoboxterroristattack")) {
+                return CorefSubType.TERRORIST_ATTACK;
+            } else if (infoboxLow.contains("{{infoboxmilitaryattack")) {
+                return CorefSubType.MILITARY_ATTACK; // REMOVE IF NOT TIME
+            } else if (infoboxLow.contains("{{infoboxcivilconflict")) {
+                return CorefSubType.CIVIL_CONFLICT; // REMOVE IF NOT TIME
+            } else if (infoboxLow.contains("{{infoboxmilitaryconflict")) {
+                return CorefSubType.MILITARY_CONFLICT; // REMOVE IF NOT TIME
+            }
         }
-//            else if(infoBox.contains("{{infoboxmilitaryattack")) {
-//                return CorefSubType.MILITARY_ATTACK;
-//            } else if(infoBox.contains("{{infoboxcivilconflict")) {
-//                return CorefSubType.CIVIL_CONFLICT;
-//            } else if(infoBox.contains("{{infoboxmilitaryconflict")) {
-//                return CorefSubType.MILITARY_CONFLICT;
-//            }
-//        }
 
         return CorefSubType.NA;
     }

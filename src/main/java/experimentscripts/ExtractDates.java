@@ -7,13 +7,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
 import utils.ExecutorServiceFactory;
+import wec.Configuration;
 import wec.CreateWEC;
 import workers.ReadDateWorkerFactory;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -26,21 +27,14 @@ public class ExtractDates {
         final String property = System.getProperty("user.dir");
         LOGGER.info("Working directory=" + property);
 
-        Map<String, String> config = GSON.fromJson(FileUtils.readFileToString(
-                new File(property + "/config.json"), "UTF-8"),
-                Map.class);
+        Configuration config = GSON.fromJson(new FileReader(property + "/config.json"), Configuration.class);
 
         ExecutorServiceFactory.initExecutorService();
-        ElasticQueryApi elasticApi = new ElasticQueryApi(config.get("elastic_wiki_index"),
-                Integer.parseInt(config.get("elastic_search_interval")),
-                Integer.parseInt(config.get("multi_request_interval")),
-                config.get("elastic_host"),
-                Integer.parseInt(config.get("elastic_port")));
 
-        try {
+        try (ElasticQueryApi elasticApi = new ElasticQueryApi(config)) {
             ReadDateWorkerFactory readDateWorkerFactory = new ReadDateWorkerFactory();
             CreateWEC createWEC = new CreateWEC(elasticApi, readDateWorkerFactory);
-            createWEC.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
+            createWEC.readAllWikiPagesAndProcess(config.getTotalAmountToExtract());
             final List<String> datesSchemas = readDateWorkerFactory.getDatesSchemas();
 
             LOGGER.info(datesSchemas.size());
@@ -48,7 +42,6 @@ public class ExtractDates {
 
             FileUtils.writeLines(new File(property + "/output/datesParse.txt"), datesSchemas, "\n");
         } finally {
-            elasticApi.close();
             ExecutorServiceFactory.closeService();
             long end = System.currentTimeMillis();
             LOGGER.info("Process Done, took-" + (end - start) + "ms to run");

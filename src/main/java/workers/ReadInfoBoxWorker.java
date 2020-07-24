@@ -12,10 +12,6 @@ public class ReadInfoBoxWorker extends AWorker {
 
     private Map<String, Set<String>> infoBoxes;
 
-    public ReadInfoBoxWorker() {
-
-    }
-
     public ReadInfoBoxWorker(List<RawElasticResult> rawElasticResults, Map<String, Set<String>> infoBoxes) {
         super(rawElasticResults);
         this.infoBoxes = infoBoxes;
@@ -24,7 +20,7 @@ public class ReadInfoBoxWorker extends AWorker {
     @Override
     public void run() {
         for(RawElasticResult rawResult : this.rawElasticResults) {
-            String infoBox = WECLinksExtractor.extractPageInfoBox(rawResult.getText());
+            String infoBox = WECLinksExtractor.extractPageInfoBox(rawResult.getText(), true);
             if(infoBox != null && !infoBox.isEmpty()) {
                 infoBox = toReadableString(infoBox);
 

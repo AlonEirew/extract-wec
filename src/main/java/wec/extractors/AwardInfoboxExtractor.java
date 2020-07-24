@@ -19,8 +19,9 @@ public class AwardInfoboxExtractor extends AInfoboxExtractor {
     }
 
     @Override
-    protected CorefSubType extract(String infobox, String title) {
+    public CorefSubType extract(String infobox, String title) {
         boolean titleMatch = this.titleNumberMatch(title);
+        infobox = infobox.toLowerCase().replaceAll(" ", "");
         Matcher awardMatcher = AWARD_PATTERN.matcher(infobox);
         if (awardMatcher.find() && titleMatch) {
             if(awardMatcher.group(1).contains("award") || awardMatcher.group(1).contains("awards")) {

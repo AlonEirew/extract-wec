@@ -4,7 +4,6 @@ import data.CorefSubType;
 import data.CorefType;
 import wec.AInfoboxExtractor;
 
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,11 +20,12 @@ public class GeneralEventInfoboxExtractor extends AInfoboxExtractor {
     }
 
     @Override
-    protected CorefSubType extract(String infobox, String title) {
+    public CorefSubType extract(String infobox, String title) {
+        infobox = infobox.toLowerCase().replaceAll(" ", "");
         Matcher concreteMatcher = CONCRETE_EVENT.matcher(infobox);
         boolean titleMatch = titleNumberMatch(title);
-        final Set<String> years = getYears(infobox);
-        if (concreteMatcher.find() && (titleMatch || (years != null && years.size() < 2))) {
+        final boolean isSingleDay = isSpanSingleMonth(infobox);
+        if (concreteMatcher.find() && (titleMatch || isSingleDay)) {
             if(concreteMatcher.group(1).contains("solareclipse")) {
                 return CorefSubType.SOLAR_ECLIPSE;
             } else if(concreteMatcher.group(1).contains("newsevent")) {

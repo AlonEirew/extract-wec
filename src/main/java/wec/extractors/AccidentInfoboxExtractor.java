@@ -13,7 +13,8 @@ public class AccidentInfoboxExtractor extends AInfoboxExtractor {
     }
 
     @Override
-    protected CorefSubType extract(String infobox, String title) {
+    public CorefSubType extract(String infobox, String title) {
+        infobox = infobox.toLowerCase().replaceAll(" ", "");
         if(infobox.contains("{{infoboxairlinerincident") || infobox.contains("{{infoboxairlineraccident") ||
                 infobox.contains("{{infoboxaircraftcrash") || infobox.contains("{{infoboxaircraftaccident") ||
                 infobox.contains("{{infoboxaircraftincident") || infobox.contains("{{infoboxaircraftoccurrence")) {

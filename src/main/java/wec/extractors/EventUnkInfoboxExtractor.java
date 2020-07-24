@@ -13,8 +13,9 @@ public class EventUnkInfoboxExtractor extends AInfoboxExtractor {
     }
 
     @Override
-    protected CorefSubType extract(String infobox, String title) {
-        if(this.isExtracted(infobox, title, "{{infoboxevent")) {
+    public CorefSubType extract(String infobox, String title) {
+        infobox = infobox.toLowerCase().replaceAll(" ", "");
+        if(this.isExtracted(infobox, "{{infoboxevent")) {
             return CorefSubType.EVENT;
         }
 

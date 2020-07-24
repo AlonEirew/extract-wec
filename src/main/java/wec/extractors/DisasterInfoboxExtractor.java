@@ -14,7 +14,8 @@ public class DisasterInfoboxExtractor extends AInfoboxExtractor {
     }
 
     @Override
-    protected CorefSubType extract(String infobox, String title) {
+    public CorefSubType extract(String infobox, String title) {
+        infobox = infobox.toLowerCase().replaceAll(" ", "");
         if (infobox.contains("{{infoboxearthquake")) {
             return CorefSubType.EARTHQUAKE;
         } else if(infobox.contains("{{infoboxwildfire")) {

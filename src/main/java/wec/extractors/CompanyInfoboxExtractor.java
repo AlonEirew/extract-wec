@@ -15,7 +15,8 @@ public class CompanyInfoboxExtractor extends AInfoboxExtractor {
     }
 
     @Override
-    protected CorefSubType extract(String infobox, String title) {
+    public CorefSubType extract(String infobox, String title) {
+        infobox = infobox.toLowerCase().replaceAll(" ", "");
         if (infobox.contains("{{infoboxcompany")) {
             for (String line : infobox.split("\n")) {
                 if (line.startsWith("|num_employees=")) {

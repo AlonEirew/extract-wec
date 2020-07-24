@@ -13,8 +13,9 @@ public class HistoricalEventInfoboxExtractor extends AInfoboxExtractor {
     }
 
     @Override
-    protected CorefSubType extract(String infobox, String title) {
-        if(super.isExtracted(infobox, title, "{{infoboxhistoricalevent")) {
+    public CorefSubType extract(String infobox, String title) {
+        infobox = infobox.toLowerCase().replaceAll(" ", "");
+        if(super.isExtracted(infobox, "{{infoboxhistoricalevent")) {
             return CorefSubType.HISTORICAL;
         }
 

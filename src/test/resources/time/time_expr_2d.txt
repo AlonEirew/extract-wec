@@ -1,0 +1,70 @@
+date = Beginning {{start date and age|1977|03|09}}
+date = {{start and end dates|df=yes|1902|10|11|1902|10|20}}
+date = {{start and end date|1942|09|12|1942|09|24|df=y}}
+date = {{Start date|df=yes|2013|08|27}} – {{End date|2013|9|17|df=yes}}
+date = {{Start date|2014|06|15|df=yes}}-<br />{{End date|2014|06|17|df=yes}}
+date=3 October 2015}}</ref> Ethiopian cavalry at the [[Battle of Adwa]]; Italian prisoners are freed following the end of hostilities; [[Menelik II]] at Adwa; [[Makonnen Wolde Mikael|''Ras'' Makonnen]] leading Ethiopian troops in the [[Battle of Amba Alagi (1895)|Battle of Amba Alagi]] | date = 15 December 1894 – 23 October 1896 | place = [[Eritrea]] and [[Ethiopia]] | result = Ethiopian victory | combatant1 ={{flagcountry|Kingdom of Italy}} * [[File:Eritrea COA.svg|13px]] [[Italian Eritrea]] <small>'''Supported by:'''</small><br />{{flagcountry|British Empire}} | combatant2 = {{flagcountry|Ethiopian Empire|1896}}<br /><small>'''Supported by:'''</small><br />{{flagcountry|Russian Empire}}<ref name="Robert G. Patman 2009"> {{harvnb|Patman|2009|pages=27–30}}</ref>
+date=1–27 July 1942
+date = 15 April 1986 | place = [[Libya]] | result = American victory<ref>Martel, William C. ''Victory in War: Foundations of Modern Military Policy'', p. 162. Cambridge: Cambridge University Press, 2011.</ref> * Ground targets destroyed * Failed Libyan Scud missile response * Libya renamed from [[Socialist People's Libyan Arab Jamahiriya]] to [[Great Socialist People's Libyan Arab Jamahiriya]]. | combatant1 = {{flag|United States}} | combatant2 = {{flagicon|Libya|1977}} [[Socialist People's Libyan Arab Jamahiriya|Libya]] | commander1 = {{flagicon|United States}} [[Ronald Reagan]] | commander2 = {{flagicon|Libya|1977}} [[Muammar Gaddafi]] | strength1 = | strength2 = | casualties1 = 1 [[General Dynamics F-111|F-111]] shot down
+date = September 19, 2013 |result = Government victory |combatant1 = {{flag icon|Egypt}} [[Law enforcement in Egypt|Police]]
+date= 22 September 1691 |place= [[Bay of Fundy]], off present-day [[Saint John, New Brunswick]] |casus= |territory= |result=French victory |combatant1= {{flagcountry|Kingdom of England}} |combatant2= {{flagcountry|Kingdom of France}} |commander1= {{flagicon|Kingdom of England}} [[Edward Tyng (military officer)|Edward Tyng]]
+date=March 23, 2005 |place=[[Lake Tharthar]], [[Iraq]] |result=Iraqi-American victory |combatant1=[[Image:Flag of Iraq.svg|22px]] [[Iraq]] {{flagicon|US}} [[United States]] |combatant2= Secret Army of Islam<ref>[[Malcolm Nance|Nance, Malcolm W.]], ''[[The Terrorists of Iraq|The Terrorists of Iraq: Inside the Strategy and Tactics of the Iraq Insurgency 2003-2014]]'', CRC Press, 2014 {{ISBN|1498706894}} {{ISBN|978-1498706896}}</ref>
+date=2 December 1870
+date=6 July 2007
+date=19–20 October 1940
+date=11 July 2007
+date = 11–13 December 1941 |place = [[Jitra]], [[British Malaya|Malaya]] |coordinates = {{Coord|06|16|05|N|100|25|18|E|display=INLINE,title}} |result = Japanese victory |combatant1 = {{flag|British Empire}} * {{flag|British Raj|name=India}} |combatant2 = {{flag|Empire of Japan|name=Japan}} |commander1 = {{flagicon|United Kingdom}} [[David Murray-Lyon]] |commander2 = {{flagicon|Empire of Japan}} [[Takurō Matsui]] |units1 ={{flagicon|British India}} [[Indian 11th Infantry Division|11th Indian Division]] |units2 ={{flagicon|Empire of Japan}} [[5th Division (Imperial Japanese Army)|5th Infantry Division]] |strength1 = |strength2 = |casualties1 =26+ killed
+date = August 9, 1949 – August 27, 1949 | result = [[Communist Party of China|Communist]] victory | combatant1 = <center>[[File:Flag of the Republic of China Army.svg|60px|Flag of the National Revolutionary Army]]
+date=19 July 1717 |place=Near [[Cape Matapan]], southern [[Greece]] |result= Holy League victory |combatant1={{flag|Ottoman Empire|}} |combatant2={{flag|Republic of Venice}}
+date=6 August 1870
+date = February 22, 1813 | place = [[Ogdensburg, New York|Ogdensburg]], [[New York (state)|New York]] | result = British victory | combatant1 = {{Flagicon|UK}} [[United Kingdom of Great Britain and Ireland|United Kingdom]] | combatant2 = {{flagicon|United States|1795}} [[United States]] | commander1 = [[George MacDonnell]] | commander2 = [[Benjamin Forsyth]] | strength1 = 520 | strength2 = about 250 | casualties1 = 6 killed
+date = 12 December 1969
+date=24 July 1920 (06:30-10:30; with intermittent clashes until 13:30) |place=[[Maysalun|Khan Maysalun]] and Wadi al-Qarn, [[Anti-Lebanon Mountains]], Syria |result=French victory |combatant1={{flagicon|France}} [[French Third Republic|France]]
+date=August 10, 1813
+date = {{Start date|1864|7|24}}
+date =6 June 1513<ref>{{cite book |url=https://books.google.co.uk/books?id=MsBMpfMVp-AC&pg=PA78 |p=78 |title=The Dawn of Modern Warfare |author=Hans Delbrück |publisher=U of Nebraska Press, |year=1990}}</ref>
+date = November 7–9, 1814 | place = [[Pensacola, Florida|Pensacola]], [[Spanish Florida]] | result = American victory * British withdrawal from Pensacola * United States occupation of Pensacola | combatant2 = {{flag|United Kingdom of Great Britain and Ireland|name=United Kingdom}}<br/>{{flag|Spain|1785}}<br/>[[Muscogee|Creek Native Americans]] | combatant1 = {{flag|United States|1795}} | commander2 = {{flagicon|Spain|1785}} [[Mateo González Manrique|Mateo Manrique]]{{surrender}}
+date = 14 May 1809 | place = [[Alcántara]], Spain | result = French victory | combatant1 = {{flagicon|France}} [[First French Empire|Imperial France]] | combatant2 = {{flagicon image|Flag Portugal (1750).svg}} [[Kingdom of Portugal]] | commander1 = {{flagicon|France}} [[Claude Perrin Victor|Claude Victor]]
+date = 25 September 1985
+date = October 2011&nbsp;– ''ongoing''
+date = 8 November 1960
+date = {{Start date|2013|02|01|df=y}}
+date = March 31, 1863 | place = [[Somerset, Kentucky]] | result = Union victory | combatant1 = {{flagicon|USA|1863}} [[United States]] ([[Union (American Civil War)|Union]]) | combatant2 = {{flagicon|CSA|1863}} [[Confederate States of America|CSA (Confederacy)]] | commander1 = [[Quincy A. Gillmore]] | commander2 = [[John Pegram (general)|John Pegram]] | strength1 = 1,300 | strength2 = 2,800 | casualties1 = 10 killed
+date= June 1, 1298 |place=On [[Gauja]] near [[Turaida Castle]] |territory= |result=Livonian Order defeated |combatant1=Residents of [[Riga]]
+date=18-19 September 1965 |result=Allied victory |combatant1={{flag|United States}}
+date=February 4, 1469
+date=March 15, 1697 |place=[[Haverhill, Massachusetts|Haverhill]], [[Province of Massachusetts Bay]] |result=French and native victory |combatant2={{flag|Kingdom of France|name=French}} colonists
+date = 19–20 November 2012 | place = Vicinity of [[Ménaka]], [[Mali]] | territory = | result = Islamist victory<ref>{{cite web|url=http://www.iol.co.za/news/africa/taureg-fighters-attack-mali-town-1.1214678?ot=inmsa.ArticlePrintPageLayout.ot|title=Tuareg fighters attack Mali town|publisher=|accessdate=16 November 2014}}</ref> * Dissolution of the [[Azawad|State of Azawad]] * Northern Mali falls to [[Ansar Dine]], [[AQIM]] and [[MOJWA]] | combatant1 = {{flag|Azawad}} * [[National Movement for the Liberation of Azawad|MNLA]] * [[Tuaregs|Tuareg]] volunteers | combatant2 = {{flagicon image|AQMI Flag asymmetric.svg}} [[Islamism|Islamist]] coalition * [[AQIM]] * [[MOJWA]] | commander1 = {{flagicon|Azawad}} Alwabihat Ag{{KIA}}
+date = 20 October 1994 &ndash; 3 November 1994 | place = Southwestern [[Bosnia and Herzegovina]] | result = [[Army of the Republic of Bosnia and Herzegovina|ARBiH]] and [[Croatian Defence Council|HVO]] victory | combatant1 = {{flag|Bosnia and Herzegovina|1992}}
+date = February 3–12, 2013
+date = 7 October 1971
+date=25–27 January 2013<br />({{Age in years, months, weeks and days|month1=01|day1=25|year1=2013|month2=01|day2=27|year2=2013}}) |result=French Victory |combatant1={{flag|France}}
+date =26 June 1813 |place =[[Tolosa, Spain]] |result=Anglo-Allied victory |combatant2={{Flag icon|France}} [[First French Empire|French Empire]]
+date=February 2013
+date = 18 September 1971
+date=September 20, 1580| place=[[Toropets]], ([[Russia]])| result=Polish–Lithuanian victory| combatant1=[[File:Herb Rzeczypospolitej Obojga Narodow.svg|15px]] [[Polish–Lithuanian Commonwealth]]| combatant2=[[Image:Coat_of_Arms_of_Russia_1577.png|19px]] [[Tsardom of Russia]]| commander1=[[Janusz Zbaraski]]| commander2=[[Dimitrij Cheremisov]]{{POW}}
+date = 1 May 2014
+date = January 31, 1866 | place = [[Corrientes Province]], Argentina. | casus = | territory = | result = Paraguayan victory {{plainlist |}} | combatant1 = {{plainlist | {{flag|Paraguay|1842}} }} *[[File:Coat of arms of Paraguay.svg|15px]] [[Paraguayan Army]] | combatant2 = {{plainlist | {{flag|Argentina}} *[[File:Ejercito Argentino Escudo.png|15px]] [[Argentine Army]]
+date = 6 – 8 May 1941<ref name="Bianchini 1993">Bianchini S. [https://books.google.com/books?id=UI54AAAAIAAJ "6 aprile 1941: l'attacco italiano alla Jugoslavia."] Marzorati 1993 p198 {{ISBN|978-88-280-0126-3}} "Maggio....6-8 insurrezione di contadini contro gli ustasa a Sanski Most."</ref>
+date = 23 March 1997
+date = 1 May 2014
+date = 17 June 1981 | place = Lebanon | coordinates = | territory = | result = | status = | combatant1 = {{flagicon|Israel}} [[Israel]] | combatant2 = {{flagicon|PLO}} [[Palestine Liberation Organization|PLO]] * [[Fatah]] * [[Democratic Front for the Liberation of Palestine|DFLP]] * [[Arab Liberation Front|ALF]]<ref name="JPS"/> | combatant3 = | commander1 = | commander2 = | commander3 = | strength1 = | strength2 = | strength3 = | casualties1 = 1 aircraft shot down
+date = January 30, 2015
+date = {{OldStyleDateNY|8 – 16 March 1917|{{small|23 Feb.–3 Mar.}}}}
+date = 4–7 March 1966 | place = [[Quảng Ngãi Province]], [[South Vietnam]] | coordinates = {{Coord|15.235|N|108.71|E|display=inline}} | result = U.S./ARVN victory | combatant1 = {{flag|United States}}
+date=13 January 2015|accessdate=1 July 2016}}</ref>
+date=12–16 November 1810
+date = 16 October 1943
+date = August 23, 1863
+date=24–25 March 1811
+date = 1 March 1949 | place = [[Yogyakarta]], [[Indonesia]] | territory = | result = Dutch tactical victory; Indonesian political victory | combatant1 = {{flag|Indonesia}} | combatant2 = {{flag|Netherlands}} | commander1 = {{nowrap|[[Sultan]] [[Hamengkubuwono IX]]}}
+date = 7 August 1949 | place = [[Surakarta]], [[Indonesia]] | territory = | result = Dutch victory | combatant1 = {{flag|Indonesia}} | combatant2 = {{flag|Netherlands}} | commander1 = {{flagdeco|Indonesia}} [[Lieutenant colonel|Lt. Col.]] [[Slamet Rijadi]] | commander2 = {{flagdeco|Netherlands}} [[Lieutenant Colonel|Lt. Col.]] Johannes Borghouts | units1 = [[Indonesian National Armed Forces|Tentara Republik Indonesia]] | units2 = [[Korps Speciale Troepen]] (RST)
+date = {{start date|2015|02|26}}
+date=3 March 2015 |accessdate=14 March 2015}}</ref><ref>{{cite web|last=Fadel |first=Leith |url=http://www.almasdarnews.com/article/monumental-battle-taking-place-tikrit-isis-faces-encirclement/ |title=Monumental Battle Taking Place in Tikrit; ISIS Faces Encirclement |publisher=Almasdarnews.com |date=2 March 2015 |accessdate=14 March 2015}}</ref>
+date = 5 January 2015{{snd}}3 May 2015
+date=28 July 1751 |place=Kirkhbulakh, near [[Erivan]], present-day [[Armenia]] |casus= |territory= |result=Decisive [[Georgia (country)|Georgian]] victory |combatant1=[[File:Coat of arms of Kingdom of Kakheti.svg|20px]] [[Kingdom of Kakheti]] |combatant2=Army of [[Azad Khan]] |commander1=[[Erekle II|Heraclius II of Kakheti]] |commander2=[[Azad-Khan Afghan]]
+date = 20 February 2015
+date = 28 December 1967 – 3 January 1968 | place = Go Noi Island, [[Quảng Nam Province]], [[South Vietnam]] | coordinates = {{Coord|15.85|N|108.186|E|display=inline}} | result = U.S. claims operational success | combatant1 = {{flag|United States}} | combatant2 = [[File:FNL Flag.svg|22px]] [[Viet Cong]] | commander1 = COL [[Robert D. Bohn]]
+date = {{Start date|2015|01|09|df=yes}} 13:00 [[Central European Time|CET]]&nbsp;–{{End date|2015|01|09|df=yes}} 17:30 [[Central European Time|CET]]
+date = 25 January 1982
+date=June 24, 1846 |place=[[Olompali, California|Olómpali]], [[California Republic]], present-day [[California, USA]] | coordinates = {{coord|38.152446|-122.571170|region:US-CA_type:event|display=inline,title}} | map_type = California | map_size = 320 | map_caption = Location within present-day California |territory=[[Alta California]] |result= California Republic victory |combatant1=

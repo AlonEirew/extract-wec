@@ -1,14 +1,12 @@
 package wec;
 
-import data.CorefSubType;
 import data.WECMention;
 import data.WikiNewsMention;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.CoreDocument;
 import edu.stanford.nlp.pipeline.CoreSentence;
-import edu.stanford.nlp.pipeline.StanfordCoreNLP;
-import workers.ReadDateWorker;
+import utils.StanfordNlpApi;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -18,22 +16,6 @@ public class WECLinksExtractor {
 
     private static final String LINK_REGEX_2 = "\\[\\[([^\\[]*?)\\|?([^\\|]*?)\\]\\]";
     private static final Pattern LINK_PATTERN_2 = Pattern.compile(LINK_REGEX_2);
-
-    private static String[] MONTHS = {"january", "february", "march", "april", "may", "june", "july", "august",
-            "september", "october", "november", "december"};
-
-    private static StanfordCoreNLP pipelineWithPos;
-    private static StanfordCoreNLP pipelineNoPos;
-
-    static {
-        Properties props1 = new Properties();
-        props1.setProperty("annotators", "tokenize, ssplit, pos");
-        pipelineWithPos = new StanfordCoreNLP(props1);
-
-        Properties props2 = new Properties();
-        props2.setProperty("annotators", "tokenize, ssplit");
-        pipelineNoPos = new StanfordCoreNLP(props2);
-    }
 
     public static List<WikiNewsMention> extractFromWikiNews(String pageName, String text) {
         List<WikiNewsMention> finalResults = new ArrayList<>();
@@ -117,12 +99,16 @@ public class WECLinksExtractor {
     }
 
     public static String extractPageInfoBox(String pageText) {
-        String text = pageText.toLowerCase().replaceAll(" ", "");
+        return extractPageInfoBox(pageText, false);
+    }
+
+    public static String extractPageInfoBox(String pageText, boolean toLowerForm) {
+//        String text = pageText.toLowerCase().replaceAll(" ", "");
         StringBuilder infoBoxFinal = new StringBuilder();
 
-        final int beginIndex = text.indexOf("{{infobox");
+        final int beginIndex = pageText.indexOf("{{Infobox");
         if (beginIndex != -1) {
-            final String infoboxSubstring = text.substring(beginIndex);
+            final String infoboxSubstring = pageText.substring(beginIndex);
             int infoBarCount = 0;
             for (int i = 0; i < infoboxSubstring.length(); i++) {
                 final char c = infoboxSubstring.charAt(i);
@@ -138,6 +124,10 @@ public class WECLinksExtractor {
 
                 infoBoxFinal.append(c);
             }
+        }
+
+        if(toLowerForm) {
+            return infoBoxFinal.toString().toLowerCase().replaceAll(" ", "");
         }
 
         return infoBoxFinal.toString();
@@ -207,20 +197,9 @@ public class WECLinksExtractor {
         return mentions;
     }
 
-    public static boolean isDaySpan(String infobox) {
-        ReadDateWorker rdw = new ReadDateWorker();
-        Date date = rdw.extractDate(infobox);
-        if(date == null) {
-            return false;
-        }
-
-        return true;
-    }
-
     private static <T extends WECMention> void setMentionsContext(List<T> mentions, String context) {
         final List<List<Map.Entry<String, Integer>>> contextAsStringList = new ArrayList<>();
-        CoreDocument doc = new CoreDocument(context);
-        pipelineNoPos.annotate(doc);
+        CoreDocument doc = StanfordNlpApi.noPosAnnotate(context);
         int runningId = 0;
         if (doc.sentences().size() > 0) {
             for (CoreSentence sentence : doc.sentences()) {
@@ -242,8 +221,7 @@ public class WECLinksExtractor {
             while (iterator.hasNext()) {
                 final T mention = iterator.next();
                 mention.setContext(contextAsStringList);
-                CoreDocument mentionCoreDoc = new CoreDocument(mention.getMentionText());
-                pipelineWithPos.annotate(mentionCoreDoc);
+                CoreDocument mentionCoreDoc = StanfordNlpApi.withPosAnnotate(mention.getMentionText());
                 if (mentionCoreDoc.sentences().size() > 0) {
                     final List<CoreLabel> mentTokens = mentionCoreDoc.sentences().get(0).tokens();
                     for (CoreLabel label : mentTokens) {
