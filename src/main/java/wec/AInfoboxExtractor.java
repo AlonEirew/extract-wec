@@ -75,6 +75,22 @@ public abstract class AInfoboxExtractor {
         return date.replaceAll("\\s+", " ");
     }
 
+    public String extractLocationLine(String infoBox) {
+        String location = "";
+        if(infoBox != null && infoBox.contains("location")) {
+            String locationSubStr = infoBox.substring(infoBox.indexOf("location"));
+            if(locationSubStr.contains("<br>")) {
+                location = locationSubStr.substring(0, locationSubStr.indexOf("<br>"));
+            } else if(locationSubStr.contains("\n")) {
+                location = locationSubStr.substring(0, locationSubStr.indexOf("\n"));
+            } else {
+                location = locationSubStr;
+            }
+        }
+
+        return location.replaceAll("\\s+", " ");
+    }
+
     public String extractDateString(String dateline) {
         String ret = "";
         if (!dateline.isEmpty() && !dateline.startsWith("dates")) {
@@ -181,24 +197,8 @@ public abstract class AInfoboxExtractor {
 
     protected boolean hasDateAndLocation(String infoBox) {
         if (infoBox != null) {
-            String dateLine = null;
-            String locationLine = null;
-            for (String line : infoBox.split("\n")) {
-                if (line.startsWith("|date=")) {
-                    final String[] split = line.split("=");
-                    if (split.length > 1) {
-                        dateLine = split[1].trim();
-                        if (dateLine.split("-").length != 1) {
-                            dateLine = null;
-                        }
-                    }
-                } else if (line.startsWith("|location=")) {
-                    final String[] split = line.split("=");
-                    if (split.length > 1) {
-                        locationLine = split[1].trim();
-                    }
-                }
-            }
+            String dateLine = extractDateLine(infoBox);
+            String locationLine = extractLocationLine(infoBox);
 
             return locationLine != null && !locationLine.isEmpty()
                     && dateLine != null && !dateLine.isEmpty()

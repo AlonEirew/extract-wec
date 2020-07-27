@@ -73,25 +73,19 @@ public class TestWECLinksExtractor {
         for(AbstractMap.SimpleEntry<String, String> text : pageTexts) {
             String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
             boolean ret = extractor.hasDateAndLocation(infoBox);
-            Assert.assertTrue(ret);
+            Assert.assertTrue(text.getKey(), ret);
             break;
         }
 
-        String pageText = getWeddingText();
-        String infoBox = WECLinksExtractor.extractPageInfoBox(pageText);
-        boolean ret = extractor.hasDateAndLocation(infoBox);
-        Assert.assertTrue(ret);
-        System.out.println();
-
         final List<AbstractMap.SimpleEntry<String, String>> peopleText = getPeopleText();
         for(AbstractMap.SimpleEntry<String, String> text : peopleText) {
-            infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
-            ret = extractor.hasDateAndLocation(infoBox);
-            Assert.assertFalse(ret);
+            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            boolean ret = extractor.hasDateAndLocation(infoBox);
+            Assert.assertFalse(text.getKey(), ret);
         }
     }
 
-//    @Test
+//    @Test // Removed test as it require running elastic search to pass
 //    public void testGetAllPagesTexts() throws IOException {
 //        Map<String, String> config = getConfigFile();
 //
@@ -198,9 +192,10 @@ public class TestWECLinksExtractor {
     @Test
     public void testSmallCompany() {
         AInfoboxExtractor companyExtractor = new CompanyInfoboxExtractor();
-        String infoBox = WECLinksExtractor.extractPageInfoBox(getSmallCompanyText());
+        String smallCompanyText = getSmallCompanyText();
+        String infoBox = WECLinksExtractor.extractPageInfoBox(smallCompanyText);
         CorefSubType ret = companyExtractor.extract(infoBox, "");
-        Assert.assertSame(CorefSubType.NA, ret);
+        Assert.assertSame(CorefSubType.COMPANY, ret);
     }
 
     @Test
@@ -259,7 +254,7 @@ public class TestWECLinksExtractor {
         final List<AbstractMap.SimpleEntry<String, String>> newsPair = getConcreteGeneralTexts();
         for(AbstractMap.SimpleEntry<String, String> pair : newsPair) {
             CorefSubType ret = generalExtractor.extract(WECLinksExtractor.extractPageInfoBox(pair.getValue()), pair.getKey());
-            Assert.assertNotSame(CorefSubType.NA, ret);
+            Assert.assertNotSame(pair.getKey(), CorefSubType.NA, ret);
         }
 
         List<AbstractMap.SimpleEntry<String, String>> other = new ArrayList<>();
@@ -273,7 +268,7 @@ public class TestWECLinksExtractor {
 
         for(AbstractMap.SimpleEntry<String, String> pair : other) {
             CorefSubType ret = generalExtractor.extract(WECLinksExtractor.extractPageInfoBox(pair.getValue()), pair.getKey());
-            Assert.assertSame(CorefSubType.NA, ret);
+            Assert.assertSame(pair.getKey(), CorefSubType.NA, ret);
         }
     }
 
@@ -383,29 +378,28 @@ public class TestWECLinksExtractor {
         extractors.add(generalEventInfoboxExtractor);
         PersonOrEventFilter filter = new PersonOrEventFilter(extractors);
 
-
         final List<AbstractMap.SimpleEntry<String, String>> peopleText = getPeopleText();
         for(AbstractMap.SimpleEntry<String, String> text : peopleText) {
             RawElasticResult input = new RawElasticResult(text.getKey(), WECLinksExtractor.extractPageInfoBox(text.getValue()));
-            Assert.assertFalse(filter.isConditionMet(input));
+            Assert.assertFalse(text.getKey(), filter.isConditionMet(input));
         }
 
         final List<AbstractMap.SimpleEntry<String, String>> stringList = getCivilAttack();
         for(AbstractMap.SimpleEntry<String, String> text : stringList) {
             RawElasticResult input = new RawElasticResult(text.getKey(), WECLinksExtractor.extractPageInfoBox(text.getValue()));
-            Assert.assertFalse(filter.isConditionMet(input));
+            Assert.assertTrue(text.getKey(), filter.isConditionMet(input));
         }
 
         final List<AbstractMap.SimpleEntry<String, String>> accidentText = getAccidentText();
         for(AbstractMap.SimpleEntry<String, String> text : accidentText) {
             RawElasticResult input = new RawElasticResult(text.getKey(), WECLinksExtractor.extractPageInfoBox(text.getValue()));
-            Assert.assertFalse(filter.isConditionMet(input));
+            Assert.assertTrue(text.getKey(), filter.isConditionMet(input));
         }
 
         final List<AbstractMap.SimpleEntry<String, String>> disasterText = getDisasterText();
         for(AbstractMap.SimpleEntry<String, String> text : disasterText) {
             RawElasticResult input = new RawElasticResult(text.getKey(), WECLinksExtractor.extractPageInfoBox(text.getValue()));
-            Assert.assertFalse(filter.isConditionMet(input));
+            Assert.assertTrue(text.getKey(), filter.isConditionMet(input));
         }
     }
 

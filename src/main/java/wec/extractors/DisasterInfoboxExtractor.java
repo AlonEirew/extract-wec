@@ -21,7 +21,7 @@ public class DisasterInfoboxExtractor extends AInfoboxExtractor {
         } else if(infobox.contains("{{infoboxwildfire")) {
             return CorefSubType.FIRE;
 //        } else if(infoBox.contains("infoboxstorm/sandbox") || infoBox.contains("infoboxstorm") || infoBox.contains("{{infoboxhurricane")) {
-//            return CorefSubType.STORM;
+//            return CorefSubType.STORM; // Remove as mostly erroneous mentions
         } else if(infobox.contains("infoboxflood")) {
             return CorefSubType.FLOOD;
         } else if(infobox.contains("infoboxoilspill")) {

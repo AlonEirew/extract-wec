@@ -21,10 +21,11 @@ public class GeneralEventInfoboxExtractor extends AInfoboxExtractor {
 
     @Override
     public CorefSubType extract(String infobox, String title) {
-        infobox = infobox.toLowerCase().replaceAll(" ", "");
-        Matcher concreteMatcher = CONCRETE_EVENT.matcher(infobox);
         boolean titleMatch = titleNumberMatch(title);
         final boolean isSingleDay = isSpanSingleMonth(infobox);
+
+        infobox = infobox.toLowerCase().replaceAll(" ", "");
+        Matcher concreteMatcher = CONCRETE_EVENT.matcher(infobox);
         if (concreteMatcher.find() && (titleMatch || isSingleDay)) {
             if(concreteMatcher.group(1).contains("solareclipse")) {
                 return CorefSubType.SOLAR_ECLIPSE;
