@@ -1,5 +1,6 @@
 package wec;
 
+import data.RawElasticResult;
 import data.WECMention;
 import data.WikiNewsMention;
 import edu.stanford.nlp.ling.CoreAnnotations;
@@ -39,17 +40,27 @@ public class WECLinksExtractor {
         return finalResults;
     }
 
-    public static List<WECMention> extractFromWikipedia(String pageName, String text) {
+    public static List<WECMention> extractFromWikipedia(RawElasticResult rowResult) {
         List<WECMention> finalResults = new ArrayList<>();
+
+        String pageName = rowResult.getTitle();
+        String text = rowResult.getText();
+
+        if(pageName.toLowerCase().startsWith("file:") ||
+                pageName.toLowerCase().startsWith("wikipedia:") || pageName.toLowerCase().startsWith("category:") ||
+                pageName.toLowerCase().contains("list of") || pageName.toLowerCase().contains("lists of") ||
+                pageName.toLowerCase().contains("listings")) {
+            return finalResults;
+        }
 
         if (text.toLowerCase().contains("[[category:opinion polling") || text.toLowerCase().contains("[[category:years in") ||
                 text.toLowerCase().contains("[[category:lists of") || text.toLowerCase().contains("[[category:list of")) {
-            text = "";
+            return finalResults;
         }
 
         String textClean = cleanTextField(text);
 
-        String relText = "";
+        String relText;
         int firstSentenceStartIndex = textClean.indexOf("'''");
         if (firstSentenceStartIndex >= 0) {
             relText = textClean.substring(firstSentenceStartIndex);
@@ -131,38 +142,6 @@ public class WECLinksExtractor {
         }
 
         return infoBoxFinal.toString();
-    }
-
-    public static Set<String> extractTypes(String text) {
-        Set<String> finalResults = new HashSet<>();
-        String relText = "";
-        int firstSentenceStartIndex = text.indexOf("|type");
-        if (firstSentenceStartIndex < 0) {
-            firstSentenceStartIndex = text.indexOf("| type");
-        }
-
-        if (firstSentenceStartIndex >= 0) {
-            relText = text.substring(firstSentenceStartIndex);
-            final int endIndex = relText.indexOf("\n");
-            if (endIndex != -1) {
-                relText = relText.substring(0, endIndex);
-            }
-
-            Matcher linkMatcher = LINK_PATTERN_2.matcher(relText);
-            while (linkMatcher.find()) {
-                String match1 = linkMatcher.group(1);
-                String match2 = linkMatcher.group(2);
-                if (!match1.contains("#")) {
-                    if (!match1.isEmpty()) {
-                        finalResults.add(match1.toLowerCase());
-                    }
-
-                    finalResults.add(match2.toLowerCase());
-                }
-            }
-        }
-
-        return finalResults;
     }
 
     static List<WECMention> extractFromParagraph(String pageName, String paragraphToExtractFrom) {

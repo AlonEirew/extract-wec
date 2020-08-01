@@ -73,30 +73,7 @@ public class ElasticQueryApi implements Closeable {
         searchRequest.source(sourceBuilder);
 
         final SearchResponse search = this.elasticClient.search(searchRequest);
-        final long hitsCount = search.getHits().getTotalHits();
-        return hitsCount;
-    }
-
-    public String getPageText(String pageTitle) throws IOException {
-        String pageText = null;
-        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-        sourceBuilder.query(QueryBuilders.matchPhraseQuery("title.keyword", pageTitle));
-        sourceBuilder.from(0);
-        sourceBuilder.size(5);
-        sourceBuilder.timeout(new TimeValue(60, TimeUnit.SECONDS));
-        SearchRequest searchRequest = new SearchRequest(this.elasticIndex);
-        searchRequest.source(sourceBuilder);
-
-        final SearchResponse search = this.elasticClient.search(searchRequest);
-        final SearchHit[] hits = search.getHits().getHits();
-        if(hits.length > 0) {
-            final RawElasticResult rawElasticResult = ElasticQueryApi.extractFromHit(hits[0]);
-            if(rawElasticResult != null) {
-                pageText = rawElasticResult.getText();
-            }
-        }
-
-        return pageText;
+        return search.getHits().getTotalHits();
     }
 
     public void getAllWikiPagesTitleAndTextAsync(Set<String> pagesTitles, ParseAndExtractMentionsWorker listener) {
@@ -140,17 +117,11 @@ public class ElasticQueryApi implements Closeable {
         final Map map = hit.getSourceAsMap();
         final String text = (String)map.get("text");
         final String title = (String)map.get("title");
-        final Map relations = (Map)map.get("relations");
 
-        if(relations != null && relations.containsKey("isDisambiguation")) {
-            if ((boolean) relations.get("isDisambiguation") ||
-                    text.startsWith("#redirect") ||
-                    text.startsWith("#REDIRECT") ||
-                    title.toLowerCase().startsWith("file:") ||
-                    title.toLowerCase().startsWith("wikipedia:")) {
+        if(text.toLowerCase().startsWith("#redirect")) {
                 return null;
-            }
         }
+
         return new RawElasticResult(id, title, text);
     }
 
@@ -209,9 +180,9 @@ public class ElasticQueryApi implements Closeable {
 
     class ElasticActionListener implements ActionListener<MultiSearchResponse> {
 
-        private AtomicInteger asyncReq = new AtomicInteger(0);
-        private ParseAndExtractMentionsWorker listener;
-        private Map<String, String> pagesResults = new HashMap<>();
+        private final AtomicInteger asyncReq = new AtomicInteger(0);
+        private final ParseAndExtractMentionsWorker listener;
+        private final Map<String, String> pagesResults = new HashMap<>();
 
         public ElasticActionListener(ParseAndExtractMentionsWorker listener) {
             this.listener = listener;

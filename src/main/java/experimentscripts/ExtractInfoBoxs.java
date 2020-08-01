@@ -6,10 +6,12 @@ import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
+import wec.Configuration;
 import wec.CreateWEC;
 import workers.ReadInfoBoxWorkerFactory;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -19,23 +21,17 @@ public class ExtractInfoBoxs {
     private final static Logger LOGGER = LogManager.getLogger(ExtractInfoBoxs.class);
     private final static Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+    public static void main(String[] args) throws IOException {
         final String property = System.getProperty("user.dir");
         LOGGER.info("Working directory=" + property);
 
-        Map<String, String> config = GSON.fromJson(FileUtils.readFileToString(
-                new File(property + "/config.json"), "UTF-8"),
-                Map.class);
+        Configuration config = GSON.fromJson(new FileReader(property + "/config.json"), Configuration.class);
 
         ReadInfoBoxWorkerFactory readInfoBoxWorkerFactory = new ReadInfoBoxWorkerFactory();
-        try (ElasticQueryApi elasticApi = new ElasticQueryApi(config.get("elastic_wiki_index"),
-                Integer.parseInt(config.get("elastic_search_interval")),
-                Integer.parseInt(config.get("multi_request_interval")),
-                config.get("elastic_host"),
-                Integer.parseInt(config.get("elastic_port")))) {
+        try (ElasticQueryApi elasticApi = new ElasticQueryApi(config)) {
 
             CreateWEC createWEC = new CreateWEC(elasticApi, readInfoBoxWorkerFactory);
-            createWEC.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
+            createWEC.readAllWikiPagesAndProcess(config.getTotalAmountToExtract());
         } catch (Exception ex) {
             LOGGER.error(ex);
         }

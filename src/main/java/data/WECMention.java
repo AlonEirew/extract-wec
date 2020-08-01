@@ -119,9 +119,6 @@ public class WECMention implements ISQLObject<WECMention> {
         if(this.coreChain.getCorefValue().isEmpty() ||
             this.mentionText.length() <= 1 ||
                 this.mentionText.toLowerCase().startsWith("category:") ||
-                this.coreChain.getCorefValue().toLowerCase().startsWith("file:") ||
-                this.coreChain.getCorefValue().toLowerCase().startsWith("wikipedia:") ||
-                this.coreChain.getCorefValue().toLowerCase().startsWith("category:") ||
                 this.tokenStart == -1 || this.tokenEnd == -1 ||
                 this.mentionTokens.size() == 0 ||
                 ((this.tokenEnd - this.tokenStart + 1) != this.mentionTokens.size()) ||

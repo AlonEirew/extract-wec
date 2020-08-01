@@ -10,7 +10,7 @@ public class ExecutorServiceFactory {
     private final static Logger LOGGER = LogManager.getLogger(ExecutorServiceFactory.class);
 
     private static ExecutorService elasticSearchPool;
-    private static ReentrantLock lock = new ReentrantLock();
+    private static final ReentrantLock lock = new ReentrantLock();
 
     public static void initExecutorService() {
         initExecutorService(Runtime.getRuntime().availableProcessors());

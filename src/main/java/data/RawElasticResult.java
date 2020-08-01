@@ -3,8 +3,8 @@ package data;
 public class RawElasticResult {
 
     private String id = "-1";
-    private String title;
-    private String text;
+    private final String title;
+    private final String text;
 
     public RawElasticResult(String title, String text) {
         this.title = title;

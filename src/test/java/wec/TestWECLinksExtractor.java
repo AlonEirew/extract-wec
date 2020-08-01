@@ -30,7 +30,8 @@ public class TestWECLinksExtractor {
             String pageText = jo.get("text").getAsString();
             String title = jo.get("title").getAsString();
             int expected = jo.get("expected").getAsInt();
-            final List<WECMention> extractMentions1 = WECLinksExtractor.extractFromWikipedia(title, pageText);
+            RawElasticResult rawElasticResult = new RawElasticResult(title, pageText);
+            final List<WECMention> extractMentions1 = WECLinksExtractor.extractFromWikipedia(rawElasticResult);
             Assert.assertEquals(title, expected, extractMentions1.size());
         }
     }
@@ -40,15 +41,6 @@ public class TestWECLinksExtractor {
         List<AbstractMap.SimpleEntry<String, String>> pageTexts = TestUtils.getTextAndTitle("wiki_links/tmp.json");
         for(AbstractMap.SimpleEntry<String, String> text : pageTexts) {
             final List<WikiNewsMention> wikiNewsMentions = WECLinksExtractor.extractFromWikiNews(text.getKey(), text.getValue());
-            System.out.println();
-        }
-    }
-
-    @Test
-    public void testExtractTypes() {
-        List<AbstractMap.SimpleEntry<String, String>> pageTexts = getCivilAttack();
-        for(AbstractMap.SimpleEntry<String, String> text : pageTexts) {
-            final Set<String> extractMentions = WECLinksExtractor.extractTypes(text.getValue());
             System.out.println();
         }
     }
@@ -110,22 +102,6 @@ public class TestWECLinksExtractor {
 //
 //        ExecutorServiceFactory.closeService();
 //    }
-
-    @Test
-    public void testGetPageText() throws IOException {
-        AInfoboxExtractor personExtractor = new PersonInfoboxExtractor();
-        Configuration config = getConfigFile();
-
-        ElasticQueryApi elasticQueryApi = new ElasticQueryApi(config);
-        final String alan_turing = elasticQueryApi.getPageText("Alan Turing");
-        final String infoBox = WECLinksExtractor.extractPageInfoBox(alan_turing);
-        Assert.assertNotSame(CorefSubType.NA, personExtractor.extract(infoBox, ""));
-        Assert.assertTrue(WECLinksExtractor.extractTypes(infoBox).isEmpty());
-
-        final String sep_11 = elasticQueryApi.getPageText("September 11 attacks");
-        Assert.assertSame(CorefSubType.NA, personExtractor.extract(sep_11, ""));
-        Assert.assertFalse(WECLinksExtractor.extractTypes(sep_11).isEmpty());
-    }
 
     @Test
     public void testIsPerson() {
