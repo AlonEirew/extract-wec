@@ -10,12 +10,6 @@ import java.util.*;
 
 public class TestSQLQueryApi {
 
-//    @Test
-    public void testSQLServerApi() throws SQLException {
-        SQLQueryApi api = new SQLQueryApi(new SQLServerConnection());
-        testInsertToTable(api);
-    }
-
     public void testCreateTable(SQLQueryApi api) throws SQLException {
         WECMention columns = new WECMention();
         final boolean table = api.createTable( columns);

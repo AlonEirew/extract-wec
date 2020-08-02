@@ -9,11 +9,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import wec.PersonOrEventFilter;
 import wec.TestWECLinksExtractor;
-import wec.WikiToWECMain;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 public class TestParseAndExtractMentionWorker {

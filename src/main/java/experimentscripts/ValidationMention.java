@@ -9,7 +9,7 @@ import java.sql.SQLException;
 
 public class ValidationMention implements ISQLObject<ValidationMention> {
     public enum SPLIT {NA, TEST, VALIDATION, TRAIN}
-    private static WECMention mention = new WECMention();
+    private static final WECMention mention = new WECMention();
 
     private MentionResultSet mentionResultSet;
     private SPLIT split = SPLIT.NA;

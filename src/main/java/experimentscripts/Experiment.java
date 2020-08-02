@@ -20,7 +20,7 @@ public class Experiment {
     private static final int TYPES_START = 1;
     private static final int TYPES_END = 1;
 
-    private static Gson gson = new Gson();
+    private static final Gson GSON = new Gson();
 
     public static void main(String[] args) throws SQLException {
 
@@ -64,8 +64,8 @@ public class Experiment {
         try {
             printMostToFile(resultsToPrint, message);
             countWithinDocMentions(resultsToPrint);
-            LOGGER.info(gson.toJson(tableResult) + " " + message);
-            LOGGER.info(message + " Mentions=" + gson.toJson(mentionsCountList));
+            LOGGER.info(GSON.toJson(tableResult) + " " + message);
+            LOGGER.info(message + " Mentions=" + GSON.toJson(mentionsCountList));
         } catch (Exception e) {
             LOGGER.error(e);
         }
@@ -75,7 +75,7 @@ public class Experiment {
         for(int i = 0 ; i < resultsToPrint.size() ; i++) {
             final Map<Integer, CorefResultSet> integerCorefResultSetMap = resultsToPrint.get(i);
             final List<CorefResultSet> values = new ArrayList<>(integerCorefResultSetMap.values());
-            Collections.sort(values, Comparator.comparingInt(CorefResultSet::getMentionsSize));
+            values.sort(Comparator.comparingInt(CorefResultSet::getMentionsSize));
             FileUtils.writeLines(new File("output" + File.separator + message + File.separator + (i + TYPES_START) + ".txt"),
                     "UTF-8", values);
         }
@@ -102,7 +102,7 @@ public class Experiment {
             wdPerType[i] = wdCount;
         }
 
-        LOGGER.info("WD MENTIONS" + gson.toJson(wdPerType));
+        LOGGER.info("WD MENTIONS" + GSON.toJson(wdPerType));
     }
 
     static List<Map<Integer, CorefResultSet>> calcLevenshteinDistance(List<Map<Integer, CorefResultSet>> clustersUniqueString) {

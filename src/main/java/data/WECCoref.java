@@ -17,7 +17,7 @@ public class WECCoref implements ISQLObject<WECCoref> {
     private static volatile AtomicInteger runningId = new AtomicInteger();
     private static final ConcurrentHashMap<String, WECCoref> globalCorefIds = new ConcurrentHashMap<>();
 
-    private int corefId = runningId.incrementAndGet();;
+    private int corefId = runningId.incrementAndGet();
     private String corefValue;
     private AtomicInteger mentionsCount = new AtomicInteger(0);
     private String corefType = DefaultInfoboxExtractor.NA;

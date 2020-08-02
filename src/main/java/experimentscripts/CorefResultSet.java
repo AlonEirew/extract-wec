@@ -5,10 +5,10 @@ import org.apache.commons.text.similarity.LevenshteinDistance;
 import java.util.*;
 
 public class CorefResultSet {
-    private int corefId;
+    private final int corefId;
+    private final List<MentionResultSet> mentions = new ArrayList<>();
     private int corefType;
     private String corefValue;
-    private List<MentionResultSet> mentions = new ArrayList<>();
 
     public CorefResultSet(int corefId) {
         this.corefId = corefId;
@@ -174,11 +174,7 @@ public class CorefResultSet {
     private boolean isLevenshteinDistanceApply(MentionResultSet m1, MentionResultSet m2, int threshold) {
         final Integer apply = LevenshteinDistance.getDefaultInstance().apply(m1.getMentionString(), m2.getMentionString());
 
-        if(apply <= threshold) {
-            return true;
-        }
-
-        return false;
+        return apply <= threshold;
     }
 
     public CorefResultSet getNonIntersectingMentions() {
@@ -211,21 +207,11 @@ public class CorefResultSet {
                 .getMentionString().split("\\s")));
 
         m1.retainAll(m2);
-        if (m1.size() >= 1) {
-            return true;
-        }
-
-        return false;
+        return m1.size() >= 1;
     }
 
     public void cleanMentionsMarkedForDeletion() {
-        final Iterator<MentionResultSet> iterator = this.mentions.iterator();
-        while(iterator.hasNext()) {
-            final MentionResultSet next = iterator.next();
-            if(next.isMarkedForDelete()) {
-                iterator.remove();
-            }
-        }
+        this.mentions.removeIf(MentionResultSet::isMarkedForDelete);
     }
 
     public List<MentionResultSet> countDuplicates() {

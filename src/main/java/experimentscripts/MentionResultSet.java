@@ -4,14 +4,14 @@ import java.util.Objects;
 
 public class MentionResultSet {
     private int mentionId;
-    private int corefId;
-    private String mentionString;
-    private String extractedFromPage;
-    private int tokenStart;
-    private int tokenEnd;
-    private String context;
+    private final int corefId;
+    private final String mentionString;
+    private final String extractedFromPage;
+    private final int tokenStart;
+    private final int tokenEnd;
+    private final String context;
     private boolean markedForDelete = false;
-    private String pos;
+    private final String pos;
     private String split = null;
 
     public MentionResultSet(int corefId, String mentionString, String extractedFromPage,

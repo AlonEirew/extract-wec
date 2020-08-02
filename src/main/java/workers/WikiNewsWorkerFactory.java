@@ -12,7 +12,7 @@ import java.util.Map;
 public class WikiNewsWorkerFactory implements IWorkerFactory {
 
     private final Map<String, WECCoref> wikiLinksCorefMap;
-    private SQLQueryApi sqlApi;
+    private final SQLQueryApi sqlApi;
 
     public WikiNewsWorkerFactory(Map<String, WECCoref> wikiLinksCorefMap, SQLQueryApi sqlApi) {
         this.wikiLinksCorefMap = wikiLinksCorefMap;

@@ -27,8 +27,8 @@ public class WECMention implements ISQLObject<WECMention> {
     private int tokenEnd = -1;
     private WECCoref coreChain;
     private String extractedFromPage = "";
-    private List<String> mentionTokens = new ArrayList<>();
-    private List<String> mentionTokensPos = new ArrayList<>();
+    private final List<String> mentionTokens = new ArrayList<>();
+    private final List<String> mentionTokensPos = new ArrayList<>();
     private List<List<Map.Entry<String, Integer>>> context;
 
     public WECMention() {
@@ -116,17 +116,13 @@ public class WECMention implements ISQLObject<WECMention> {
     }
 
     public boolean isValid() {
-        if(this.coreChain.getCorefValue().isEmpty() ||
-            this.mentionText.length() <= 1 ||
-                this.mentionText.toLowerCase().startsWith("category:") ||
-                this.tokenStart == -1 || this.tokenEnd == -1 ||
-                this.mentionTokens.size() == 0 ||
-                ((this.tokenEnd - this.tokenStart + 1) != this.mentionTokens.size()) ||
-                !this.isContextValid()) {
-            return false;
-        }
-
-        return true;
+        return !this.coreChain.getCorefValue().isEmpty() &&
+                this.mentionText.length() > 1 &&
+                !this.mentionText.toLowerCase().startsWith("category:") &&
+                this.tokenStart != -1 && this.tokenEnd != -1 &&
+                this.mentionTokens.size() != 0 &&
+                ((this.tokenEnd - this.tokenStart + 1) == this.mentionTokens.size()) &&
+                this.isContextValid();
     }
 
     public boolean isContextValid() {

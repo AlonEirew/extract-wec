@@ -7,7 +7,7 @@ import java.util.List;
 
 public class ReadDateWorkerFactory implements IWorkerFactory {
 
-    private List<String> datesSchemas = new ArrayList<>();
+    private final List<String> datesSchemas = new ArrayList<>();
 
     @Override
     public AWorker createNewWorker(List<RawElasticResult> rawElasticResults) {

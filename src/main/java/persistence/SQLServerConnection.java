@@ -12,7 +12,7 @@ public class SQLServerConnection implements ISQLConnection {
     private static final String USER = "wikilink";
     private static final String PASSWORD = "Pa5$W0rdA1#nE1r@w";
 
-    private static BasicDataSource ds = new BasicDataSource();
+    private static final BasicDataSource ds = new BasicDataSource();
 
     static {
         ds.setUrl(CONNECTION_URL);

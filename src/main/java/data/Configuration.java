@@ -1,7 +1,5 @@
 package data;
 
-import java.util.List;
-
 public class Configuration {
     private String poolSize;
     private String elasticHost;

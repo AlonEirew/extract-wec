@@ -10,7 +10,7 @@ import java.util.Set;
 
 public class ReadInfoBoxWorker extends AWorker {
 
-    private Map<String, Set<String>> infoBoxes;
+    private final Map<String, Set<String>> infoBoxes;
 
     public ReadInfoBoxWorker(List<RawElasticResult> rawElasticResults, Map<String, Set<String>> infoBoxes) {
         super(rawElasticResults);

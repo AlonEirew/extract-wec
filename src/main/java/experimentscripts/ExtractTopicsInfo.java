@@ -31,7 +31,7 @@ public class ExtractTopicsInfo {
             }
         }
 
-        Collections.sort(printTopicsBySize, Comparator.comparingInt(AbstractMap.SimpleEntry::getValue));
+        printTopicsBySize.sort(Comparator.comparingInt(AbstractMap.SimpleEntry::getValue));
 
         FileUtils.writeLines(new File("output/topics2.txt"), "UTF-8", printTopicsBySize);
     }
