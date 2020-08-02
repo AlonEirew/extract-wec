@@ -16,6 +16,7 @@ public class TestUtils {
 
     public static List<AbstractMap.SimpleEntry<String, String>> getTextAndTitle(String fileName) {
         InputStream inputStreamNlp = TestWECLinksExtractor.class.getClassLoader().getResourceAsStream(fileName);
+        assert inputStreamNlp != null;
         JsonArray inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonArray.class);
 
         List<AbstractMap.SimpleEntry<String, String>> retTexts = new ArrayList<>();
@@ -30,6 +31,7 @@ public class TestUtils {
 
     public static List<JsonObject> getTextTitleAndExpected(String fileName) {
         InputStream inputStreamNlp = TestWECLinksExtractor.class.getClassLoader().getResourceAsStream(fileName);
+        assert inputStreamNlp != null;
         JsonArray inputJsonNlp = gson.fromJson(new InputStreamReader(inputStreamNlp), JsonArray.class);
 
         List<JsonObject> retTexts = new ArrayList<>();

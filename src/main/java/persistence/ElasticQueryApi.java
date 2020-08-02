@@ -4,7 +4,6 @@ import data.RawElasticResult;
 import org.apache.http.HttpHost;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.search.*;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -13,15 +12,13 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import wec.Configuration;
+import data.Configuration;
 import wec.WECLinksExtractor;
-import workers.ParseAndExtractMentionsWorker;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
@@ -31,8 +28,6 @@ public class ElasticQueryApi implements Closeable {
     private final String elasticIndex;
     private final int queryInterval;
     private final int multiRequestInterval;
-
-    private final AtomicInteger asyncRequests = new AtomicInteger(0);
 
     public ElasticQueryApi(String elasticIndex, int queryInterval, int multiRequestInterval, String host, int port) {
         this.elasticIndex = elasticIndex;
@@ -76,9 +71,9 @@ public class ElasticQueryApi implements Closeable {
         return search.getHits().getTotalHits();
     }
 
-    public void getAllWikiPagesTitleAndTextAsync(Set<String> pagesTitles, ParseAndExtractMentionsWorker listener) {
+    public Map<String, RawElasticResult> getAllWikiPagesTitleAndText(Set<String> pagesTitles) {
         LOGGER.info("Got total of-" + pagesTitles.size() + " coref pages to extract from elastic");
-        ElasticActionListener actionListener = new ElasticActionListener(listener);
+        Map<String, RawElasticResult> allResponses = new HashMap<>();
         MultiSearchRequest multiSearchRequest = new MultiSearchRequest();
         int index = 0;
         try {
@@ -92,9 +87,7 @@ public class ElasticQueryApi implements Closeable {
                 index++;
                 if (index % this.multiRequestInterval == 0) {
                     if(!multiSearchRequest.requests().isEmpty()) {
-                        this.asyncRequests.incrementAndGet();
-                        actionListener.incAsyncRequest();
-                        elasticClient.multiSearchAsync(multiSearchRequest, actionListener);
+                        allResponses.putAll(onResponse(elasticClient.multiSearch(multiSearchRequest)));
                         multiSearchRequest = new MultiSearchRequest();
                         LOGGER.info("Done extracting " + index + " coref pages");
                     }
@@ -102,14 +95,30 @@ public class ElasticQueryApi implements Closeable {
             }
 
             if(!multiSearchRequest.requests().isEmpty()) {
-                actionListener.incAsyncRequest();
-                this.asyncRequests.incrementAndGet();
-                elasticClient.multiSearchAsync(multiSearchRequest, actionListener);
+                allResponses.putAll(onResponse(elasticClient.multiSearch(multiSearchRequest)));
             }
 
         } catch (Exception e) {
             LOGGER.error(e);
         }
+
+        return allResponses;
+    }
+
+    private Map<String, RawElasticResult> onResponse(MultiSearchResponse response) {
+        final Map<String, RawElasticResult> rawResults = new HashMap<>();
+        for(MultiSearchResponse.Item item : response.getResponses()) {
+            final SearchHit[] hits = item.getResponse().getHits().getHits();
+            if(hits.length > 0) {
+                final RawElasticResult rawElasticResult = ElasticQueryApi.extractFromHit(hits[0]);
+                if(rawElasticResult != null) {
+                    final String infoBox = WECLinksExtractor.extractPageInfoBox(rawElasticResult.getText());
+                    rawResults.put(rawElasticResult.getTitle(), new RawElasticResult(rawElasticResult.getTitle(), infoBox));
+                }
+            }
+        }
+
+        return rawResults;
     }
 
     public static RawElasticResult extractFromHit(SearchHit hit) {
@@ -164,69 +173,9 @@ public class ElasticQueryApi implements Closeable {
     @Override
     public void close() {
         try {
-            while(this.asyncRequests.get() > 0) {
-                try {
-                    LOGGER.info("There is still " + this.asyncRequests.get() + " async request running cannot close elastic client");
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    LOGGER.error("Failed to wait to running async threads...", e);
-                }
-            }
             this.elasticClient.close();
         } catch (IOException e) {
             LOGGER.error("Elastic Client did not close", e);
-        }
-    }
-
-    class ElasticActionListener implements ActionListener<MultiSearchResponse> {
-
-        private final AtomicInteger asyncReq = new AtomicInteger(0);
-        private final ParseAndExtractMentionsWorker listener;
-        private final Map<String, String> pagesResults = new HashMap<>();
-
-        public ElasticActionListener(ParseAndExtractMentionsWorker listener) {
-            this.listener = listener;
-        }
-
-        @Override
-        public void onResponse(MultiSearchResponse response) {
-            final List<RawElasticResult> rawResults = new ArrayList<>();
-            for(MultiSearchResponse.Item item : response.getResponses()) {
-                final SearchHit[] hits = item.getResponse().getHits().getHits();
-                if(hits.length > 0) {
-                    final RawElasticResult rawElasticResult = ElasticQueryApi.extractFromHit(hits[0]);
-                    if(rawElasticResult != null) {
-                        final String infoBox = WECLinksExtractor.extractPageInfoBox(rawElasticResult.getText());
-                        rawResults.add(new RawElasticResult(rawElasticResult.getTitle(), infoBox));
-                    }
-                }
-            }
-
-            for(RawElasticResult result : rawResults) {
-                pagesResults.put(result.getTitle(), result.getText());
-            }
-
-            this.decAsyncRequest();
-            if(this.asyncReq.get() == 0) {
-                this.listener.onResponse(pagesResults);
-            }
-
-            asyncRequests.decrementAndGet();
-        }
-
-        @Override
-        public void onFailure(Exception e) {
-            this.decAsyncRequest();
-            asyncRequests.decrementAndGet();
-            LOGGER.error("Failed to retrieve multiSearchRequest", e);
-        }
-
-        public void incAsyncRequest() {
-            this.asyncReq.incrementAndGet();
-        }
-
-        public void decAsyncRequest() {
-            this.asyncReq.decrementAndGet();
         }
     }
 }

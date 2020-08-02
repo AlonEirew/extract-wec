@@ -1,7 +1,5 @@
 package wec;
 
-import data.CorefSubType;
-import data.CorefType;
 import edu.stanford.nlp.pipeline.CoreDocument;
 import edu.stanford.nlp.pipeline.CoreEntityMention;
 import edu.stanford.nlp.time.TimeAnnotations;
@@ -11,36 +9,42 @@ import utils.StanfordNlpApi;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class AInfoboxExtractor {
+public class DefaultInfoboxExtractor {
 
-//    private static final String[] MONTHS = {"january", "february", "march", "april", "may", "june", "july", "august",
-//            "september", "october", "november", "december"};
+    public static final String NA = "NA";
 
-    final private CorefSubType[] subTypesArray;
-    final private CorefType corefType;
+    private final List<String> infoboxs;
+    private final String corefType;
 
-    public AInfoboxExtractor(CorefSubType[] subTypesArray, CorefType type) {
-        this.subTypesArray = subTypesArray;
-        this.corefType = type;
+    public DefaultInfoboxExtractor(String corefType, List<String> infoboxs) {
+        this.corefType = corefType;
+        this.infoboxs = infoboxs;
     }
 
-    public abstract CorefSubType extract(String infobox, String title);
+    public String extractMatchedInfobox(String infobox, String title) {
+        String infoboxLow = infobox.toLowerCase().replaceAll(" ", "");
+        Pattern pattern = Pattern.compile("\\{\\{infobox[\\w|]*?("+ String.join("|", this.infoboxs) + ")");
+        Matcher matcher = pattern.matcher(infoboxLow);
 
-    CorefType extractTypeFromSubType(CorefSubType subType) {
-        if (Arrays.asList(this.subTypesArray).contains(subType)) {
-            return this.corefType;
+        if(matcher.find()) {
+            return matcher.group(1);
         }
-        return CorefType.NA;
+
+        return NA;
     }
 
     protected boolean isExtracted(String infobox, String infoboxAtt) {
         return infobox.contains(infoboxAtt);
+    }
+
+    public String getCorefType() {
+        return corefType;
     }
 
     protected boolean titleNumberMatch(String title) {

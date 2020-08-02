@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-public class ExtractDates {
-    private final static Logger LOGGER = LogManager.getLogger(ExtractDates.class);
+public class ExtractTitleList {
+    private final static Logger LOGGER = LogManager.getLogger(ExtractTitleList.class);
     private final static Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException, TimeoutException {

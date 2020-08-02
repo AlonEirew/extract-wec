@@ -1,4 +1,4 @@
-package wec;
+package data;
 
 import java.util.List;
 
@@ -8,11 +8,11 @@ public class Configuration {
     private int elasticPort;
     private String elasticWikiIndex;
     private String elasticWikinewsIndex;
+    private String infoboxConfiguration;
     private int multiRequestInterval;
     private int elasticSearchInterval;
     private int totalAmountToExtract;
     private String sqlConnectionUrl;
-    private List<String> useExtractors;
 
     public String getPoolSize() {
         return poolSize;
@@ -70,6 +70,14 @@ public class Configuration {
         this.elasticSearchInterval = elasticSearchInterval;
     }
 
+    public String getInfoboxConfiguration() {
+        return infoboxConfiguration;
+    }
+
+    public void setInfoboxConfiguration(String infoboxConfiguration) {
+        this.infoboxConfiguration = infoboxConfiguration;
+    }
+
     public int getTotalAmountToExtract() {
         return totalAmountToExtract;
     }
@@ -89,11 +97,4 @@ public class Configuration {
         this.sqlConnectionUrl = sqlConnectionUrl;
     }
 
-    public List<String> getUseExtractors() {
-        return useExtractors;
-    }
-
-    public void setUseExtractors(List<String> useExtractors) {
-        this.useExtractors = useExtractors;
-    }
 }

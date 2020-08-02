@@ -1,18 +1,12 @@
 {
-  "poolSize": "2",
+  "poolSize": "8",
   "elasticHost": "localhost",
   "elasticPort": 9200,
   "elasticWikiIndex": "enwiki_v3",
   "elasticWikinewsIndex": "wikinews_v1",
+  "infoboxConfiguration": "/infobox_config/en_infobox_config.json",
   "multiRequestInterval" : 100,
   "elasticSearchInterval" : 100,
-  "totalAmountToExtract" : 1000000,
-  "sqlConnectionUrl": "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksExperiment.db",
-  "useExtractors" : [
-    "wec.extractors.DisasterInfoboxExtractor",
-    "wec.extractors.AttackInfoboxExtractor",
-    "wec.extractors.AccidentInfoboxExtractor",
-    "wec.extractors.AwardInfoboxExtractor",
-    "wec.extractors.GeneralEventInfoboxExtractor"
-  ]
+  "totalAmountToExtract" : 10000,
+  "sqlConnectionUrl": "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksExperiment.db"
 }

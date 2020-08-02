@@ -1,3 +1,4 @@
+date    = 27 September 1688 – 20 September 1697
 date = {{nowrap|'''First wave:'''
 date = summer 1662 – autumn 1664 | place = Mainly [[Bashkortostan]], [[Russian Empire]] | casus = | territory = | result = Bashkir political victory * Russian government forced to accept Bashkir demands | combatant1 = [[Bashkirs|Bashkir]] rebels | combatant2 = {{flagicon image|Flag of Oryol (variant).svg}} [[Tsardom of Russia|Russia]] | commander1 = Gaura Akbulatov
 date=640 CE |place=[[Tarim Basin]] |casus= |territory= |result=Decisive [[Tang Dynasty|Tang]] victory *Annexation of [[Karakhoja]] as a [[Tang Dynasty|Tang]] prefecture *Establishment of the [[Anxi Protectorate]] |combatant1=[[Tang Dynasty]] |combatant2=[[Karakhoja]]

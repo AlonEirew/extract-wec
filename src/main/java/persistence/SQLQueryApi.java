@@ -1,17 +1,16 @@
 package persistence;
 
 import com.google.common.collect.Iterables;
-import data.CorefType;
 import data.WECCoref;
 import data.WECMention;
 import experimentscripts.CorefResultSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import wec.DefaultInfoboxExtractor;
 
 import java.sql.*;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class SQLQueryApi {
     private final static Logger LOGGER = LogManager.getLogger(SQLQueryApi.class);
@@ -20,7 +19,7 @@ public class SQLQueryApi {
     private static final int MAX_MENTIONS_ACCUMULATED_SIZE = 500000;
     private static final List<WECMention> accumulatedMentions = new ArrayList<>();
 
-    private ISQLConnection sqlConnection;
+    private final ISQLConnection sqlConnection;
 
     public SQLQueryApi(ISQLConnection sqlConnection) {
         this.sqlConnection = sqlConnection;
@@ -237,7 +236,7 @@ public class SQLQueryApi {
         final Collection<WECCoref> allCorefs = WECCoref.getGlobalCorefMap().values();
 
         allCorefs.removeIf(wikiLinksCoref -> wikiLinksCoref.getMentionsCount() < 2 ||
-                wikiLinksCoref.getCorefType() == CorefType.NA ||
+                wikiLinksCoref.getCorefType().equals(DefaultInfoboxExtractor.NA) ||
                 wikiLinksCoref.isMarkedForRemoval());
 
         LOGGER.info("Preparing to add " + allCorefs.size() + " corefs tables values");

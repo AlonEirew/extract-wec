@@ -1,6 +1,7 @@
 package data;
 
 import persistence.ISQLObject;
+import wec.DefaultInfoboxExtractor;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -19,8 +20,8 @@ public class WECCoref implements ISQLObject<WECCoref> {
     private int corefId = runningId.incrementAndGet();;
     private String corefValue;
     private AtomicInteger mentionsCount = new AtomicInteger(0);
-    private CorefType corefType = CorefType.NA;
-    private CorefSubType corefSubType = CorefSubType.NA;
+    private String corefType = DefaultInfoboxExtractor.NA;
+    private String corefSubType = DefaultInfoboxExtractor.NA;
     private boolean markedForRemoval = false;
     private boolean wasRetrived = false;
 
@@ -72,15 +73,15 @@ public class WECCoref implements ISQLObject<WECCoref> {
         return this.mentionsCount.get();
     }
 
-    public CorefType getCorefType() {
+    public String getCorefType() {
         return corefType;
     }
 
-    public void setCorefType(CorefType corefType) {
+    public void setCorefType(String corefType) {
         this.corefType = corefType;
     }
 
-    public void setCorefSubType(CorefSubType corefSubType) {
+    public void setCorefSubType(String corefSubType) {
         this.corefSubType = corefSubType;
     }
 
@@ -121,8 +122,8 @@ public class WECCoref implements ISQLObject<WECCoref> {
         return corefId + "," +
                 "'" + this.corefValue + "'" +
                 "," + this.mentionsCount.get() +
-                "," + this.corefType.ordinal() +
-                "," + this.corefSubType.ordinal() ;
+                "," + this.corefType +
+                "," + this.corefSubType;
     }
 
     @Override
@@ -135,8 +136,8 @@ public class WECCoref implements ISQLObject<WECCoref> {
         preparedStatement.setInt(1, this.corefId);
         preparedStatement.setString(2, this.corefValue);
         preparedStatement.setInt(3, this.mentionsCount.get());
-        preparedStatement.setInt(4, this.corefType.ordinal());
-        preparedStatement.setInt(5, this.corefSubType.ordinal());
+        preparedStatement.setString(4, this.corefType);
+        preparedStatement.setString(5, this.corefSubType);
     }
 
     @Override
@@ -157,14 +158,14 @@ public class WECCoref implements ISQLObject<WECCoref> {
         final int corefId = rs.getInt("corefId");
         final String corefValue = rs.getString("corefValue");
         final int mentionsCount = rs.getInt("mentionsCount");
-        final int corefType = rs.getInt("corefType");
-        final int corefSubType = rs.getInt("corefSubType");
+        final String corefType = rs.getString("corefType");
+        final String corefSubType = rs.getString("corefSubType");
 
         WECCoref extractedCoref = new WECCoref(corefValue);
         extractedCoref.corefId = corefId;
         extractedCoref.mentionsCount = new AtomicInteger(mentionsCount);
-        extractedCoref.corefType = CorefType.values()[corefType];
-        extractedCoref.corefSubType = CorefSubType.values()[corefSubType];
+        extractedCoref.corefType = corefType;
+        extractedCoref.corefSubType = corefSubType;
 
         return extractedCoref;
     }
@@ -179,8 +180,8 @@ public class WECCoref implements ISQLObject<WECCoref> {
                 wasRetrived == wecCoref.wasRetrived &&
                 Objects.equals(corefValue, wecCoref.corefValue) &&
                 Objects.equals(mentionsCount, wecCoref.mentionsCount) &&
-                corefType == wecCoref.corefType &&
-                corefSubType == wecCoref.corefSubType;
+                Objects.equals(corefType, wecCoref.corefType) &&
+                Objects.equals(corefSubType, wecCoref.corefSubType);
     }
 
     @Override

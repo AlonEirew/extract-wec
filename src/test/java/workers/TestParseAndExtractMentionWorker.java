@@ -1,20 +1,27 @@
 package workers;
 
+import com.google.gson.Gson;
+import data.InfoboxConfiguration;
+import data.RawElasticResult;
 import data.WECCoref;
 import data.WECMention;
 import org.junit.Assert;
 import org.junit.Test;
 import wec.PersonOrEventFilter;
+import wec.TestWECLinksExtractor;
 import wec.WikiToWECMain;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 public class TestParseAndExtractMentionWorker {
 
+    private static final Gson GSON = new Gson();
+
     @Test
-    public void testFilterUnwantedMentions() throws ClassNotFoundException, InvocationTargetException,
-            InstantiationException, IllegalAccessException {
+    public void testFilterUnwantedMentions() throws FileNotFoundException {
         WECMention mention1 = new WECMention();
         WECMention mention2 = new WECMention();
         WECMention mention3 = new WECMention();
@@ -47,23 +54,20 @@ public class TestParseAndExtractMentionWorker {
         crs4.setWasAlreadyRetrived(false);
         mention4.setCorefChain(crs4);
 
-        String[] extractors = {
-                "wec.extractors.DisasterInfoboxExtractor",
-                "wec.extractors.AttackInfoboxExtractor",
-                "wec.extractors.AccidentInfoboxExtractor",
-                "wec.extractors.AwardInfoboxExtractor",
-                "wec.extractors.GeneralEventInfoboxExtractor"
-        };
-        ParseAndExtractMentionsWorker worker = new ParseAndExtractMentionsWorker(mentions,
-                WikiToWECMain.getPersonOrEventFilter(Arrays.asList(extractors)));
+        String inputStreamNlp = Objects.requireNonNull(TestWECLinksExtractor.class.getClassLoader()
+                .getResource("en_infobox_config.json")).getFile();
 
-        Map<String, String> testMap = new HashMap<>();
-        testMap.put("TEST3", "{{infoboxearthquake");
-        testMap.put("TEST4", "{infoboxtofilter}");
+        InfoboxConfiguration infoboxConfiguration = GSON.fromJson(new FileReader(inputStreamNlp), InfoboxConfiguration.class);
 
-        worker.filterUnwantedMentions(testMap);
+        ParseAndExtractMentionsWorker worker = new ParseAndExtractMentionsWorker(
+                new PersonOrEventFilter(infoboxConfiguration));
 
-        final List<WECMention> finalToCommit = worker.getFinalToCommit();
+        Map<String, RawElasticResult> testMap = new HashMap<>();
+        testMap.put("TEST3", new RawElasticResult("TEST3", "{{infoboxearthquake"));
+        testMap.put("TEST4", new RawElasticResult("TEST4", "{infoboxtofilter}"));
+
+        final List<WECMention> finalToCommit = worker.filterUnwantedMentions(mentions, testMap);
+
         Assert.assertEquals(2, finalToCommit.size());
         for(WECMention mention : finalToCommit) {
             if(!mention.getCorefChain().getCorefValue().equals("TEST2") &&

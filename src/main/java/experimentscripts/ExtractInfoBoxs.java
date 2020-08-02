@@ -6,7 +6,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
-import wec.Configuration;
+import data.Configuration;
 import wec.CreateWEC;
 import workers.ReadInfoBoxWorkerFactory;
 
@@ -14,8 +14,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 public class ExtractInfoBoxs {
     private final static Logger LOGGER = LogManager.getLogger(ExtractInfoBoxs.class);

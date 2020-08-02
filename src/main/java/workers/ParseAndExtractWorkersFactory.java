@@ -3,13 +3,8 @@ package workers;
 import data.RawElasticResult;
 import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
-import wec.AInfoboxExtractor;
 import wec.PersonOrEventFilter;
-import wec.extractors.*;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class ParseAndExtractWorkersFactory implements IWorkerFactory {

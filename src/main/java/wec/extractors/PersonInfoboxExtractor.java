@@ -1,25 +1,23 @@
 package wec.extractors;
 
-import data.CorefSubType;
-import data.CorefType;
-import wec.AInfoboxExtractor;
+import wec.DefaultInfoboxExtractor;
 
-public class PersonInfoboxExtractor extends AInfoboxExtractor {
+import java.util.List;
 
-    private static CorefSubType[] subTypes = {CorefSubType.PERSON};
+public class PersonInfoboxExtractor extends DefaultInfoboxExtractor {
 
-    public PersonInfoboxExtractor() {
-        super(subTypes, CorefType.PERSON);
+    public PersonInfoboxExtractor(String corefType, List<String> infoboxs) {
+        super(corefType, infoboxs);
     }
 
     @Override
-    public CorefSubType extract(String infobox, String title) {
+    public String extractMatchedInfobox(String infobox, String title) {
         infobox = infobox.toLowerCase().replaceAll(" ", "");
         if(infobox.contains("birth_name") || infobox.contains("birth_date") ||
                 infobox.contains("birth_place")) {
-            return CorefSubType.PERSON;
+            return this.getCorefType();
         }
 
-        return CorefSubType.NA;
+        return DefaultInfoboxExtractor.NA;
     }
 }

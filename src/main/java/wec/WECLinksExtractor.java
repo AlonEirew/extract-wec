@@ -53,10 +53,10 @@ public class WECLinksExtractor {
             return finalResults;
         }
 
-        if (text.toLowerCase().contains("[[category:opinion polling") || text.toLowerCase().contains("[[category:years in") ||
-                text.toLowerCase().contains("[[category:lists of") || text.toLowerCase().contains("[[category:list of")) {
-            return finalResults;
-        }
+//        if (text.toLowerCase().contains("[[category:opinion polling") || text.toLowerCase().contains("[[category:years in") ||
+//                text.toLowerCase().contains("[[category:lists of") || text.toLowerCase().contains("[[category:list of")) {
+//            return finalResults;
+//        }
 
         String textClean = cleanTextField(text);
 

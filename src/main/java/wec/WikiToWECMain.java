@@ -1,6 +1,8 @@
 package wec;
 
 import com.google.gson.Gson;
+import data.Configuration;
+import data.InfoboxConfiguration;
 import data.WECCoref;
 import data.WECMention;
 import org.apache.logging.log4j.LogManager;
@@ -13,11 +15,8 @@ import workers.ParseAndExtractWorkersFactory;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class WikiToWECMain {
     private final static Logger LOGGER = LogManager.getLogger(WikiToWECMain.class);
@@ -29,6 +28,10 @@ public class WikiToWECMain {
         LOGGER.info("Working directory=" + property);
 
         Configuration config = GSON.fromJson(new FileReader(property + "/config.json"), Configuration.class);
+        InfoboxConfiguration infoboxConfiguration = GSON.fromJson(new FileReader(
+                property + config.getInfoboxConfiguration()), InfoboxConfiguration.class);
+
+        infoboxConfiguration.getInfoboxConfigs().get(10).getExtractor();
 
         final int pool_size = Integer.parseInt(config.getPoolSize());
         if(pool_size > 0) {
@@ -40,9 +43,8 @@ public class WikiToWECMain {
         SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections(config.getSqlConnectionUrl()));
         long start = System.currentTimeMillis();
         try (ElasticQueryApi elasticApi = new ElasticQueryApi(config)) {
-
             CreateWEC createWEC = new CreateWEC(elasticApi, new ParseAndExtractWorkersFactory(sqlApi, elasticApi,
-                    getPersonOrEventFilter(config.getUseExtractors())));
+                    new PersonOrEventFilter(infoboxConfiguration)));
 
             if (!createSQLWikiLinksTables(sqlApi)) {
                 LOGGER.error("Failed to create Database and tables, finishing process");
@@ -66,18 +68,5 @@ public class WikiToWECMain {
         LOGGER.info("Creating SQL Tables");
         return sqlApi.createTable(new WECMention()) &&
                 sqlApi.createTable(WECCoref.getAndSetIfNotExist("####TEMP####"));
-    }
-
-    public static PersonOrEventFilter getPersonOrEventFilter(List<String> extractorClasses) throws ClassNotFoundException,
-            IllegalAccessException, InvocationTargetException, InstantiationException {
-        List<AInfoboxExtractor> extractors = new ArrayList<>();
-
-        for(String className : extractorClasses) {
-            Constructor<?>[] constructors = Class.forName(className).getConstructors();
-            AInfoboxExtractor extractor = (AInfoboxExtractor) constructors[0].newInstance();
-            extractors.add(extractor);
-        }
-
-        return new PersonOrEventFilter(extractors);
     }
 }

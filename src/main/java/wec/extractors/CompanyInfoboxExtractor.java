@@ -1,39 +1,38 @@
 package wec.extractors;
 
-import data.CorefSubType;
-import data.CorefType;
-import wec.AInfoboxExtractor;
+import wec.DefaultInfoboxExtractor;
 
-public class CompanyInfoboxExtractor extends AInfoboxExtractor {
+import java.util.List;
+
+public class CompanyInfoboxExtractor extends DefaultInfoboxExtractor {
 
     private static final int MAX_EMPLOYEES = 1000;
 
-    private static CorefSubType[] subTypes = {CorefSubType.COMPANY};
-
-    public CompanyInfoboxExtractor() {
-        super(subTypes, CorefType.COMPANY);
+    public CompanyInfoboxExtractor(String corefType, List<String> infoboxs) {
+        super(corefType, infoboxs);
     }
 
     @Override
-    public CorefSubType extract(String infobox, String title) {
-        infobox = infobox.toLowerCase().replaceAll(" ", "");
-        if (infobox.contains("{{infoboxcompany")) {
-            for (String line : infobox.split("\n")) {
+    public String extractMatchedInfobox(String infobox, String title) {
+        String extract = super.extractMatchedInfobox(infobox, title);
+        if(!extract.equals(DefaultInfoboxExtractor.NA)) {
+            String infoboxLow = infobox.toLowerCase().replaceAll(" ", "");
+            for (String line : infoboxLow.split("\n")) {
                 if (line.startsWith("|num_employees=")) {
                     final String[] numEmpSplit = line.split("=");
                     if (numEmpSplit.length == 2) {
                         try {
                             int empAmount = Integer.parseInt(numEmpSplit[1]);
                             if (empAmount <= MAX_EMPLOYEES) {
-                                return CorefSubType.COMPANY;
+                                return extract;
                             }
-                        } catch (NumberFormatException e) {
+                        } catch (NumberFormatException ignore) {
                         }
                     }
                 }
             }
         }
 
-        return CorefSubType.NA;
+        return DefaultInfoboxExtractor.NA;
     }
 }

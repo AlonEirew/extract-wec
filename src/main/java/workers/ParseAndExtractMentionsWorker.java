@@ -6,7 +6,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
-import utils.ExecutorServiceFactory;
 import wec.ICorefFilter;
 import wec.WECLinksExtractor;
 
@@ -14,8 +13,6 @@ import java.util.*;
 
 public class ParseAndExtractMentionsWorker extends AWorker {
     private final static Logger LOGGER = LogManager.getLogger(ParseAndExtractMentionsWorker.class);
-
-    private final List<WECMention> finalToCommit = new ArrayList<>();
 
     private final SQLQueryApi sqlApi;
     private final ElasticQueryApi elasticApi;
@@ -30,65 +27,64 @@ public class ParseAndExtractMentionsWorker extends AWorker {
     }
 
     // Constructor for testing purposes
-    ParseAndExtractMentionsWorker(List<WECMention> finalToCommit, ICorefFilter filter) {
+    ParseAndExtractMentionsWorker(ICorefFilter filter) {
         this(new ArrayList<>(), null, null, filter);
-        this.finalToCommit.addAll(finalToCommit);
     }
 
     @Override
     public void run() {
+        List<WECMention> finalToCommit = new ArrayList<>();
         LOGGER.info("Parsing the wikipedia pages and extracting mentions");
         for(RawElasticResult rowResult : this.rawElasticResults) {
-            List<WECMention> WECMentions = WECLinksExtractor.extractFromWikipedia(rowResult.getTitle(), rowResult.getText());
-            WECMentions.forEach(wikiLinksMention -> wikiLinksMention.getCorefChain().incMentionsCount());
-            this.finalToCommit.addAll(WECMentions);
+            List<WECMention> wecMentions = WECLinksExtractor.extractFromWikipedia(rowResult);
+            if(!wecMentions.isEmpty()) {
+                wecMentions.forEach(wikiLinksMention -> wikiLinksMention.getCorefChain().incMentionsCount());
+                finalToCommit.addAll(wecMentions);
+            }
         }
 
         LOGGER.info("Handle all worker mentions...in total-" + finalToCommit.size() + " will be handled");
         final Set<String> corefTitleSet = new HashSet<>();
-        for(WECMention mention : this.finalToCommit) {
+        for(WECMention mention : finalToCommit) {
             if(!mention.getCorefChain().wasAlreadyRetrived()) {
                 corefTitleSet.add(mention.getCorefChain().getCorefValue());
             }
         }
 
+        Map<String, RawElasticResult> allWikiPagesTitleAndText = new HashMap<>();
         if(!corefTitleSet.isEmpty()) {
             LOGGER.info("Sending-" + corefTitleSet.size() + " coref titles to be retrieved");
-            ExecutorServiceFactory.submit(() -> this.elasticApi.getAllWikiPagesTitleAndTextAsync(corefTitleSet, this));
-        } else {
-            onResponse(new HashMap<>());
+            allWikiPagesTitleAndText = this.elasticApi.getAllWikiPagesTitleAndText(corefTitleSet);
         }
+
+        onResponse(finalToCommit, allWikiPagesTitleAndText);
     }
 
-    public void onResponse(Map<String, String> pagesResults) {
+    private void onResponse(List<WECMention> finalToCommit, Map<String, RawElasticResult> pagesResults) {
         LOGGER.info("processing returned results from elastic MultiSearchRequest");
-        filterUnwantedMentions(pagesResults);
-        if(!this.finalToCommit.isEmpty()) {
-            ExecutorServiceFactory.submit(() -> sqlApi.commitMentions(finalToCommit));
+        if(!finalToCommit.isEmpty()) {
+            finalToCommit = filterUnwantedMentions(finalToCommit, pagesResults);
+            sqlApi.commitMentions(finalToCommit);
         }
     }
 
-    void filterUnwantedMentions(Map<String, String> pagesResults) {
-        final Iterator<WECMention> iterator = this.finalToCommit.iterator();
+    List<WECMention> filterUnwantedMentions(List<WECMention> finalToCommit, Map<String, RawElasticResult> pagesResults) {
+        final Iterator<WECMention> iterator = finalToCommit.iterator();
         while (iterator.hasNext()) {
             WECMention ment = iterator.next();
-
             if(ment.getCorefChain().isMarkedForRemoval()) {
                 iterator.remove();
             } else if(!ment.getCorefChain().wasAlreadyRetrived()) {
                 ment.getCorefChain().setWasAlreadyRetrived(true);
                 final String corefValue = ment.getCorefChain().getCorefValue();
-                final String pageText = pagesResults.get(corefValue);
-                RawElasticResult rawElasticResult = new RawElasticResult(corefValue, pageText);
+                final RawElasticResult rawElasticResult = pagesResults.get(corefValue);
                 if(!this.filter.isConditionMet(rawElasticResult)) {
                     ment.getCorefChain().setMarkedForRemoval(true);
                     iterator.remove();
                 }
             }
         }
-    }
 
-    List<WECMention> getFinalToCommit() {
         return finalToCommit;
     }
 }

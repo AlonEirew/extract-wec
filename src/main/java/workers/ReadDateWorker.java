@@ -1,24 +1,11 @@
 package workers;
 
-import data.CorefSubType;
 import data.RawElasticResult;
-import edu.stanford.nlp.pipeline.CoreDocument;
-import edu.stanford.nlp.pipeline.CoreEntityMention;
-import edu.stanford.nlp.time.TimeAnnotations;
-import edu.stanford.nlp.time.Timex;
-import edu.stanford.nlp.util.Pair;
-import utils.StanfordNlpApi;
-import wec.AInfoboxExtractor;
+import wec.DefaultInfoboxExtractor;
 import wec.WECLinksExtractor;
-import wec.extractors.AttackInfoboxExtractor;
-import wec.extractors.GeneralEventInfoboxExtractor;
+import wec.extractors.TimeSpan1MonthInfoboxExtractor;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ReadDateWorker extends AWorker {
 
@@ -41,10 +28,9 @@ public class ReadDateWorker extends AWorker {
 
     private String extractDate(String text, String title) {
         String infoBox = WECLinksExtractor.extractPageInfoBox(text);
-        AInfoboxExtractor attack = new AttackInfoboxExtractor();
+        DefaultInfoboxExtractor attack = new TimeSpan1MonthInfoboxExtractor(null, null);
 
         String infoboxLow = infoBox.toLowerCase().replaceAll(" ", "");
-        CorefSubType corefSubType = CorefSubType.NA;
         if (infoboxLow.contains("{{infoboxcivilianattack") || infoboxLow.contains("{{infoboxterroristattack") ||
                 infoboxLow.contains("{{infoboxmilitaryattack") || infoboxLow.contains("{{infoboxcivilconflict") ||
                 infoboxLow.contains("{{infoboxmilitaryconflict")) {
