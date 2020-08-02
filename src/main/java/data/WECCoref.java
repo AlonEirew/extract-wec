@@ -1,5 +1,7 @@
 package data;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import persistence.ISQLObject;
 import wec.DefaultInfoboxExtractor;
 
@@ -12,6 +14,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class WECCoref implements ISQLObject<WECCoref> {
+    private final static Logger LOGGER = LogManager.getLogger(WECCoref.class);
+
     public static final String TABLE_COREF = "CorefChains";
 
     private static volatile AtomicInteger runningId = new AtomicInteger();
@@ -24,8 +28,6 @@ public class WECCoref implements ISQLObject<WECCoref> {
     private String corefSubType = DefaultInfoboxExtractor.NA;
     private boolean markedForRemoval = false;
     private boolean wasRetrived = false;
-
-    public WECCoref() {}
 
     public WECCoref(String corefValue) {
         this.corefValue = corefValue;
@@ -40,9 +42,7 @@ public class WECCoref implements ISQLObject<WECCoref> {
     }
 
     public static void removeKey(String keyToRemove) {
-        if(globalCorefIds.contains(keyToRemove)) {
-            globalCorefIds.remove(keyToRemove);
-        }
+        globalCorefIds.remove(keyToRemove);
     }
 
     public static Map<String, WECCoref> getGlobalCorefMap() {

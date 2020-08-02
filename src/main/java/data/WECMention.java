@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class WECMention implements ISQLObject<WECMention> {
     private static final String TABLE_MENTIONS = "Mentions";
 
-    private static final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+    private static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
     private static volatile AtomicInteger runningId = new AtomicInteger();
 
     private final long mentionId = runningId.incrementAndGet();
@@ -196,7 +196,7 @@ public class WECMention implements ISQLObject<WECMention> {
             }
             rootArray.add(jsonArray);
         }
-        return gson.toJson(rootArray);
+        return GSON.toJson(rootArray);
     }
 
     @Override

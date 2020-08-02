@@ -43,7 +43,7 @@ public class WikiToWECMain {
         long start = System.currentTimeMillis();
         try (ElasticQueryApi elasticApi = new ElasticQueryApi(config)) {
             CreateWEC createWEC = new CreateWEC(elasticApi, new ParseAndExtractWorkersFactory(sqlApi, elasticApi,
-                    new PersonOrEventFilter(infoboxConfiguration)));
+                    new InfoboxFilter(infoboxConfiguration)));
 
             if (!createSQLWikiLinksTables(sqlApi)) {
                 LOGGER.error("Failed to create Database and tables, finishing process");

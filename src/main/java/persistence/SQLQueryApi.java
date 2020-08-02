@@ -75,11 +75,11 @@ public class SQLQueryApi {
         return true;
     }
 
-    public synchronized <T extends ISQLObject> boolean createTable(T objectRep) throws SQLException {
+    public synchronized <T extends ISQLObject<T>> boolean createTable(T objectRep) throws SQLException {
         try (Connection con = this.sqlConnection.getConnection(); Statement stmt = con.createStatement()) {
             if(!isTableExists(objectRep)) {
                 StringBuilder createTableSql = new StringBuilder();
-                createTableSql.append("CREATE TABLE " + objectRep.getTableName() + " (").append(objectRep.getColumnNamesAndValues()).append(")");
+                createTableSql.append("CREATE TABLE ").append(objectRep.getTableName()).append(" (").append(objectRep.getColumnNamesAndValues()).append(")");
                 createTableSql.delete(createTableSql.length() - 1, createTableSql.length());
                 createTableSql.append(");");
                 stmt.executeUpdate(createTableSql.toString());
@@ -92,7 +92,7 @@ public class SQLQueryApi {
         return true;
     }
 
-    public synchronized <T extends ISQLObject> boolean deleteTable(T repObject) throws SQLException {
+    public synchronized <T extends ISQLObject<T>> boolean deleteTable(T repObject) throws SQLException {
         try (Connection con = this.sqlConnection.getConnection(); Statement stmt = con.createStatement()) {
             if(isTableExists(repObject)) {
                 String deleteTableSql = "DROP TABLE " + repObject.getTableName();
@@ -215,7 +215,7 @@ public class SQLQueryApi {
         return result;
     }
 
-    public <T extends ISQLObject> boolean isTableExists(T objectRep) throws SQLException {
+    public <T extends ISQLObject<T>> boolean isTableExists(T objectRep) throws SQLException {
         boolean result = false;
 
         try(Connection conn = this.sqlConnection.getConnection();
@@ -234,18 +234,18 @@ public class SQLQueryApi {
     public synchronized void persistAllCorefs() {
         LOGGER.info("Persisting corefs tables values");
         final Collection<WECCoref> allCorefs = WECCoref.getGlobalCorefMap().values();
-
-        allCorefs.removeIf(wikiLinksCoref -> wikiLinksCoref.getMentionsCount() < 2 ||
+        allCorefs.removeIf(wikiLinksCoref -> wikiLinksCoref.getMentionsCount() == 0 ||
                 wikiLinksCoref.getCorefType().equals(DefaultInfoboxExtractor.NA) ||
                 wikiLinksCoref.isMarkedForRemoval());
 
         LOGGER.info("Preparing to add " + allCorefs.size() + " corefs tables values");
+
         try {
             if (!insertRowsToTable(new ArrayList<>(allCorefs))) {
-                LOGGER.error("Failed to insert Corefs!!!!");
+                LOGGER.error("persistAllCorefs: Failed to insert Corefs!!!!");
             }
         } catch (SQLException e) {
-            LOGGER.error(e);
+            LOGGER.error("persistAllCorefs:", e);
         }
     }
 

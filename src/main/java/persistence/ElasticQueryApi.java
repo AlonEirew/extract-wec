@@ -71,7 +71,7 @@ public class ElasticQueryApi implements Closeable {
         return search.getHits().getTotalHits();
     }
 
-    public Map<String, RawElasticResult> getAllWikiPagesTitleAndText(Set<String> pagesTitles) {
+    public Map<String, RawElasticResult> getAllWikiCorefPagesFromTitle(Set<String> pagesTitles) {
         LOGGER.info("Got total of-" + pagesTitles.size() + " coref pages to extract from elastic");
         Map<String, RawElasticResult> allResponses = new HashMap<>();
         MultiSearchRequest multiSearchRequest = new MultiSearchRequest();
@@ -99,7 +99,7 @@ public class ElasticQueryApi implements Closeable {
             }
 
         } catch (Exception e) {
-            LOGGER.error(e);
+            LOGGER.error("getAllWikiPagesTitleAndText:", e);
         }
 
         return allResponses;

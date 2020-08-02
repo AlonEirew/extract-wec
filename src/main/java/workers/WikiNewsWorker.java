@@ -36,7 +36,7 @@ public class WikiNewsWorker extends AWorker {
         List<WikiNewsMention> mentions = new ArrayList<>();
         for(RawElasticResult rowResult : this.rawElasticResults) {
             List<WikiNewsMention> wikiLinksMentions = WECLinksExtractor.extractFromWikiNews(rowResult.getTitle(), rowResult.getText());
-            wikiLinksMentions.stream().forEach(wikiLinksMention -> wikiLinksMention.getCorefChain().incMentionsCount());
+            wikiLinksMentions.forEach(wikiLinksMention -> wikiLinksMention.getCorefChain().incMentionsCount());
             mentions.addAll(wikiLinksMentions);
         }
 
@@ -61,8 +61,7 @@ public class WikiNewsWorker extends AWorker {
         sLock.lock();
         finalToCommit.addAll(mentions);
         if(finalToCommit.size() >= COMMIT_MAX_SIZE || forceCommit) {
-            List<WikiNewsMention> localNewList = new ArrayList<>();
-            localNewList.addAll(finalToCommit);
+            List<WikiNewsMention> localNewList = new ArrayList<>(finalToCommit);
             finalToCommit.clear();
 
             sLock.unlock();

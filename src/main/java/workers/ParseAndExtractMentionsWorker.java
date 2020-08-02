@@ -54,7 +54,7 @@ public class ParseAndExtractMentionsWorker extends AWorker {
         Map<String, RawElasticResult> allWikiPagesTitleAndText = new HashMap<>();
         if(!corefTitleSet.isEmpty()) {
             LOGGER.info("Sending-" + corefTitleSet.size() + " coref titles to be retrieved");
-            allWikiPagesTitleAndText = this.elasticApi.getAllWikiPagesTitleAndText(corefTitleSet);
+            allWikiPagesTitleAndText = this.elasticApi.getAllWikiCorefPagesFromTitle(corefTitleSet);
         }
 
         onResponse(finalToCommit, allWikiPagesTitleAndText);
@@ -79,6 +79,7 @@ public class ParseAndExtractMentionsWorker extends AWorker {
                 final String corefValue = ment.getCorefChain().getCorefValue();
                 final RawElasticResult rawElasticResult = pagesResults.get(corefValue);
                 if(!this.filter.isConditionMet(rawElasticResult)) {
+                    LOGGER.debug("Removing Coref page-" + corefValue);
                     ment.getCorefChain().setMarkedForRemoval(true);
                     iterator.remove();
                 }

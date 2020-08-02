@@ -7,7 +7,7 @@ import data.WECCoref;
 import data.WECMention;
 import org.junit.Assert;
 import org.junit.Test;
-import wec.PersonOrEventFilter;
+import wec.InfoboxFilter;
 import wec.TestWECLinksExtractor;
 
 import java.io.FileNotFoundException;
@@ -58,7 +58,7 @@ public class TestParseAndExtractMentionWorker {
         InfoboxConfiguration infoboxConfiguration = GSON.fromJson(new FileReader(inputStreamNlp), InfoboxConfiguration.class);
 
         ParseAndExtractMentionsWorker worker = new ParseAndExtractMentionsWorker(
-                new PersonOrEventFilter(infoboxConfiguration));
+                new InfoboxFilter(infoboxConfiguration));
 
         Map<String, RawElasticResult> testMap = new HashMap<>();
         testMap.put("TEST3", new RawElasticResult("TEST3", "{{infoboxearthquake"));

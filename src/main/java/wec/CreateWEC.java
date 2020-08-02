@@ -63,13 +63,12 @@ public class CreateWEC {
             searchHits = searchResponse.getHits().getHits();
         }
 
-
-        elasticApi.closeScroll(scrollId);
         LOGGER.info("Handling last mentions if exists");
         for (Future<?> future : allTasks) {
-            future.get(1000, TimeUnit.SECONDS);
+            future.get(10, TimeUnit.MINUTES);
         }
 
         this.workerFactory.finalizeIfNeeded();
+        elasticApi.closeScroll(scrollId);
     }
 }

@@ -6,13 +6,13 @@ import data.WECCoref;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class PersonOrEventFilter implements ICorefFilter {
+public class InfoboxFilter implements ICorefFilter {
 
-    private final static Logger LOGGER = LogManager.getLogger(PersonOrEventFilter.class);
+    private final static Logger LOGGER = LogManager.getLogger(InfoboxFilter.class);
 
     private final InfoboxConfiguration infoboxConfiguration;
 
-    public PersonOrEventFilter(InfoboxConfiguration infoboxConfiguration) {
+    public InfoboxFilter(InfoboxConfiguration infoboxConfiguration) {
         this.infoboxConfiguration = infoboxConfiguration;
     }
 
@@ -21,12 +21,12 @@ public class PersonOrEventFilter implements ICorefFilter {
         if (result != null && result.getText() != null && !result.getText().isEmpty()) {
             for (InfoboxConfiguration.InfoboxConfig config : this.infoboxConfiguration.getInfoboxConfigs()) {
                 DefaultInfoboxExtractor extractor = config.getExtractor();
-                if(config.isInclude() && extractor != null) {
+                if(config.isInclude()) {
                     final String extractMatchedInfobox = extractor.extractMatchedInfobox(result.getText(), result.getTitle());
                     final String corefType = extractor.getCorefType();
 
                     if (!extractMatchedInfobox.equals(DefaultInfoboxExtractor.NA)) {
-                        LOGGER.info(result.getTitle() + " passed " + extractor.getClass().getSimpleName() + " extractor");
+                        LOGGER.info(result.getTitle() + " passed as " + extractMatchedInfobox + " infobox");
                         WECCoref wecCoref = WECCoref.getAndSetIfNotExist(result.getTitle());
                         wecCoref.setCorefType(corefType);
                         wecCoref.setCorefSubType(extractMatchedInfobox);

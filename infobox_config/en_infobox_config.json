@@ -17,13 +17,11 @@
     {
       "corefType": "ATTACK_EVENT",
       "include": true,
-      "useExtractorClass": "wec.extractors.TimeSpan1MonthInfoboxExtractor",
       "infoboxs": [
         "civilianattack",
         "terroristattack",
         "militaryattack",
-        "civilconflict",
-        "militaryconflict"
+        "civilconflict"
       ]
     },
     {

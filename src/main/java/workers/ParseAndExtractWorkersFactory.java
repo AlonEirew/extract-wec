@@ -3,7 +3,7 @@ package workers;
 import data.RawElasticResult;
 import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
-import wec.PersonOrEventFilter;
+import wec.InfoboxFilter;
 
 import java.util.List;
 
@@ -11,9 +11,9 @@ public class ParseAndExtractWorkersFactory implements IWorkerFactory {
 
     private final SQLQueryApi sqlApi;
     private final ElasticQueryApi elasticApi;
-    private final PersonOrEventFilter filter;
+    private final InfoboxFilter filter;
 
-    public ParseAndExtractWorkersFactory(SQLQueryApi sqlApi, ElasticQueryApi elasticApi, PersonOrEventFilter filter) {
+    public ParseAndExtractWorkersFactory(SQLQueryApi sqlApi, ElasticQueryApi elasticApi, InfoboxFilter filter) {
         this.sqlApi = sqlApi;
         this.elasticApi = elasticApi;
         this.filter = filter;
@@ -26,10 +26,5 @@ public class ParseAndExtractWorkersFactory implements IWorkerFactory {
 
     @Override
     public void finalizeIfNeeded() {
-//        final ParseAndExtractMentionsWorker parseAndExtractMentionsWorker = new
-//                ParseAndExtractMentionsWorker(new ArrayList<>(),
-//                this.sqlApi, this.elasticApi, new PersonOrEventFilter());
-//
-//        parseAndExtractMentionsWorker.handle(new ArrayList<>(), true);
     }
 }

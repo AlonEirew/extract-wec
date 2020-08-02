@@ -347,7 +347,7 @@ public class TestWECLinksExtractor {
 
     @Test
     public void testPersonOrEventFilter() {
-        PersonOrEventFilter filter = new PersonOrEventFilter(infoboxConfiguration);
+        InfoboxFilter filter = new InfoboxFilter(infoboxConfiguration);
 
         final List<AbstractMap.SimpleEntry<String, String>> peopleText = getPeopleText();
         for(AbstractMap.SimpleEntry<String, String> text : peopleText) {
