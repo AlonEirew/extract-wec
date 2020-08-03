@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
 import wec.ICorefFilter;
+import wec.InfoboxFilter;
 import wec.WECLinksExtractor;
 
 import java.util.*;
@@ -16,10 +17,10 @@ public class ParseAndExtractMentionsWorker extends AWorker {
 
     private final SQLQueryApi sqlApi;
     private final ElasticQueryApi elasticApi;
-    private final ICorefFilter filter;
+    private final InfoboxFilter filter;
 
     public ParseAndExtractMentionsWorker(List<RawElasticResult> rawElasticResults, SQLQueryApi sqlApi,
-                                         ElasticQueryApi elasticApi, ICorefFilter filter) {
+                                         ElasticQueryApi elasticApi, InfoboxFilter filter) {
         super(rawElasticResults);
         this.sqlApi = sqlApi;
         this.elasticApi = elasticApi;
@@ -27,7 +28,7 @@ public class ParseAndExtractMentionsWorker extends AWorker {
     }
 
     // Constructor for testing purposes
-    ParseAndExtractMentionsWorker(ICorefFilter filter) {
+    ParseAndExtractMentionsWorker(InfoboxFilter filter) {
         this(new ArrayList<>(), null, null, filter);
     }
 
@@ -36,10 +37,13 @@ public class ParseAndExtractMentionsWorker extends AWorker {
         List<WECMention> finalToCommit = new ArrayList<>();
         LOGGER.info("Parsing the wikipedia pages and extracting mentions");
         for(RawElasticResult rowResult : this.rawElasticResults) {
-            List<WECMention> wecMentions = WECLinksExtractor.extractFromWikipedia(rowResult);
-            if(!wecMentions.isEmpty()) {
-                wecMentions.forEach(wikiLinksMention -> wikiLinksMention.getCorefChain().incMentionsCount());
-                finalToCommit.addAll(wecMentions);
+            String infobox = filter.extractPageInfoBox(rowResult.getText());
+            if(infobox != null && !infobox.isEmpty()) {
+                List<WECMention> wecMentions = WECLinksExtractor.extractFromWikipedia(rowResult);
+                if (!wecMentions.isEmpty()) {
+                    wecMentions.forEach(wikiLinksMention -> wikiLinksMention.getCorefChain().incMentionsCount());
+                    finalToCommit.addAll(wecMentions);
+                }
             }
         }
 

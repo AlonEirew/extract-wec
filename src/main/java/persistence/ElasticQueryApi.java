@@ -112,8 +112,7 @@ public class ElasticQueryApi implements Closeable {
             if(hits.length > 0) {
                 final RawElasticResult rawElasticResult = ElasticQueryApi.extractFromHit(hits[0]);
                 if(rawElasticResult != null) {
-                    final String infoBox = WECLinksExtractor.extractPageInfoBox(rawElasticResult.getText());
-                    rawResults.put(rawElasticResult.getTitle(), new RawElasticResult(rawElasticResult.getTitle(), infoBox));
+                    rawResults.put(rawElasticResult.getTitle(), rawElasticResult);
                 }
             }
         }

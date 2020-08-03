@@ -3,13 +3,14 @@ package wec.extractors;
 import wec.DefaultInfoboxExtractor;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class CompanyInfoboxExtractor extends DefaultInfoboxExtractor {
 
     private static final int MAX_EMPLOYEES = 1000;
 
-    public CompanyInfoboxExtractor(String corefType, List<String> infoboxs) {
-        super(corefType, infoboxs);
+    public CompanyInfoboxExtractor(String corefType, List<String> infoboxs, Pattern pattern) {
+        super(corefType, infoboxs, pattern);
     }
 
     @Override

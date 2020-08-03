@@ -1,7 +1,9 @@
 package workers;
 
+import data.InfoboxConfiguration;
 import data.RawElasticResult;
 import wec.DefaultInfoboxExtractor;
+import wec.InfoboxFilter;
 import wec.WECLinksExtractor;
 import wec.extractors.TimeSpan1MonthInfoboxExtractor;
 
@@ -27,8 +29,9 @@ public class ReadDateWorker extends AWorker {
     }
 
     private String extractDate(String text, String title) {
-        String infoBox = WECLinksExtractor.extractPageInfoBox(text);
-        DefaultInfoboxExtractor attack = new TimeSpan1MonthInfoboxExtractor(null, null);
+        InfoboxFilter filter = new InfoboxFilter(new InfoboxConfiguration());
+        String infoBox = filter.extractPageInfoBox(text);
+        DefaultInfoboxExtractor attack = new TimeSpan1MonthInfoboxExtractor(null, null, null);
 
         String infoboxLow = infoBox.toLowerCase().replaceAll(" ", "");
         if (infoboxLow.contains("{{infoboxcivilianattack") || infoboxLow.contains("{{infoboxterroristattack") ||

@@ -20,23 +20,11 @@ import java.util.regex.Pattern;
 public class WECLinksExtractor {
 
     public static List<WECMention> extractFromWikipedia(RawElasticResult rawElasticResult) {
-        List<WECMention> finalResults = new ArrayList<>();
-
         String pageName = rawElasticResult.getTitle();
         String text = rawElasticResult.getText();
-
-        if(pageName.toLowerCase().startsWith("file:") ||
-                pageName.toLowerCase().startsWith("wikipedia:") || pageName.toLowerCase().startsWith("category:") ||
-                pageName.toLowerCase().contains("list of") || pageName.toLowerCase().contains("lists of") ||
-                pageName.toLowerCase().contains("listings")) {
-            return finalResults;
-        }
-
         String htmlText = WikiModel.toHtml(text);
         String cleanHtml = cleanTextField(htmlText);
-        finalResults = extractMentions(pageName, cleanHtml);
-
-        return finalResults;
+        return extractMentions(pageName, cleanHtml);
     }
 
     private static List<WECMention> extractMentions(String pageName, String cleanHtml) {
@@ -105,40 +93,5 @@ public class WECLinksExtractor {
         }
 
         return cleanHtml;
-    }
-
-    public static String extractPageInfoBox(String pageText) {
-        return extractPageInfoBox(pageText, false);
-    }
-
-    public static String extractPageInfoBox(String pageText, boolean toLowerForm) {
-//        String text = pageText.toLowerCase().replaceAll(" ", "");
-        StringBuilder infoBoxFinal = new StringBuilder();
-
-        final int beginIndex = pageText.indexOf("{{Infobox");
-        if (beginIndex != -1) {
-            final String infoboxSubstring = pageText.substring(beginIndex);
-            int infoBarCount = 0;
-            for (int i = 0; i < infoboxSubstring.length(); i++) {
-                final char c = infoboxSubstring.charAt(i);
-                if (c == '}') {
-                    infoBarCount--;
-                    if (infoBarCount == 0) {
-                        infoBoxFinal.append(c);
-                        break;
-                    }
-                } else if (c == '{') {
-                    infoBarCount++;
-                }
-
-                infoBoxFinal.append(c);
-            }
-        }
-
-        if(toLowerForm) {
-            return infoBoxFinal.toString().toLowerCase().replaceAll(" ", "");
-        }
-
-        return infoBoxFinal.toString();
     }
 }

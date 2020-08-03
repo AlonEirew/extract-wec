@@ -20,6 +20,7 @@ public class TestWECLinksExtractor {
     private static final Gson GSON = new Gson();
 
     private InfoboxConfiguration infoboxConfiguration;
+    private InfoboxFilter filter;
 
     @Before
     public void initTest() throws FileNotFoundException {
@@ -27,6 +28,7 @@ public class TestWECLinksExtractor {
                 .getResource("en_infobox_config.json")).getFile();
 
         infoboxConfiguration = GSON.fromJson(new FileReader(inputStreamNlp), InfoboxConfiguration.class);
+        filter = new InfoboxFilter(infoboxConfiguration);
     }
 
     @Test
@@ -38,7 +40,11 @@ public class TestWECLinksExtractor {
             String title = jo.get("title").getAsString();
             int expected = jo.get("expected").getAsInt();
             RawElasticResult rawElasticResult = new RawElasticResult(title, pageText);
-            final List<WECMention> extractMentions1 = WECLinksExtractor.extractFromWikipedia(rawElasticResult);
+            String infobox = filter.extractPageInfoBox(rawElasticResult.getText());
+            List<WECMention> extractMentions1 = new ArrayList<>();
+            if(infobox != null && !infobox.isEmpty()) {
+                extractMentions1 = WECLinksExtractor.extractFromWikipedia(rawElasticResult);
+            }
             Assert.assertEquals(title, expected, extractMentions1.size());
         }
     }
@@ -46,17 +52,17 @@ public class TestWECLinksExtractor {
     @Test
     public void testInfoBoxExtract() {
         String pageText = getInfoBoxs();
-        final String infoBoxs = WECLinksExtractor.extractPageInfoBox(pageText);
+        final String infoBoxs = filter.extractPageInfoBox(pageText);
         System.out.println(infoBoxs);
     }
 
     @Test
     public void testHasDateAndLocationExtractor() {
-        DefaultInfoboxExtractor extractor = new DefaultInfoboxExtractor(null, null);
+        DefaultInfoboxExtractor extractor = new DefaultInfoboxExtractor(null, null, null);
 
         List<AbstractMap.SimpleEntry<String, String>> pageTexts = getCivilAttack();
         for(AbstractMap.SimpleEntry<String, String> text : pageTexts) {
-            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            String infoBox = filter.extractPageInfoBox(text.getValue());
             boolean ret = extractor.hasDateAndLocation(infoBox);
             Assert.assertTrue(text.getKey(), ret);
             break;
@@ -64,7 +70,7 @@ public class TestWECLinksExtractor {
 
         final List<AbstractMap.SimpleEntry<String, String>> peopleText = getPeopleText();
         for(AbstractMap.SimpleEntry<String, String> text : peopleText) {
-            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            String infoBox = filter.extractPageInfoBox(text.getValue());
             boolean ret = extractor.hasDateAndLocation(infoBox);
             Assert.assertFalse(text.getKey(), ret);
         }
@@ -99,9 +105,7 @@ public class TestWECLinksExtractor {
     @Test
     public void testIsPerson() {
         String corefType = "PERSON";
-        InfoboxConfiguration.InfoboxConfig infoboxConfig = infoboxConfiguration.getInfoboxConfigByCoref(corefType);
-        assert infoboxConfig != null;
-        DefaultInfoboxExtractor personExtractor = infoboxConfig.getExtractor();
+        DefaultInfoboxExtractor personExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
         final List<AbstractMap.SimpleEntry<String, String>> peopleText = getPeopleText();
         for(AbstractMap.SimpleEntry<String, String> text : peopleText) {
             String ret = personExtractor.extractMatchedInfobox(text.getValue(), "");
@@ -112,12 +116,10 @@ public class TestWECLinksExtractor {
     @Test
     public void testIsElection() {
         String corefType = "ELECTION_EVENT";
-        InfoboxConfiguration.InfoboxConfig infoboxConfig = infoboxConfiguration.getInfoboxConfigByCoref(corefType);
-        assert infoboxConfig != null;
-        DefaultInfoboxExtractor electionExtractor = infoboxConfig.getExtractor();
+        DefaultInfoboxExtractor electionExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
         List<AbstractMap.SimpleEntry<String, String>> pageText = getElectionText();
         for(AbstractMap.SimpleEntry<String, String> text : pageText) {
-            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            String infoBox = filter.extractPageInfoBox(text.getValue());
             String ret = electionExtractor.extractMatchedInfobox(infoBox, text.getKey());
             Assert.assertNotSame(text.getKey(), DefaultInfoboxExtractor.NA, ret);
         }
@@ -133,7 +135,7 @@ public class TestWECLinksExtractor {
         other.addAll(getPeopleText());
 
          for(AbstractMap.SimpleEntry<String, String> text : other) {
-            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            String infoBox = filter.extractPageInfoBox(text.getValue());
             String ret = electionExtractor.extractMatchedInfobox(infoBox, text.getKey());
             Assert.assertSame(text.getKey(), DefaultInfoboxExtractor.NA, ret);
         }
@@ -142,12 +144,10 @@ public class TestWECLinksExtractor {
     @Test
     public void testAccident() {
         String corefType = "ACCIDENT_EVENT";
-        InfoboxConfiguration.InfoboxConfig infoboxConfig = infoboxConfiguration.getInfoboxConfigByCoref(corefType);
-        assert infoboxConfig != null;
-        DefaultInfoboxExtractor accidentExtractor = infoboxConfig.getExtractor();
+        DefaultInfoboxExtractor accidentExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
         List<AbstractMap.SimpleEntry<String, String>> pageTexts = getAccidentText();
         for(AbstractMap.SimpleEntry<String, String> text : pageTexts) {
-            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            String infoBox = filter.extractPageInfoBox(text.getValue());
             String ret = accidentExtractor.extractMatchedInfobox(infoBox, "");
             Assert.assertNotSame(DefaultInfoboxExtractor.NA, ret);
         }
@@ -163,7 +163,7 @@ public class TestWECLinksExtractor {
         other.addAll(getPeopleText());
 
         for(AbstractMap.SimpleEntry<String, String> text : other) {
-            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            String infoBox = filter.extractPageInfoBox(text.getValue());
             String ret = accidentExtractor.extractMatchedInfobox(infoBox, "");
             Assert.assertSame(DefaultInfoboxExtractor.NA, ret);
         }
@@ -172,24 +172,20 @@ public class TestWECLinksExtractor {
     @Test
     public void testSmallCompany() {
         String corefType = "COMPANY";
-        InfoboxConfiguration.InfoboxConfig infoboxConfig = infoboxConfiguration.getInfoboxConfigByCoref(corefType);
-        assert infoboxConfig != null;
-        DefaultInfoboxExtractor companyExtractor = infoboxConfig.getExtractor();
+        DefaultInfoboxExtractor companyExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
         String smallCompanyText = getSmallCompanyText();
-        String infoBox = WECLinksExtractor.extractPageInfoBox(smallCompanyText);
+        String infoBox = filter.extractPageInfoBox(smallCompanyText);
         String ret = companyExtractor.extractMatchedInfobox(infoBox, "");
-        Assert.assertTrue(infoboxConfig.getInfoboxs().contains(ret));
+        Assert.assertNotSame(DefaultInfoboxExtractor.NA, ret);
     }
 
     @Test
     public void testIsSport() {
         String corefType = "SPORT_EVENT";
-        InfoboxConfiguration.InfoboxConfig infoboxConfig = infoboxConfiguration.getInfoboxConfigByCoref(corefType);
-        assert infoboxConfig != null;
-        DefaultInfoboxExtractor sportExtractor = infoboxConfig.getExtractor();
+        DefaultInfoboxExtractor sportExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
         final List<AbstractMap.SimpleEntry<String, String>> sportText = getSportText();
         for(AbstractMap.SimpleEntry<String, String> text : sportText) {
-            String ret = sportExtractor.extractMatchedInfobox(WECLinksExtractor.extractPageInfoBox(text.getValue()), text.getKey());
+            String ret = sportExtractor.extractMatchedInfobox(filter.extractPageInfoBox(text.getValue()), text.getKey());
             Assert.assertNotSame(text.getValue(), DefaultInfoboxExtractor.NA, ret);
         }
 
@@ -204,7 +200,7 @@ public class TestWECLinksExtractor {
         other.addAll(getPeopleText());
 
         for(AbstractMap.SimpleEntry<String, String> text : other) {
-            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            String infoBox = filter.extractPageInfoBox(text.getValue());
             String ret = sportExtractor.extractMatchedInfobox(infoBox, text.getKey());
             Assert.assertSame(text.getKey(), DefaultInfoboxExtractor.NA, ret);
         }
@@ -213,12 +209,10 @@ public class TestWECLinksExtractor {
     @Test
     public void testIsAward() {
         String corefType = "AWARD_EVENT";
-        InfoboxConfiguration.InfoboxConfig infoboxConfig = infoboxConfiguration.getInfoboxConfigByCoref(corefType);
-        assert infoboxConfig != null;
-        DefaultInfoboxExtractor awardExtractor = infoboxConfig.getExtractor();
+        DefaultInfoboxExtractor awardExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
         final List<AbstractMap.SimpleEntry<String, String>> awardPair = getAwards();
         for(AbstractMap.SimpleEntry<String, String> pair : awardPair) {
-            String ret = awardExtractor.extractMatchedInfobox(WECLinksExtractor.extractPageInfoBox(pair.getValue()), pair.getKey());
+            String ret = awardExtractor.extractMatchedInfobox(filter.extractPageInfoBox(pair.getValue()), pair.getKey());
             Assert.assertNotSame(pair.getKey(), DefaultInfoboxExtractor.NA, ret);
         }
 
@@ -233,7 +227,7 @@ public class TestWECLinksExtractor {
         other.addAll(getPeopleText());
 
         for(AbstractMap.SimpleEntry<String, String> pair : other) {
-            String ret = awardExtractor.extractMatchedInfobox(WECLinksExtractor.extractPageInfoBox(pair.getValue()), pair.getKey());
+            String ret = awardExtractor.extractMatchedInfobox(filter.extractPageInfoBox(pair.getValue()), pair.getKey());
             Assert.assertSame(pair.getKey(), DefaultInfoboxExtractor.NA, ret);
         }
     }
@@ -242,21 +236,17 @@ public class TestWECLinksExtractor {
     public void testIsConcreteGeneralEvent() {
         String generalEvent = "GENERAL_EVENT";
         String otherEvent = "OTHERS";
-        InfoboxConfiguration.InfoboxConfig infoboxConfig1 = infoboxConfiguration.getInfoboxConfigByCoref(generalEvent);
-        assert infoboxConfig1 != null;
-        DefaultInfoboxExtractor generalExtractor = infoboxConfig1.getExtractor();
+        DefaultInfoboxExtractor generalExtractor = infoboxConfiguration.getExtractorByCorefType(generalEvent);
         final List<AbstractMap.SimpleEntry<String, String>> newsPair = getConcreteGeneralTexts();
         for(AbstractMap.SimpleEntry<String, String> pair : newsPair) {
-            String ret1 = generalExtractor.extractMatchedInfobox(WECLinksExtractor.extractPageInfoBox(pair.getValue()), pair.getKey());
+            String ret1 = generalExtractor.extractMatchedInfobox(filter.extractPageInfoBox(pair.getValue()), pair.getKey());
             Assert.assertNotSame(pair.getKey(), DefaultInfoboxExtractor.NA, ret1);
         }
 
-        InfoboxConfiguration.InfoboxConfig infoboxConfig2 = infoboxConfiguration.getInfoboxConfigByCoref(otherEvent);
-        assert infoboxConfig2 != null;
-        DefaultInfoboxExtractor otherExtractor = infoboxConfig2.getExtractor();
+        DefaultInfoboxExtractor otherExtractor = infoboxConfiguration.getExtractorByCorefType(otherEvent);
         final List<AbstractMap.SimpleEntry<String, String>> othersEvents = getOthersTexts();
         for(AbstractMap.SimpleEntry<String, String> pair : othersEvents) {
-            String ret2 = otherExtractor.extractMatchedInfobox(WECLinksExtractor.extractPageInfoBox(pair.getValue()), pair.getKey());
+            String ret2 = otherExtractor.extractMatchedInfobox(filter.extractPageInfoBox(pair.getValue()), pair.getKey());
             Assert.assertNotSame(pair.getKey(), DefaultInfoboxExtractor.NA, ret2);
         }
 
@@ -270,8 +260,8 @@ public class TestWECLinksExtractor {
         other.addAll(getPeopleText());
 
         for(AbstractMap.SimpleEntry<String, String> pair : other) {
-            String ret1 = generalExtractor.extractMatchedInfobox(WECLinksExtractor.extractPageInfoBox(pair.getValue()), pair.getKey());
-            String ret2 = otherExtractor.extractMatchedInfobox(WECLinksExtractor.extractPageInfoBox(pair.getValue()), pair.getKey());
+            String ret1 = generalExtractor.extractMatchedInfobox(filter.extractPageInfoBox(pair.getValue()), pair.getKey());
+            String ret2 = otherExtractor.extractMatchedInfobox(filter.extractPageInfoBox(pair.getValue()), pair.getKey());
             Assert.assertSame(pair.getKey(), DefaultInfoboxExtractor.NA, ret1);
             Assert.assertSame(pair.getKey(), DefaultInfoboxExtractor.NA, ret2);
         }
@@ -280,12 +270,10 @@ public class TestWECLinksExtractor {
     @Test
     public void testIsDisaster() {
         String corefType = "DISASTER_EVENT";
-        InfoboxConfiguration.InfoboxConfig infoboxConfig = infoboxConfiguration.getInfoboxConfigByCoref(corefType);
-        assert infoboxConfig != null;
-        DefaultInfoboxExtractor disasterExtractor = infoboxConfig.getExtractor();
+        DefaultInfoboxExtractor disasterExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
         final List<AbstractMap.SimpleEntry<String, String>> disasterText = getDisasterText();
         for(AbstractMap.SimpleEntry<String, String> text : disasterText) {
-            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            String infoBox = filter.extractPageInfoBox(text.getValue());
             String ret = disasterExtractor.extractMatchedInfobox(infoBox, "");
             Assert.assertNotSame(text.getKey(), DefaultInfoboxExtractor.NA, ret);
         }
@@ -301,7 +289,7 @@ public class TestWECLinksExtractor {
         other.addAll(getPeopleText());
 
         for(AbstractMap.SimpleEntry<String, String> text : other) {
-            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            String infoBox = filter.extractPageInfoBox(text.getValue());
             String ret = disasterExtractor.extractMatchedInfobox(infoBox, "");
             Assert.assertSame(text.getKey(), DefaultInfoboxExtractor.NA, ret);
         }
@@ -310,12 +298,10 @@ public class TestWECLinksExtractor {
     @Test
     public void testIsCivilAttack() {
         String corefType = "ATTACK_EVENT";
-        InfoboxConfiguration.InfoboxConfig infoboxConfig = infoboxConfiguration.getInfoboxConfigByCoref(corefType);
-        assert infoboxConfig != null;
-        DefaultInfoboxExtractor attackExtractor = infoboxConfig.getExtractor();
+        DefaultInfoboxExtractor attackExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
         final List<AbstractMap.SimpleEntry<String, String>> civilAttack = getCivilAttack();
         for(AbstractMap.SimpleEntry<String, String> text : civilAttack) {
-            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            String infoBox = filter.extractPageInfoBox(text.getValue());
             String ret = attackExtractor.extractMatchedInfobox(infoBox, "");
             Assert.assertNotSame(text.getKey(), DefaultInfoboxExtractor.NA, ret);
         }
@@ -332,7 +318,7 @@ public class TestWECLinksExtractor {
         other.addAll(getPeopleText());
 
         for(AbstractMap.SimpleEntry<String, String> text : other) {
-            String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            String infoBox = filter.extractPageInfoBox(text.getValue());
             String ret = attackExtractor.extractMatchedInfobox(infoBox, "");
             Assert.assertSame(text.getKey(), DefaultInfoboxExtractor.NA, ret);
         }
@@ -346,9 +332,9 @@ public class TestWECLinksExtractor {
     public void testReject() {
         final List<AbstractMap.SimpleEntry<String, String>> rejectTexts = getRejectTexts();
         for(AbstractMap.SimpleEntry<String, String> pair : rejectTexts) {
-            String infoBox = WECLinksExtractor.extractPageInfoBox(pair.getValue());
-            for (InfoboxConfiguration.InfoboxConfig infoboxConfig : infoboxConfiguration.getActiveInfoboxConfigs()) {
-                String ret = infoboxConfig.getExtractor().extractMatchedInfobox(infoBox, pair.getKey());
+            String infoBox = filter.extractPageInfoBox(pair.getValue());
+            for (DefaultInfoboxExtractor extractor : infoboxConfiguration.getAllIncludedExtractor()) {
+                String ret = extractor.extractMatchedInfobox(infoBox, pair.getKey());
                 Assert.assertSame(pair.getKey(), DefaultInfoboxExtractor.NA, ret);
             }
         }
@@ -360,25 +346,25 @@ public class TestWECLinksExtractor {
 
         final List<AbstractMap.SimpleEntry<String, String>> peopleText = getPeopleText();
         for(AbstractMap.SimpleEntry<String, String> text : peopleText) {
-            RawElasticResult input = new RawElasticResult(text.getKey(), WECLinksExtractor.extractPageInfoBox(text.getValue()));
+            RawElasticResult input = new RawElasticResult(text.getKey(), filter.extractPageInfoBox(text.getValue()));
             Assert.assertFalse(text.getKey(), filter.isConditionMet(input));
         }
 
         final List<AbstractMap.SimpleEntry<String, String>> stringList = getCivilAttack();
         for(AbstractMap.SimpleEntry<String, String> text : stringList) {
-            RawElasticResult input = new RawElasticResult(text.getKey(), WECLinksExtractor.extractPageInfoBox(text.getValue()));
+            RawElasticResult input = new RawElasticResult(text.getKey(), filter.extractPageInfoBox(text.getValue()));
             Assert.assertTrue(text.getKey(), filter.isConditionMet(input));
         }
 
         final List<AbstractMap.SimpleEntry<String, String>> accidentText = getAccidentText();
         for(AbstractMap.SimpleEntry<String, String> text : accidentText) {
-            RawElasticResult input = new RawElasticResult(text.getKey(), WECLinksExtractor.extractPageInfoBox(text.getValue()));
+            RawElasticResult input = new RawElasticResult(text.getKey(), filter.extractPageInfoBox(text.getValue()));
             Assert.assertTrue(text.getKey(), filter.isConditionMet(input));
         }
 
         final List<AbstractMap.SimpleEntry<String, String>> disasterText = getDisasterText();
         for(AbstractMap.SimpleEntry<String, String> text : disasterText) {
-            RawElasticResult input = new RawElasticResult(text.getKey(), WECLinksExtractor.extractPageInfoBox(text.getValue()));
+            RawElasticResult input = new RawElasticResult(text.getKey(), filter.extractPageInfoBox(text.getValue()));
             Assert.assertTrue(text.getKey(), filter.isConditionMet(input));
         }
     }

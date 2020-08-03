@@ -1,5 +1,6 @@
 package wec;
 
+import data.InfoboxConfiguration;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -18,7 +19,7 @@ public class TestTimeExtraction {
         InputStream inputStream = TestWECLinksExtractor.class.getClassLoader().getResourceAsStream("time/time_expr_2d.txt");
         assert inputStream != null;
         List<String> strings = IOUtils.readLines(new InputStreamReader(inputStream));
-        DefaultInfoboxExtractor extractor = new DefaultInfoboxExtractor(null, null);
+        TimeSpan1MonthInfoboxExtractor extractor = new TimeSpan1MonthInfoboxExtractor(null, null, null);
 
         for (String line : strings) {
             boolean spanSingleMonth = extractor.isSpanSingleMonth(line);
@@ -31,7 +32,7 @@ public class TestTimeExtraction {
         InputStream inputStream = TestWECLinksExtractor.class.getClassLoader().getResourceAsStream("time/time_expr_unk.txt");
         assert inputStream != null;
         List<String> strings = IOUtils.readLines(new InputStreamReader(inputStream));
-        DefaultInfoboxExtractor extractor = new DefaultInfoboxExtractor(null, null);
+        TimeSpan1MonthInfoboxExtractor extractor = new TimeSpan1MonthInfoboxExtractor(null, null, null);
 
         for (String line : strings) {
             boolean spanSingleDay = extractor.isSpanSingleMonth(line);
@@ -41,10 +42,11 @@ public class TestTimeExtraction {
 
     @Test
     public void testExtractDateFromInfobox() {
-        TimeSpan1MonthInfoboxExtractor extractor = new TimeSpan1MonthInfoboxExtractor(null, null);
+        InfoboxFilter filter = new InfoboxFilter(new InfoboxConfiguration());
+        TimeSpan1MonthInfoboxExtractor extractor = new TimeSpan1MonthInfoboxExtractor(null, null, null);
         final List<AbstractMap.SimpleEntry<String, String>> sportText = getTimeFullPages();
         for(AbstractMap.SimpleEntry<String, String> text : sportText) {
-            final String infoBox = WECLinksExtractor.extractPageInfoBox(text.getValue());
+            final String infoBox = filter.extractPageInfoBox(text.getValue());
             boolean spanSingleMonth = extractor.isSpanSingleMonth(infoBox);
             Assert.assertFalse(text.getKey(), spanSingleMonth);
         }

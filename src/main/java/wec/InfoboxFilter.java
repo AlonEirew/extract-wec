@@ -19,9 +19,9 @@ public class InfoboxFilter implements ICorefFilter {
     @Override
     public boolean isConditionMet(RawElasticResult result) {
         if (result != null && result.getText() != null && !result.getText().isEmpty()) {
-            for (InfoboxConfiguration.InfoboxConfig config : this.infoboxConfiguration.getActiveInfoboxConfigs()) {
-                DefaultInfoboxExtractor extractor = config.getExtractor();
-                if(config.isInclude()) {
+            final String infoBox = this.extractPageInfoBox(result.getText());
+            if (infoBox != null && !infoBox.isEmpty()) {
+                for (DefaultInfoboxExtractor extractor : this.infoboxConfiguration.getAllIncludedExtractor()) {
                     final String extractMatchedInfobox = extractor.extractMatchedInfobox(result.getText(), result.getTitle());
                     final String corefType = extractor.getCorefType();
 
@@ -37,5 +37,39 @@ public class InfoboxFilter implements ICorefFilter {
         }
 
         return false;
+    }
+
+    public String extractPageInfoBox(String pageText) {
+        return extractPageInfoBox(pageText, false);
+    }
+
+    public String extractPageInfoBox(String pageText, boolean toLowerForm) {
+        StringBuilder infoBoxFinal = new StringBuilder();
+
+        final int beginIndex = pageText.indexOf("{{" + infoboxConfiguration.getInfoboxLangText());
+        if (beginIndex != -1) {
+            final String infoboxSubstring = pageText.substring(beginIndex);
+            int infoBarCount = 0;
+            for (int i = 0; i < infoboxSubstring.length(); i++) {
+                final char c = infoboxSubstring.charAt(i);
+                if (c == '}') {
+                    infoBarCount--;
+                    if (infoBarCount == 0) {
+                        infoBoxFinal.append(c);
+                        break;
+                    }
+                } else if (c == '{') {
+                    infoBarCount++;
+                }
+
+                infoBoxFinal.append(c);
+            }
+        }
+
+        if(toLowerForm) {
+            return infoBoxFinal.toString().toLowerCase().replaceAll(" ", "");
+        }
+
+        return infoBoxFinal.toString();
     }
 }

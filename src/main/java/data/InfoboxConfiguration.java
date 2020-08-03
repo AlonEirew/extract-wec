@@ -6,9 +6,20 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 public class InfoboxConfiguration {
+    // default (will be overridden by infobox_config.json)
+    String infoboxLangText = "infobox";
     private List<InfoboxConfig> infoboxConfigs;
+
+    public String getInfoboxLangText() {
+        return infoboxLangText;
+    }
+
+    public void setInfoboxLangText(String infoboxLangText) {
+        this.infoboxLangText = infoboxLangText;
+    }
 
     public List<InfoboxConfig> getInfoboxConfigs() {
         return infoboxConfigs;
@@ -32,6 +43,49 @@ public class InfoboxConfiguration {
 
     public void setInfoboxConfigs(List<InfoboxConfig> infoboxConfigs) {
         this.infoboxConfigs = infoboxConfigs;
+    }
+
+    private DefaultInfoboxExtractor initExtractorAndGet(InfoboxConfig locConfig) {
+        DefaultInfoboxExtractor extractor = locConfig.getExtractor();
+        if (extractor == null) {
+            Pattern pattern = Pattern.compile("\\{\\{" + this.infoboxLangText.toLowerCase() +
+                    "[\\w|]*?(" + String.join("|", locConfig.getInfoboxs()) + ")");
+            if (locConfig.getUseExtractorClass() != null && !locConfig.getUseExtractorClass().isEmpty()) {
+                try {
+                    Constructor<?>[] constructors = Class.forName(locConfig.getUseExtractorClass()).getConstructors();
+                    extractor = (DefaultInfoboxExtractor) constructors[0].newInstance(locConfig.getCorefType(),
+                            locConfig.getInfoboxs(), pattern);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            } else {
+                extractor = new DefaultInfoboxExtractor(locConfig.getCorefType(), locConfig.getInfoboxs(), pattern);
+            }
+            locConfig.extractor = extractor;
+        }
+
+        return extractor;
+    }
+
+    public DefaultInfoboxExtractor getExtractorByCorefType(String corefType) {
+        for(InfoboxConfig locConfig : this.infoboxConfigs) {
+            if(locConfig.getCorefType().equals(corefType)) {
+                return this.initExtractorAndGet(locConfig);
+            }
+        }
+
+        return null;
+    }
+
+    public List<DefaultInfoboxExtractor> getAllIncludedExtractor() {
+        List<DefaultInfoboxExtractor> includedExtractors = new ArrayList<>();
+        for(InfoboxConfig locConfig : this.infoboxConfigs) {
+            if(locConfig.isInclude()) {
+                includedExtractors.add(this.initExtractorAndGet(locConfig));
+            }
+        }
+
+        return includedExtractors;
     }
 
     public static class InfoboxConfig {
@@ -58,22 +112,6 @@ public class InfoboxConfiguration {
             this.include = include;
         }
 
-        public DefaultInfoboxExtractor getExtractor() {
-            if(this.extractor == null) {
-                if (this.useExtractorClass != null && !this.useExtractorClass.isEmpty()) {
-                    try {
-                        Constructor<?>[] constructors = Class.forName(this.useExtractorClass).getConstructors();
-                        this.extractor = (DefaultInfoboxExtractor) constructors[0].newInstance(this.corefType, this.infoboxs);
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                } else {
-                    this.extractor = new DefaultInfoboxExtractor(this.corefType, this.infoboxs);
-                }
-            }
-            return extractor;
-        }
-
         public String getUseExtractorClass() {
             return useExtractorClass;
         }
@@ -88,6 +126,10 @@ public class InfoboxConfiguration {
 
         public void setInfoboxs(List<String> infoboxs) {
             this.infoboxs = infoboxs;
+        }
+
+        private DefaultInfoboxExtractor getExtractor() {
+            return this.extractor;
         }
     }
 }

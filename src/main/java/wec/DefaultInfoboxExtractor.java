@@ -21,16 +21,17 @@ public class DefaultInfoboxExtractor {
 
     private final List<String> infoboxs;
     private final String corefType;
+    private final Pattern pattern;
 
-    public DefaultInfoboxExtractor(String corefType, List<String> infoboxs) {
+    public DefaultInfoboxExtractor(String corefType, List<String> infoboxs, Pattern pattern) {
         this.corefType = corefType;
         this.infoboxs = infoboxs;
+        this.pattern = pattern;
     }
 
     public String extractMatchedInfobox(String infobox, String title) {
         String infoboxLow = infobox.toLowerCase().replaceAll(" ", "");
-        Pattern pattern = Pattern.compile("\\{\\{infobox[\\w|]*?("+ String.join("|", this.infoboxs) + ")");
-        Matcher matcher = pattern.matcher(infoboxLow);
+        Matcher matcher = this.pattern.matcher(infoboxLow);
 
         if(matcher.find()) {
             return matcher.group(1);
@@ -45,22 +46,6 @@ public class DefaultInfoboxExtractor {
 
     public String getCorefType() {
         return corefType;
-    }
-
-    protected boolean titleNumberMatch(String title) {
-        Pattern titlePattern = Pattern.compile("\\s?\\d\\d?th\\s|[12][90][0-9][0-9]|\\b[MDCLXVI]+\\b");
-        Matcher titleMatcher = titlePattern.matcher(title);
-        return titleMatcher.find();
-    }
-
-    public boolean isSpanSingleMonth(String infoBox) {
-        String dateLine = extractDateLine(infoBox);
-        String dateString = extractDateString(dateLine);
-        Pattern p = Pattern.compile("PT?(\\d+)([DHM])");
-        Matcher matcher = p.matcher(dateString);
-        return matcher.matches() && ((matcher.group(2).equals("H") && Integer.parseInt(matcher.group(1)) <= 28*24) ||
-                (matcher.group(2).equals("D") && Integer.parseInt(matcher.group(1)) <= 28) ||
-                (matcher.group(2).equals("M") && Integer.parseInt(matcher.group(1)) == 1));
     }
 
     public String extractDateLine(String infoBox) {

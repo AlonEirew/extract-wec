@@ -61,8 +61,8 @@ public class TestParseAndExtractMentionWorker {
                 new InfoboxFilter(infoboxConfiguration));
 
         Map<String, RawElasticResult> testMap = new HashMap<>();
-        testMap.put("TEST3", new RawElasticResult("TEST3", "{{infoboxearthquake"));
-        testMap.put("TEST4", new RawElasticResult("TEST4", "{infoboxtofilter}"));
+        testMap.put("TEST3", new RawElasticResult("TEST3", "{{Infobox earthquake"));
+        testMap.put("TEST4", new RawElasticResult("TEST4", "{Infobox tofilter}"));
 
         final List<WECMention> finalToCommit = worker.filterUnwantedMentions(mentions, testMap);
 

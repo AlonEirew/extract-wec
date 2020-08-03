@@ -1,4 +1,5 @@
 {
+  "infoboxLangText" : "Infobox",
   "infoboxConfigs": [
     {
       "corefType": "ACCIDENT_EVENT",

@@ -1,6 +1,8 @@
 package workers;
 
+import data.InfoboxConfiguration;
 import data.RawElasticResult;
+import wec.InfoboxFilter;
 import wec.WECLinksExtractor;
 
 import java.util.HashSet;
@@ -11,6 +13,7 @@ import java.util.Set;
 public class ReadInfoBoxWorker extends AWorker {
 
     private final Map<String, Set<String>> infoBoxes;
+    private final InfoboxFilter filter = new InfoboxFilter(new InfoboxConfiguration());
 
     public ReadInfoBoxWorker(List<RawElasticResult> rawElasticResults, Map<String, Set<String>> infoBoxes) {
         super(rawElasticResults);
@@ -20,7 +23,7 @@ public class ReadInfoBoxWorker extends AWorker {
     @Override
     public void run() {
         for(RawElasticResult rawResult : this.rawElasticResults) {
-            String infoBox = WECLinksExtractor.extractPageInfoBox(rawResult.getText(), true);
+            String infoBox = filter.extractPageInfoBox(rawResult.getText(), true);
             if(infoBox != null && !infoBox.isEmpty()) {
                 infoBox = toReadableString(infoBox);
 
