@@ -79,7 +79,7 @@ public class ParseAndExtractMentionsWorker extends AWorker {
                 final String corefValue = ment.getCorefChain().getCorefValue();
                 final RawElasticResult rawElasticResult = pagesResults.get(corefValue);
                 if(!this.filter.isConditionMet(rawElasticResult)) {
-                    LOGGER.debug("Removing Coref page-" + corefValue);
+                    LOGGER.trace("Removing Coref page-" + corefValue);
                     ment.getCorefChain().setMarkedForRemoval(true);
                     iterator.remove();
                 }
