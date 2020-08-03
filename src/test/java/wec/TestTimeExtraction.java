@@ -19,7 +19,7 @@ public class TestTimeExtraction {
         InputStream inputStream = TestWECLinksExtractor.class.getClassLoader().getResourceAsStream("time/time_expr_2d.txt");
         assert inputStream != null;
         List<String> strings = IOUtils.readLines(new InputStreamReader(inputStream));
-        TimeSpan1MonthInfoboxExtractor extractor = new TimeSpan1MonthInfoboxExtractor(null, null, null);
+        TimeSpan1MonthInfoboxExtractor extractor = new TimeSpan1MonthInfoboxExtractor(null, null);
 
         for (String line : strings) {
             boolean spanSingleMonth = extractor.isSpanSingleMonth(line);
@@ -32,7 +32,7 @@ public class TestTimeExtraction {
         InputStream inputStream = TestWECLinksExtractor.class.getClassLoader().getResourceAsStream("time/time_expr_unk.txt");
         assert inputStream != null;
         List<String> strings = IOUtils.readLines(new InputStreamReader(inputStream));
-        TimeSpan1MonthInfoboxExtractor extractor = new TimeSpan1MonthInfoboxExtractor(null, null, null);
+        TimeSpan1MonthInfoboxExtractor extractor = new TimeSpan1MonthInfoboxExtractor(null, null);
 
         for (String line : strings) {
             boolean spanSingleDay = extractor.isSpanSingleMonth(line);
@@ -43,7 +43,7 @@ public class TestTimeExtraction {
     @Test
     public void testExtractDateFromInfobox() {
         InfoboxFilter filter = new InfoboxFilter(new InfoboxConfiguration());
-        TimeSpan1MonthInfoboxExtractor extractor = new TimeSpan1MonthInfoboxExtractor(null, null, null);
+        TimeSpan1MonthInfoboxExtractor extractor = new TimeSpan1MonthInfoboxExtractor(null, null);
         final List<AbstractMap.SimpleEntry<String, String>> sportText = getTimeFullPages();
         for(AbstractMap.SimpleEntry<String, String> text : sportText) {
             final String infoBox = filter.extractPageInfoBox(text.getValue());

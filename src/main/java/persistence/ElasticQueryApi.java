@@ -1,5 +1,6 @@
 package persistence;
 
+import data.Configuration;
 import data.RawElasticResult;
 import org.apache.http.HttpHost;
 import org.apache.logging.log4j.LogManager;
@@ -12,8 +13,6 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import data.Configuration;
-import wec.WECLinksExtractor;
 
 import java.io.Closeable;
 import java.io.IOException;

@@ -4,10 +4,9 @@ import data.InfoboxConfiguration;
 import data.RawElasticResult;
 import wec.DefaultInfoboxExtractor;
 import wec.InfoboxFilter;
-import wec.WECLinksExtractor;
 import wec.extractors.TimeSpan1MonthInfoboxExtractor;
 
-import java.util.*;
+import java.util.List;
 
 public class ReadDateWorker extends AWorker {
 
@@ -31,13 +30,13 @@ public class ReadDateWorker extends AWorker {
     private String extractDate(String text, String title) {
         InfoboxFilter filter = new InfoboxFilter(new InfoboxConfiguration());
         String infoBox = filter.extractPageInfoBox(text);
-        DefaultInfoboxExtractor attack = new TimeSpan1MonthInfoboxExtractor(null, null, null);
+        DefaultInfoboxExtractor attack = new TimeSpan1MonthInfoboxExtractor(null, null);
 
         String infoboxLow = infoBox.toLowerCase().replaceAll(" ", "");
         if (infoboxLow.contains("{{infoboxcivilianattack") || infoboxLow.contains("{{infoboxterroristattack") ||
                 infoboxLow.contains("{{infoboxmilitaryattack") || infoboxLow.contains("{{infoboxcivilconflict") ||
                 infoboxLow.contains("{{infoboxmilitaryconflict")) {
-            String dateline = attack.extractDateLine(infoBox);
+            String dateline = TimeSpan1MonthInfoboxExtractor.extractDateLine(infoBox);
 //            String dateString = attack.extractDateString(dateline);
 
             if (!dateline.isEmpty()) {// && !dateString.isEmpty()) {

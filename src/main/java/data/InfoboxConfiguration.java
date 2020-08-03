@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 public class InfoboxConfiguration {
     // default (will be overridden by infobox_config.json)
-    String infoboxLangText = "infobox";
+    String infoboxLangText = "Infobox";
     private List<InfoboxConfig> infoboxConfigs;
 
     public String getInfoboxLangText() {
@@ -53,13 +53,12 @@ public class InfoboxConfiguration {
             if (locConfig.getUseExtractorClass() != null && !locConfig.getUseExtractorClass().isEmpty()) {
                 try {
                     Constructor<?>[] constructors = Class.forName(locConfig.getUseExtractorClass()).getConstructors();
-                    extractor = (DefaultInfoboxExtractor) constructors[0].newInstance(locConfig.getCorefType(),
-                            locConfig.getInfoboxs(), pattern);
+                    extractor = (DefaultInfoboxExtractor) constructors[0].newInstance(locConfig.getCorefType(), pattern);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
             } else {
-                extractor = new DefaultInfoboxExtractor(locConfig.getCorefType(), locConfig.getInfoboxs(), pattern);
+                extractor = new DefaultInfoboxExtractor(locConfig.getCorefType(), pattern);
             }
             locConfig.extractor = extractor;
         }

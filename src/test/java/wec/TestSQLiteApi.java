@@ -10,14 +10,14 @@ import java.sql.SQLException;
 
 public class TestSQLiteApi {
 
-    @Test
+//    @Test
     public void testSQLiteApi() throws SQLException {
         TestSQLQueryApi sqlTest = new TestSQLQueryApi();
         SQLQueryApi api = new SQLQueryApi(new SQLiteConnections());
         sqlTest.testInsertToTable(api);
     }
 
-    @Test
+//    @Test
     public void testDeleteTable() throws SQLException {
         SQLQueryApi api = new SQLQueryApi(new SQLiteConnections());
         WECMention columns = new WECMention();

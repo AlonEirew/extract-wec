@@ -8,8 +8,8 @@ import java.util.regex.Pattern;
 
 public class TitleWithDateInfoboxExtractor extends DefaultInfoboxExtractor {
 
-    public TitleWithDateInfoboxExtractor(String corefType, List<String> infoboxs, Pattern pattern) {
-        super(corefType, infoboxs, pattern);
+    public TitleWithDateInfoboxExtractor(String corefType, Pattern pattern) {
+        super(corefType, pattern);
     }
 
     @Override

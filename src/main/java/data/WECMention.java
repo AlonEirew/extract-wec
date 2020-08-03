@@ -104,51 +104,6 @@ public class WECMention implements ISQLObject<WECMention> {
         return mentionId;
     }
 
-    public void addMentionToken(String token, String tokenPos) {
-        if(token != null) {
-            this.mentionTokens.add(token);
-            if(tokenPos != null) {
-                this.mentionTokensPos.add(tokenPos);
-            } else {
-                this.mentionTokensPos.add("UNK");
-            }
-        }
-    }
-
-    public boolean isValid() {
-        return !this.coreChain.getCorefValue().isEmpty() &&
-                this.mentionText.length() > 1 &&
-                !this.mentionText.toLowerCase().startsWith("category:") &&
-                this.tokenStart != -1 && this.tokenEnd != -1 &&
-                this.mentionTokens.size() != 0 &&
-                ((this.tokenEnd - this.tokenStart + 1) == this.mentionTokens.size()) &&
-                this.isContextValid();
-    }
-
-    public boolean isContextValid() {
-        for (Map.Entry<String, Integer> entry : this.context) {
-            if (entry.getKey().toLowerCase().contains("#") ||
-                    entry.getKey().toLowerCase().contains("jpg") ||
-                    entry.getKey().toLowerCase().contains("{") ||
-                    entry.getKey().toLowerCase().contains("}")) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private int isVerb() {
-        int isVerb = 1;
-        for(String pos : this.mentionTokensPos) {
-            if(!pos.matches("VB[DGNPZ]?")) {
-                isVerb = 0;
-                break;
-            }
-        }
-
-        return isVerb;
-    }
-
     @Override
     public String getColumnNames() {
         return "mentionId, coreChainId, mentionText, tokenStart, tokenEnd, extractedFromPage, context, PartOfSpeech";
