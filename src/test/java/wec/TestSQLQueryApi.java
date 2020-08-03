@@ -31,15 +31,6 @@ public class TestSQLQueryApi {
                 new AbstractMap.SimpleEntry<>("blogb", 2),
                 new AbstractMap.SimpleEntry<>("blob", 3)
         };
-        List<List<Map.Entry<String, Integer>>> context = new ArrayList<>();
-        context.add(Arrays.asList(contextSent));
-        objList.add(new WECMention(
-                WECCoref.getAndSetIfNotExist("test1"),
-                "test",
-                0,
-                1,
-                "Test",
-                context));
 
         objList.add(new WECMention(
                 WECCoref.getAndSetIfNotExist("test1"),
@@ -47,7 +38,15 @@ public class TestSQLQueryApi {
                 0,
                 1,
                 "Test",
-                context));
+                Arrays.asList(contextSent)));
+
+        objList.add(new WECMention(
+                WECCoref.getAndSetIfNotExist("test1"),
+                "test",
+                0,
+                1,
+                "Test",
+                Arrays.asList(contextSent)));
 
         final boolean b = api.insertRowsToTable(objList);
         Assert.assertTrue(b);

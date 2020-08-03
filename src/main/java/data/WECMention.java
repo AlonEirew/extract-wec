@@ -29,7 +29,7 @@ public class WECMention implements ISQLObject<WECMention> {
     private String extractedFromPage = "";
     private final List<String> mentionTokens = new ArrayList<>();
     private final List<String> mentionTokensPos = new ArrayList<>();
-    private List<List<Map.Entry<String, Integer>>> context;
+    private List<Map.Entry<String, Integer>> context;
 
     public WECMention() {
     }
@@ -39,7 +39,7 @@ public class WECMention implements ISQLObject<WECMention> {
     }
 
     public WECMention(WECCoref coref, String mentionText,
-                      int tokenStart, int tokenEnd, String extractedFromPage, List<List<Map.Entry<String, Integer>>> context) {
+                      int tokenStart, int tokenEnd, String extractedFromPage, List<Map.Entry<String, Integer>> context) {
         this.coreChain = coref;
         this.mentionText = mentionText;
         this.tokenStart = tokenStart;
@@ -84,11 +84,11 @@ public class WECMention implements ISQLObject<WECMention> {
         this.coreChain = corefChainValue;
     }
 
-    public List<List<Map.Entry<String, Integer>>> getContext() {
+    public List<Map.Entry<String, Integer>> getContext() {
         return context;
     }
 
-    public void setContext(List<List<Map.Entry<String, Integer>>> context) {
+    public void setContext(List<Map.Entry<String, Integer>> context) {
         this.context = context;
     }
 
@@ -126,14 +126,12 @@ public class WECMention implements ISQLObject<WECMention> {
     }
 
     public boolean isContextValid() {
-        for(List<Map.Entry<String, Integer>> sentence : this.context) {
-            for (Map.Entry<String, Integer> entry : sentence) {
-                if (entry.getKey().toLowerCase().contains("#") ||
-                        entry.getKey().toLowerCase().contains("jpg") ||
-                        entry.getKey().toLowerCase().contains("{") ||
-                        entry.getKey().toLowerCase().contains("}")) {
-                    return false;
-                }
+        for (Map.Entry<String, Integer> entry : this.context) {
+            if (entry.getKey().toLowerCase().contains("#") ||
+                    entry.getKey().toLowerCase().contains("jpg") ||
+                    entry.getKey().toLowerCase().contains("{") ||
+                    entry.getKey().toLowerCase().contains("}")) {
+                return false;
             }
         }
         return true;
@@ -182,20 +180,13 @@ public class WECMention implements ISQLObject<WECMention> {
     }
 
     private String getContextAsSQLBlob() {
-        StringBuilder sb = new StringBuilder();
         JsonArray rootArray = new JsonArray();
-        for(int i = 0 ; i < this.context.size(); i++) {
-            List<Map.Entry<String, Integer>> sentence = this.context.get(i);
-            sb.append("[");
-            JsonArray jsonArray = new JsonArray();
-            for (int j = 0; j < sentence.size(); j++) {
-                JsonObject jsonObject = new JsonObject();
-                Map.Entry<String, Integer> entry = sentence.get(j);
-                jsonObject.addProperty(entry.getKey(), entry.getValue());
-                jsonArray.add(jsonObject);
-            }
-            rootArray.add(jsonArray);
+        for (Map.Entry<String, Integer> entry : this.context) {
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty(entry.getKey(), entry.getValue());
+            rootArray.add(jsonObject);
         }
+
         return GSON.toJson(rootArray);
     }
 

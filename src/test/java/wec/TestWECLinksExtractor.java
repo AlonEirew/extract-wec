@@ -44,15 +44,6 @@ public class TestWECLinksExtractor {
     }
 
     @Test
-    public void testExtractTmp() {
-        List<AbstractMap.SimpleEntry<String, String>> pageTexts = TestUtils.getTextAndTitle("wiki_links/tmp.json");
-        for(AbstractMap.SimpleEntry<String, String> text : pageTexts) {
-            final List<WikiNewsMention> wikiNewsMentions = WECLinksExtractor.extractFromWikiNews(text.getKey(), text.getValue());
-            System.out.println();
-        }
-    }
-
-    @Test
     public void testInfoBoxExtract() {
         String pageText = getInfoBoxs();
         final String infoBoxs = WECLinksExtractor.extractPageInfoBox(pageText);

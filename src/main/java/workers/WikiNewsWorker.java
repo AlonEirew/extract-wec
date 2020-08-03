@@ -33,27 +33,27 @@ public class WikiNewsWorker extends AWorker {
 
     @Override
     public void run() {
-        List<WikiNewsMention> mentions = new ArrayList<>();
-        for(RawElasticResult rowResult : this.rawElasticResults) {
-            List<WikiNewsMention> wikiLinksMentions = WECLinksExtractor.extractFromWikiNews(rowResult.getTitle(), rowResult.getText());
-            wikiLinksMentions.forEach(wikiLinksMention -> wikiLinksMention.getCorefChain().incMentionsCount());
-            mentions.addAll(wikiLinksMentions);
-        }
-
-        if(mentions.size() > 0) {
-            final Iterator<WikiNewsMention> menIterator = mentions.iterator();
-            while(menIterator.hasNext()) {
-                WikiNewsMention mention = menIterator.next();
-                final String corefValue = mention.getCorefChain().getCorefValue();
-                if (!wikiLinksCorefMap.containsKey(corefValue)) {
-                    menIterator.remove();
-                } else {
-                    mention.setCorefChain(wikiLinksCorefMap.get(corefValue));
-                }
-            }
-        }
-
-        handle(mentions, false);
+//        List<WikiNewsMention> mentions = new ArrayList<>();
+//        for(RawElasticResult rowResult : this.rawElasticResults) {
+//            List<WikiNewsMention> wikiLinksMentions = WECLinksExtractor.extractFromWikiNews(rowResult.getTitle(), rowResult.getText());
+//            wikiLinksMentions.forEach(wikiLinksMention -> wikiLinksMention.getCorefChain().incMentionsCount());
+//            mentions.addAll(wikiLinksMentions);
+//        }
+//
+//        if(mentions.size() > 0) {
+//            final Iterator<WikiNewsMention> menIterator = mentions.iterator();
+//            while(menIterator.hasNext()) {
+//                WikiNewsMention mention = menIterator.next();
+//                final String corefValue = mention.getCorefChain().getCorefValue();
+//                if (!wikiLinksCorefMap.containsKey(corefValue)) {
+//                    menIterator.remove();
+//                } else {
+//                    mention.setCorefChain(wikiLinksCorefMap.get(corefValue));
+//                }
+//            }
+//        }
+//
+//        handle(mentions, false);
     }
 
     public void handle(List<WikiNewsMention> mentions, boolean forceCommit) {

@@ -14,14 +14,14 @@ import java.util.*;
 public class TestWikiNewsExtractor {
 
 
-    @Test
-    public void testExtractWikiNewsLinks() {
-        final List<AbstractMap.SimpleEntry<String, String>> textAndTitle = TestUtils.getTextAndTitle("wiki_news/colombia.json");
-        AbstractMap.SimpleEntry<String, String> pair = textAndTitle.get(0);
-        final List<WikiNewsMention> wikiNewsMentions = WECLinksExtractor.extractFromWikiNews(pair.getKey(), pair.getValue());
-        Assert.assertEquals(23, wikiNewsMentions.size());
-
-    }
+//    @Test
+//    public void testExtractWikiNewsLinks() {
+//        final List<AbstractMap.SimpleEntry<String, String>> textAndTitle = TestUtils.getTextAndTitle("wiki_news/colombia.json");
+//        AbstractMap.SimpleEntry<String, String> pair = textAndTitle.get(0);
+//        final List<WikiNewsMention> wikiNewsMentions = WECLinksExtractor.extractFromWikiNews(pair.getKey(), pair.getValue());
+//        Assert.assertEquals(23, wikiNewsMentions.size());
+//
+//    }
 
 //    @Test
     public void testNewsWorker() {

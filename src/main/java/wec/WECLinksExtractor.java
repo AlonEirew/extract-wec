@@ -2,49 +2,28 @@ package wec;
 
 import data.RawElasticResult;
 import data.WECMention;
-import data.WikiNewsMention;
-import edu.stanford.nlp.ling.CoreAnnotations;
-import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.pipeline.CoreDocument;
-import edu.stanford.nlp.pipeline.CoreSentence;
-import utils.StanfordNlpApi;
+import info.bliki.wiki.model.WikiModel;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
+import org.jsoup.select.Elements;
 
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class WECLinksExtractor {
 
-    private static final String LINK_REGEX_2 = "\\[\\[([^\\[]*?)\\|?([^\\|]*?)\\]\\]";
-    private static final Pattern LINK_PATTERN_2 = Pattern.compile(LINK_REGEX_2);
-
-    public static List<WikiNewsMention> extractFromWikiNews(String pageName, String text) {
-        List<WikiNewsMention> finalResults = new ArrayList<>();
-        text = cleanTextField(text);
-        String[] textLines = text.split("\\.\n\n");
-        for (String context : textLines) {
-            final List<WECMention> WECMentions = extractTextBodyMentions(pageName, context);
-            for (WECMention WECMention : WECMentions) {
-                finalResults.add(new WikiNewsMention(WECMention));
-            }
-        }
-
-        for (WikiNewsMention mention : finalResults) {
-            String corefValue = mention.getCorefChain().getCorefValue();
-            if (corefValue.contains("w:")) {
-                corefValue = corefValue.replace("w:", "").trim();
-                mention.getCorefChain().setCorefValue(corefValue);
-            }
-        }
-
-        return finalResults;
-    }
-
-    public static List<WECMention> extractFromWikipedia(RawElasticResult rowResult) {
+    public static List<WECMention> extractFromWikipedia(RawElasticResult rawElasticResult) {
         List<WECMention> finalResults = new ArrayList<>();
 
-        String pageName = rowResult.getTitle();
-        String text = rowResult.getText();
+        String pageName = rawElasticResult.getTitle();
+        String text = rawElasticResult.getText();
 
         if(pageName.toLowerCase().startsWith("file:") ||
                 pageName.toLowerCase().startsWith("wikipedia:") || pageName.toLowerCase().startsWith("category:") ||
@@ -53,60 +32,79 @@ public class WECLinksExtractor {
             return finalResults;
         }
 
-//        if (text.toLowerCase().contains("[[category:opinion polling") || text.toLowerCase().contains("[[category:years in") ||
-//                text.toLowerCase().contains("[[category:lists of") || text.toLowerCase().contains("[[category:list of")) {
-//            return finalResults;
-//        }
+        String htmlText = WikiModel.toHtml(text);
+        String cleanHtml = cleanTextField(htmlText);
+        finalResults = extractMentions(pageName, cleanHtml);
 
-        String textClean = cleanTextField(text);
+        return finalResults;
+    }
 
-        String relText;
-        int firstSentenceStartIndex = textClean.indexOf("'''");
-        if (firstSentenceStartIndex >= 0) {
-            relText = textClean.substring(firstSentenceStartIndex);
-            String[] textLines = relText.split("\\.\n\n");
-            for (String paragraph : textLines) {
-                finalResults.addAll(extractTextBodyMentions(pageName, paragraph));
+    private static List<WECMention> extractMentions(String pageName, String cleanHtml) {
+        List<WECMention> finalResults = new ArrayList<>();
+        Document doc = Jsoup.parse(cleanHtml);
+        Elements pElements = doc.getElementsByTag("p");
+        for (Element paragraph : pElements) {
+            int index = 0;
+            final List<Map.Entry<String, Integer>> contextAsStringList = new ArrayList<>();
+            List<Node> nodes = paragraph.childNodes();
+            List<WECMention> paragraphResults = new ArrayList<>();
+            for(Node child : nodes) {
+                String text = null;
+                String linkHref = null;
+                if(child instanceof Element) {
+                    if (((Element) child).tag().getName().equals("a")) {
+                        linkHref = child.attr("href");
+                        linkHref = linkHref.substring(linkHref.indexOf("/") + 1).replaceAll("_", " ");
+                    }
+
+                    text = ((Element) child).text();
+                }
+                else if (child instanceof TextNode) {
+                    text = ((TextNode) child).text();
+                }
+
+                if(text != null) {
+                    text = text.trim();
+                    String[] splText = text.split(" ");
+
+                    int i = 0;
+                    for(; i < splText.length ; i++) {
+                        contextAsStringList.add(new AbstractMap.SimpleEntry<>(splText[i], i+index));
+                    }
+                    int startIndex = index;
+                    index = index+i;
+
+                    if(linkHref != null) {
+                        WECMention mention = new WECMention(pageName);
+                        mention.setMentionText(text);
+                        mention.setCorefChain(linkHref);
+                        mention.setTokenStart(startIndex);
+                        mention.setTokenEnd(index-1);
+                        paragraphResults.add(mention);
+                    }
+                }
             }
+
+            for(WECMention ment : paragraphResults) {
+                ment.setContext(contextAsStringList);
+            }
+
+            finalResults.addAll(paragraphResults);
         }
 
         return finalResults;
     }
 
-    private static List<WECMention> extractTextBodyMentions(String pageName, String paragraph) {
-        String[] paragraphLines = paragraph.split("\n");
-        for (int i = 0; i < paragraphLines.length; i++) {
-            if (paragraphLines[i] != null && !paragraphLines[i].isEmpty() && isValidLine(paragraphLines[i])) {
-                paragraphLines[i] = paragraphLines[i]
-                        .replaceAll("\\*.*?\n", "")
-                        .replaceAll("\n", " ")
-                        .replaceAll("\\<.*?>", "")
-                        .replaceAll("\\s+", " ").trim();
-            } else {
-                paragraphLines[i] = "";
-            }
-        }
-
-        String fixedParagraph = String.join("\n", paragraphLines);
-        return extractFromParagraph(pageName, fixedParagraph);
-    }
-
-    private static String cleanTextField(String text) {
-        text = text.replaceAll("==.*?==\n", "\n");
+    private static String cleanTextField(String html) {
+        String cleanHtml = html;
         Pattern pat1 = Pattern.compile("(?s)\\{\\{[^{]*?\\}\\}");
-        Matcher match1 = pat1.matcher(text);
+        Matcher match1 = pat1.matcher(cleanHtml);
         while (match1.find()) {
-            text = match1.replaceAll("");
-            match1 = pat1.matcher(text);
+            cleanHtml = match1.replaceAll("");
+            match1 = pat1.matcher(cleanHtml);
         }
-        text = text.replaceAll("<ref[\\s\\S][^<]*?/>", "");
-        text = text.replaceAll("(?s)<ref[\\s\\S]*?</ref>", "");
-        text = text.replaceAll("(?s)\\{\\|\\s?class=\\\"?wikitable.*?\n\\|\\}", "");
-        text = text.replaceAll("(?s)<gallery.*?</gallery>", "");
-        text = text.replaceAll("(?s)<timeline.*?</timeline>", "");
-        text = text.replaceAll("\\[\\[([cC]ategory|[fF]ile|[iI]mage).*", "");
-        text = text.replaceAll("\\*.*?\n", "\n");
-        return text;
+
+        return cleanHtml;
     }
 
     public static String extractPageInfoBox(String pageText) {
@@ -142,113 +140,5 @@ public class WECLinksExtractor {
         }
 
         return infoBoxFinal.toString();
-    }
-
-    static List<WECMention> extractFromParagraph(String pageName, String paragraphToExtractFrom) {
-        List<WECMention> mentions = new ArrayList<>();
-
-        Matcher linkMatcher = LINK_PATTERN_2.matcher(paragraphToExtractFrom);
-        while (linkMatcher.find()) {
-            String match1 = linkMatcher.group(1);
-            String match2 = linkMatcher.group(2);
-            if (!match1.contains("#")) {
-                WECMention mention = new WECMention(pageName);
-                if (!match1.isEmpty()) {
-                    mention.setMentionText(match2);
-                    mention.setCorefChain(match1);
-                } else {
-                    mention.setMentionText(match2);
-                    mention.setCorefChain(match2);
-                }
-
-                mentions.add(mention);
-            }
-        }
-
-        String context = linkMatcher
-                .replaceAll("$2")
-                .replaceAll("\\s+", " ").trim();
-        if (context.matches("'''(.*?)'''(.*?)")) {
-            context = context.replaceAll("'''(.*?)'''(.*?)", "$1");
-        }
-
-        setMentionsContext(mentions, context);
-        return mentions;
-    }
-
-    private static <T extends WECMention> void setMentionsContext(List<T> mentions, String context) {
-        final List<List<Map.Entry<String, Integer>>> contextAsStringList = new ArrayList<>();
-        CoreDocument doc = StanfordNlpApi.noPosAnnotate(context);
-        int runningId = 0;
-        if (doc.sentences().size() > 0) {
-            for (CoreSentence sentence : doc.sentences()) {
-                List<Map.Entry<String, Integer>> sentenceTokens = new ArrayList<>();
-                final List<CoreLabel> tokens = sentence.tokens();
-                for (CoreLabel token : tokens) {
-                    if (token.originalText().matches("[|\\[\\]\\*^\\+]")) {
-                        continue;
-                    }
-                    sentenceTokens.add(new AbstractMap.SimpleEntry<>(token.originalText(), runningId));
-                    runningId++;
-                }
-
-                contextAsStringList.add(sentenceTokens);
-            }
-
-            Set<Integer> usedStartIndexes = new HashSet<>();
-            Iterator<T> iterator = mentions.iterator();
-            while (iterator.hasNext()) {
-                final T mention = iterator.next();
-                mention.setContext(contextAsStringList);
-                CoreDocument mentionCoreDoc = StanfordNlpApi.withPosAnnotate(mention.getMentionText());
-                if (mentionCoreDoc.sentences().size() > 0) {
-                    final List<CoreLabel> mentTokens = mentionCoreDoc.sentences().get(0).tokens();
-                    for (CoreLabel label : mentTokens) {
-                        mention.addMentionToken(label.originalText(), label.get(CoreAnnotations.PartOfSpeechAnnotation.class));
-                    }
-
-                    setMentionStartEndTokenIndex(mention, usedStartIndexes, mentTokens);
-
-                    if (!mention.isValid()) {
-                        iterator.remove();
-                    }
-
-                } else {
-                    iterator.remove();
-                }
-            }
-        } else {
-            mentions.clear();
-        }
-    }
-
-    private static <T extends WECMention> void setMentionStartEndTokenIndex(T mention, Set<Integer> usedStartIndexes, List<CoreLabel> mentTokens) {
-        int index = 0;
-        for(int i = 0 ; i < mention.getContext().size() ; i++) {
-            List<Map.Entry<String, Integer>> sentenceToken = mention.getContext().get(i);
-            for (int j = 0; j < sentenceToken.size(); j++) {
-                if (!usedStartIndexes.contains(index)) {
-                    if (sentenceToken.get(j).getKey().equals(mentTokens.get(0).originalText())) {
-                        mention.setTokenStart(sentenceToken.get(j).getValue());
-                        usedStartIndexes.add(index);
-                        if (mentTokens.size() == 1) {
-                            mention.setTokenEnd(index);
-                            break;
-                        }
-                    } else if (mention.getTokenStart() != -1 && sentenceToken.get(j).getKey()
-                            .equals(mentTokens.get(mentTokens.size() - 1).originalText())) {
-                        mention.setTokenEnd(sentenceToken.get(j).getValue());
-                        return;
-                    }
-                }
-                index++;
-            }
-        }
-    }
-
-    static boolean isValidLine(String line) {
-        line = line.toLowerCase();
-        return !(line.startsWith("|") || line.startsWith("*") || line.startsWith("=") || line.startsWith("#") ||
-                line.startsWith(";") || line.startsWith(":"));
     }
 }
