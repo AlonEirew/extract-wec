@@ -30,8 +30,6 @@ public class WikiToWECMain {
         InfoboxConfiguration infoboxConfiguration = GSON.fromJson(new FileReader(
                 property + config.getInfoboxConfiguration()), InfoboxConfiguration.class);
 
-        infoboxConfiguration.getInfoboxConfigs().get(10).getExtractor();
-
         final int pool_size = Integer.parseInt(config.getPoolSize());
         if(pool_size > 0) {
             ExecutorServiceFactory.initExecutorService(pool_size);

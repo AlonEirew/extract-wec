@@ -19,7 +19,7 @@ public class InfoboxFilter implements ICorefFilter {
     @Override
     public boolean isConditionMet(RawElasticResult result) {
         if (result != null && result.getText() != null && !result.getText().isEmpty()) {
-            for (InfoboxConfiguration.InfoboxConfig config : this.infoboxConfiguration.getInfoboxConfigs()) {
+            for (InfoboxConfiguration.InfoboxConfig config : this.infoboxConfiguration.getActiveInfoboxConfigs()) {
                 DefaultInfoboxExtractor extractor = config.getExtractor();
                 if(config.isInclude()) {
                     final String extractMatchedInfobox = extractor.extractMatchedInfobox(result.getText(), result.getTitle());

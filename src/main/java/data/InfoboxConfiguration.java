@@ -3,13 +3,31 @@ package data;
 import wec.DefaultInfoboxExtractor;
 
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class InfoboxConfiguration {
     private List<InfoboxConfig> infoboxConfigs;
 
     public List<InfoboxConfig> getInfoboxConfigs() {
         return infoboxConfigs;
+    }
+
+    public List<InfoboxConfig> getActiveInfoboxConfigs() {
+        List<InfoboxConfig> onlyValid = new ArrayList<>(this.infoboxConfigs);
+        onlyValid.removeIf(infobox -> !infobox.include);
+        return onlyValid;
+    }
+
+    public InfoboxConfiguration.InfoboxConfig getInfoboxConfigByCoref(String corefType) {
+        for(InfoboxConfiguration.InfoboxConfig infoboxConfig : this.infoboxConfigs) {
+            if(infoboxConfig.getCorefType().equals(corefType)) {
+                return infoboxConfig;
+            }
+        }
+
+        return null;
     }
 
     public void setInfoboxConfigs(List<InfoboxConfig> infoboxConfigs) {

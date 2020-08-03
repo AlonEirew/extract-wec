@@ -17,6 +17,7 @@
     {
       "corefType": "ATTACK_EVENT",
       "include": true,
+      "useExtractorClass": "wec.extractors.TimeSpan1MonthInfoboxExtractor",
       "infoboxs": [
         "civilianattack",
         "terroristattack",
@@ -49,17 +50,24 @@
     {
       "corefType": "GENERAL_EVENT",
       "include": true,
+      "useExtractorClass": "wec.extractors.TimeSpan1MonthInfoboxExtractor",
       "infoboxs": [
-        "solareclipse",
         "newsevent",
         "concert",
-        "weaponstest",
-        "explosivetest",
         "summit",
         "convention",
         "conference",
         "summitmeeting",
         "festival"
+      ]
+    },
+    {
+      "corefType": "OTHERS",
+      "include": true,
+      "infoboxs": [
+        "solareclipse",
+        "weaponstest",
+        "explosivetest"
       ]
     },
     {
