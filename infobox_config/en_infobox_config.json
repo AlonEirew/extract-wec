@@ -18,11 +18,9 @@
     {
       "corefType": "ATTACK_EVENT",
       "include": true,
-      "useExtractorClass": "wec.extractors.TimeSpan1MonthInfoboxExtractor",
       "infoboxs": [
         "civilianattack",
         "terroristattack",
-        "militaryattack",
         "civilconflict"
       ]
     },
@@ -51,7 +49,6 @@
     {
       "corefType": "GENERAL_EVENT",
       "include": true,
-      "useExtractorClass": "wec.extractors.TimeSpan1MonthInfoboxExtractor",
       "infoboxs": [
         "newsevent",
         "concert",
