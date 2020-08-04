@@ -34,10 +34,6 @@ public class WECMention implements ISQLObject<WECMention> {
     public WECMention() {
     }
 
-    public WECMention(String extractedFromPage) {
-        this.extractedFromPage = extractedFromPage;
-    }
-
     public WECMention(WECCoref coref, String mentionText,
                       int tokenStart, int tokenEnd, String extractedFromPage, List<Map.Entry<String, Integer>> context) {
         this.coreChain = coref;
@@ -46,6 +42,8 @@ public class WECMention implements ISQLObject<WECMention> {
         this.tokenEnd = tokenEnd;
         this.extractedFromPage = extractedFromPage;
         this.context = context;
+
+        this.coreChain.incMentionsCount();
     }
 
     public String getMentionText() {

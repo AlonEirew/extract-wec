@@ -1,6 +1,7 @@
 package wec;
 
 import data.RawElasticResult;
+import data.WECCoref;
 import data.WECMention;
 import info.bliki.wiki.model.WikiModel;
 import org.jsoup.Jsoup;
@@ -35,7 +36,7 @@ public class WECLinksExtractor {
             int index = 0;
             final List<Map.Entry<String, Integer>> contextAsStringList = new ArrayList<>();
             List<Node> nodes = paragraph.childNodes();
-            List<WECMention> paragraphResults = new ArrayList<>();
+            List<WECMention> paragraphMentions = new ArrayList<>();
             for(Node child : nodes) {
                 String text = null;
                 String linkHref = null;
@@ -63,21 +64,25 @@ public class WECLinksExtractor {
                     index = index+i;
 
                     if(linkHref != null) {
-                        WECMention mention = new WECMention(pageName);
-                        mention.setMentionText(text);
-                        mention.setCorefChain(linkHref);
-                        mention.setTokenStart(startIndex);
-                        mention.setTokenEnd(index-1);
-                        paragraphResults.add(mention);
+                        WECCoref wecCoref = WECCoref.getAndSetIfNotExist(linkHref);
+                        WECMention mention = new WECMention(
+                                wecCoref,
+                                text,
+                                startIndex,
+                                index-1,
+                                pageName,
+                                null);
+
+                        paragraphMentions.add(mention);
                     }
                 }
             }
 
-            for(WECMention ment : paragraphResults) {
+            for(WECMention ment : paragraphMentions) {
                 ment.setContext(contextAsStringList);
             }
 
-            finalResults.addAll(paragraphResults);
+            finalResults.addAll(paragraphMentions);
         }
 
         return finalResults;

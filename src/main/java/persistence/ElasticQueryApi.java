@@ -2,6 +2,7 @@ package persistence;
 
 import data.Configuration;
 import data.RawElasticResult;
+import data.WECCoref;
 import org.apache.http.HttpHost;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -112,6 +113,8 @@ public class ElasticQueryApi implements Closeable {
                 final RawElasticResult rawElasticResult = ElasticQueryApi.extractFromHit(hits[0]);
                 if(rawElasticResult != null) {
                     rawResults.put(rawElasticResult.getTitle(), rawElasticResult);
+                } else {
+                    LOGGER.debug("Missing Coref Result?!");
                 }
             }
         }

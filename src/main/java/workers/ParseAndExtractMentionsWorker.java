@@ -41,7 +41,6 @@ public class ParseAndExtractMentionsWorker extends AWorker {
             if(infobox != null && !infobox.isEmpty()) {
                 List<WECMention> wecMentions = WECLinksExtractor.extractFromWikipedia(rowResult);
                 if (!wecMentions.isEmpty()) {
-                    wecMentions.forEach(wikiLinksMention -> wikiLinksMention.getCorefChain().incMentionsCount());
                     finalToCommit.addAll(wecMentions);
                 }
             }
@@ -79,7 +78,6 @@ public class ParseAndExtractMentionsWorker extends AWorker {
             if(ment.getCorefChain().isMarkedForRemoval()) {
                 iterator.remove();
             } else if(!ment.getCorefChain().wasAlreadyRetrived()) {
-                ment.getCorefChain().setWasAlreadyRetrived(true);
                 final String corefValue = ment.getCorefChain().getCorefValue();
                 final RawElasticResult rawElasticResult = pagesResults.get(corefValue);
                 if(!this.filter.isConditionMet(rawElasticResult)) {
@@ -87,6 +85,7 @@ public class ParseAndExtractMentionsWorker extends AWorker {
                     ment.getCorefChain().setMarkedForRemoval(true);
                     iterator.remove();
                 }
+                ment.getCorefChain().setWasAlreadyRetrived(true);
             }
         }
 
