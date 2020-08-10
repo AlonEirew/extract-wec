@@ -127,9 +127,10 @@ public class ElasticQueryApi implements Closeable {
         final Map map = hit.getSourceAsMap();
         final String text = (String) map.get("text");
         final String title = (String) map.get("title");
-        final String infobox = (String) map.get("infobox");
         final String redirect = (String) map.get("redirectTitle");
-        final boolean isDisambig = (Boolean) map.get("relations.isDisambiguation");
+        final Map relations = (Map) map.get("relations");
+        final boolean isDisambig = (Boolean) relations.get("isDisambiguation");
+        final String infobox = (String) relations.get("infobox");
 
         if(redirect != null && !redirect.isEmpty()) {
                 return null;
