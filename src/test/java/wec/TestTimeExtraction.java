@@ -1,6 +1,7 @@
 package wec;
 
 import data.InfoboxConfiguration;
+import data.RawElasticResult;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -42,17 +43,15 @@ public class TestTimeExtraction {
 
     @Test
     public void testExtractDateFromInfobox() {
-        InfoboxFilter filter = new InfoboxFilter(new InfoboxConfiguration());
         TimeSpan1MonthInfoboxExtractor extractor = new TimeSpan1MonthInfoboxExtractor(null, null);
-        final List<AbstractMap.SimpleEntry<String, String>> sportText = getTimeFullPages();
-        for(AbstractMap.SimpleEntry<String, String> text : sportText) {
-            final String infoBox = filter.extractPageInfoBox(text.getValue());
-            boolean spanSingleMonth = extractor.isSpanSingleMonth(infoBox);
-            Assert.assertFalse(text.getKey(), spanSingleMonth);
+        final List<RawElasticResult> sportText = getTimeFullPages();
+        for(RawElasticResult text : sportText) {
+            boolean spanSingleMonth = extractor.isSpanSingleMonth(text.getInfobox());
+            Assert.assertFalse(text.getTitle(), spanSingleMonth);
         }
     }
 
-    private List<AbstractMap.SimpleEntry<String, String>> getTimeFullPages() {
+    private List<RawElasticResult> getTimeFullPages() {
         return TestUtils.getTextAndTitle("time/page_time_extract.json");
     }
 }

@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import data.RawElasticResult;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -14,16 +15,18 @@ import java.util.List;
 public class TestUtils {
     private static final Gson GSON = new Gson();
 
-    public static List<AbstractMap.SimpleEntry<String, String>> getTextAndTitle(String fileName) {
+    public static List<RawElasticResult> getTextAndTitle(String fileName) {
         InputStream inputStreamNlp = TestWECLinksExtractor.class.getClassLoader().getResourceAsStream(fileName);
         assert inputStreamNlp != null;
         JsonArray inputJsonNlp = GSON.fromJson(new InputStreamReader(inputStreamNlp), JsonArray.class);
 
-        List<AbstractMap.SimpleEntry<String, String>> retTexts = new ArrayList<>();
+        List<RawElasticResult> retTexts = new ArrayList<>();
         for(JsonElement jsonObj : inputJsonNlp) {
-            AbstractMap.SimpleEntry<String, String> pair = new AbstractMap.SimpleEntry<>(jsonObj.getAsJsonObject().get("title").getAsString(),
-                    jsonObj.getAsJsonObject().get("text").getAsString());
-            retTexts.add(pair);
+            String title = jsonObj.getAsJsonObject().get("title").getAsString();
+            String text = jsonObj.getAsJsonObject().get("text").getAsString();
+            String infobox = jsonObj.getAsJsonObject().get("infobox").getAsString();
+
+            retTexts.add(new RawElasticResult(title, text, infobox));
         }
 
         return retTexts;
@@ -43,9 +46,12 @@ public class TestUtils {
         return retTexts;
     }
 
-    public static String getText(String fileNme) {
+    public static RawElasticResult getText(String fileNme) {
         InputStream inputStreamNlp = TestWECLinksExtractor.class.getClassLoader().getResourceAsStream(fileNme);
         JsonObject inputJsonNlp = GSON.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
-        return inputJsonNlp.get("text").getAsString();
+        String text = inputJsonNlp.get("text").getAsString();
+        String title = inputJsonNlp.get("title").getAsString();
+        String infobox = inputJsonNlp.get("infobox").getAsString();
+        return new RawElasticResult(title, text, infobox);
     }
 }

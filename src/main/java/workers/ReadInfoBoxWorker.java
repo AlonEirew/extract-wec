@@ -23,7 +23,7 @@ public class ReadInfoBoxWorker extends AWorker {
     @Override
     public void run() {
         for(RawElasticResult rawResult : this.rawElasticResults) {
-            String infoBox = filter.extractPageInfoBox(rawResult.getText(), true);
+            String infoBox = rawResult.getInfobox();
             if(infoBox != null && !infoBox.isEmpty()) {
                 infoBox = toReadableString(infoBox);
 

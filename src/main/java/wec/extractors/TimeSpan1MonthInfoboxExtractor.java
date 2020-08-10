@@ -17,6 +17,8 @@ import java.util.regex.Pattern;
 
 public class TimeSpan1MonthInfoboxExtractor extends DefaultInfoboxExtractor {
 
+    private static final Pattern datePattern = Pattern.compile("\\|[\\s\\t]*date[\\s\\t]*=");
+
     public TimeSpan1MonthInfoboxExtractor(String corefType, Pattern pattern) {
         super(corefType, pattern);
     }
@@ -46,14 +48,17 @@ public class TimeSpan1MonthInfoboxExtractor extends DefaultInfoboxExtractor {
 
     public static String extractDateLine(String infoBox) {
         String date = "";
-        if(infoBox != null && infoBox.contains("date")) {
-            String dateSubStr = infoBox.substring(infoBox.indexOf("date"));
-            if(dateSubStr.contains("<br>")) {
-                date = dateSubStr.substring(0, dateSubStr.indexOf("<br>"));
-            } else if(dateSubStr.contains("\n")) {
-                date = dateSubStr.substring(0, dateSubStr.indexOf("\n"));
-            } else {
-                date = dateSubStr;
+        if(infoBox != null) {
+            Matcher match = datePattern.matcher(infoBox);
+            if(match.find()) {
+                String dateSubStr = infoBox.substring(match.start());
+                if (dateSubStr.contains("<br>")) {
+                    date = dateSubStr.substring(0, dateSubStr.indexOf("<br>"));
+                } else if (dateSubStr.contains("\n")) {
+                    date = dateSubStr.substring(0, dateSubStr.indexOf("\n"));
+                } else {
+                    date = dateSubStr;
+                }
             }
         }
 

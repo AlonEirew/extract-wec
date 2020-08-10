@@ -36,10 +36,9 @@ public class ParseAndExtractMentionsWorker extends AWorker {
     public void run() {
         List<WECMention> finalToCommit = new ArrayList<>();
         LOGGER.info("Parsing the wikipedia pages and extracting mentions");
-        for(RawElasticResult rowResult : this.rawElasticResults) {
-            String infobox = filter.extractPageInfoBox(rowResult.getText());
-            if(infobox != null && !infobox.isEmpty()) {
-                List<WECMention> wecMentions = WECLinksExtractor.extractFromWikipedia(rowResult);
+        for(RawElasticResult rawResult : this.rawElasticResults) {
+            if(rawResult.getInfobox() != null && !rawResult.getInfobox().isEmpty()) {
+                List<WECMention> wecMentions = WECLinksExtractor.extractFromWikipedia(rawResult);
                 if (!wecMentions.isEmpty()) {
                     finalToCommit.addAll(wecMentions);
                 }

@@ -12,7 +12,8 @@
         "aircraftincident",
         "aircraftoccurrence",
         "railaccident",
-        "busaccident"
+        "busaccident",
+        "publictransitaccident"
       ]
     },
     {

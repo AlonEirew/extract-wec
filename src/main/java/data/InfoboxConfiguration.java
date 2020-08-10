@@ -48,8 +48,9 @@ public class InfoboxConfiguration {
     private DefaultInfoboxExtractor initExtractorAndGet(InfoboxConfig locConfig) {
         DefaultInfoboxExtractor extractor = locConfig.getExtractor();
         if (extractor == null) {
-            Pattern pattern = Pattern.compile("\\{\\{" + this.infoboxLangText.toLowerCase() +
-                    "[\\w|]*?(" + String.join("|", locConfig.getInfoboxs()) + ")");
+            String regex = "\\{\\{" + this.infoboxLangText.toLowerCase() +
+                    "[\\w|]*?(" + String.join("|", locConfig.getInfoboxs()) + ")";
+            Pattern pattern = Pattern.compile(regex);
             if (locConfig.getUseExtractorClass() != null && !locConfig.getUseExtractorClass().isEmpty()) {
                 try {
                     Constructor<?>[] constructors = Class.forName(locConfig.getUseExtractorClass()).getConstructors();

@@ -125,14 +125,21 @@ public class ElasticQueryApi implements Closeable {
     public static RawElasticResult extractFromHit(SearchHit hit) {
         final String id = hit.getId();
         final Map map = hit.getSourceAsMap();
-        final String text = (String)map.get("text");
-        final String title = (String)map.get("title");
+        final String text = (String) map.get("text");
+        final String title = (String) map.get("title");
+        final String infobox = (String) map.get("infobox");
+        final String redirect = (String) map.get("redirectTitle");
+        final boolean isDisambig = (Boolean) map.get("relations.isDisambiguation");
 
-        if(text.toLowerCase().startsWith("#redirect")) {
+        if(redirect != null && !redirect.isEmpty()) {
                 return null;
         }
 
-        return new RawElasticResult(id, title, text);
+        if (isDisambig) {
+            return null;
+        }
+
+        return new RawElasticResult(id, title, text, infobox);
     }
 
     public List<RawElasticResult> getNextScrollResults(SearchHit[] searchHits) {

@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 public class CompanyInfoboxExtractor extends DefaultInfoboxExtractor {
 
-    private static final int MAX_EMPLOYEES = 1000;
+    private static final int MAX_EMPLOYEES = 1700;
 
     public CompanyInfoboxExtractor(String corefType, Pattern pattern) {
         super(corefType, pattern);

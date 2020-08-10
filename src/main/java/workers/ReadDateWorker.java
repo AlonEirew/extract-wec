@@ -20,27 +20,23 @@ public class ReadDateWorker extends AWorker {
     @Override
     public void run() {
         for(RawElasticResult rawResult : this.rawElasticResults) {
-            String date = extractDate(rawResult.getText(), rawResult.getTitle());
+            String date = extractDate(rawResult);
             if(date != null && !date.isEmpty()) {
                 this.datesSchemas.add(date);
             }
         }
     }
 
-    private String extractDate(String text, String title) {
-        InfoboxFilter filter = new InfoboxFilter(new InfoboxConfiguration());
-        String infoBox = filter.extractPageInfoBox(text);
-        DefaultInfoboxExtractor attack = new TimeSpan1MonthInfoboxExtractor(null, null);
-
-        String infoboxLow = infoBox.toLowerCase().replaceAll(" ", "");
+    private String extractDate(RawElasticResult rawResult) {
+        String infoboxLow = rawResult.getInfobox().toLowerCase().replaceAll(" ", "");
         if (infoboxLow.contains("{{infoboxcivilianattack") || infoboxLow.contains("{{infoboxterroristattack") ||
                 infoboxLow.contains("{{infoboxmilitaryattack") || infoboxLow.contains("{{infoboxcivilconflict") ||
                 infoboxLow.contains("{{infoboxmilitaryconflict")) {
-            String dateline = TimeSpan1MonthInfoboxExtractor.extractDateLine(infoBox);
+            String dateline = TimeSpan1MonthInfoboxExtractor.extractDateLine(rawResult.getInfobox());
 //            String dateString = attack.extractDateString(dateline);
 
             if (!dateline.isEmpty()) {// && !dateString.isEmpty()) {
-                return dateline + " => " + title;
+                return dateline + " => " + rawResult.getTitle();
             }
         }
 
