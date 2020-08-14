@@ -24,8 +24,8 @@ public class TimeSpan1MonthInfoboxValidator extends DefaultInfoboxValidator {
     }
 
     @Override
-    public String extractMatchedInfobox(String infobox, String title) {
-        String extract = super.extractMatchedInfobox(infobox, title);
+    public String validateMatchedInfobox(String infobox, String title) {
+        String extract = super.validateMatchedInfobox(infobox, title);
 
         if(!extract.equals(DefaultInfoboxValidator.NA)) {
             if (this.isSpanSingleMonth(infobox)) {

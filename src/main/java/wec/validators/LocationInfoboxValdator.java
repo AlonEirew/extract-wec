@@ -11,8 +11,8 @@ public class LocationInfoboxValdator extends DefaultInfoboxValidator {
     }
 
     @Override
-    public String extractMatchedInfobox(String infobox, String title) {
-        String extract = super.extractMatchedInfobox(infobox, title);
+    public String validateMatchedInfobox(String infobox, String title) {
+        String extract = super.validateMatchedInfobox(infobox, title);
 
         if(!extract.equals(DefaultInfoboxValidator.NA)) {
             String location = this.extractLocationLine(infobox);

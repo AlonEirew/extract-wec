@@ -11,7 +11,7 @@ public class PersonInfoboxValidator extends DefaultInfoboxValidator {
     }
 
     @Override
-    public String extractMatchedInfobox(String infobox, String title) {
+    public String validateMatchedInfobox(String infobox, String title) {
         infobox = infobox.toLowerCase().replaceAll(" ", "");
         if(infobox.contains("birth_name") || infobox.contains("birth_date") ||
                 infobox.contains("birth_place")) {

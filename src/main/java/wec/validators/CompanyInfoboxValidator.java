@@ -13,8 +13,8 @@ public class CompanyInfoboxValidator extends DefaultInfoboxValidator {
     }
 
     @Override
-    public String extractMatchedInfobox(String infobox, String title) {
-        String extract = super.extractMatchedInfobox(infobox, title);
+    public String validateMatchedInfobox(String infobox, String title) {
+        String extract = super.validateMatchedInfobox(infobox, title);
         if(!extract.equals(DefaultInfoboxValidator.NA)) {
             String infoboxLow = infobox.toLowerCase().replaceAll(" ", "");
             for (String line : infoboxLow.split("\n")) {

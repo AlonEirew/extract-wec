@@ -15,7 +15,7 @@ public class DefaultInfoboxValidator {
         this.pattern = pattern;
     }
 
-    public String extractMatchedInfobox(String infobox, String title) {
+    public String validateMatchedInfobox(String infobox, String title) {
         String infoboxLow = infobox.toLowerCase().replaceAll(" ", "");
         Matcher matcher = this.pattern.matcher(infoboxLow);
 
@@ -26,7 +26,7 @@ public class DefaultInfoboxValidator {
         return NA;
     }
 
-    protected boolean isExtracted(String infobox, String infoboxAtt) {
+    protected boolean isValid(String infobox, String infoboxAtt) {
         return infobox.contains(infoboxAtt);
     }
 

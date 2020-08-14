@@ -21,7 +21,7 @@ public class InfoboxFilter implements ICorefFilter {
         if (result != null && result.getText() != null && !result.getText().isEmpty()) {
             if (result.getInfobox() != null && !result.getInfobox().isEmpty()) {
                 for (DefaultInfoboxValidator validator : this.infoboxConfiguration.getAllIncludedValidators()) {
-                    final String extractMatchedInfobox = validator.extractMatchedInfobox(result.getInfobox(), result.getTitle());
+                    final String extractMatchedInfobox = validator.validateMatchedInfobox(result.getInfobox(), result.getTitle());
                     final String corefType = validator.getCorefType();
 
                     if (!extractMatchedInfobox.equals(DefaultInfoboxValidator.NA)) {

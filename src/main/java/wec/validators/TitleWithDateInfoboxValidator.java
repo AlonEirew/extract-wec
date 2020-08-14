@@ -12,8 +12,8 @@ public class TitleWithDateInfoboxValidator extends DefaultInfoboxValidator {
     }
 
     @Override
-    public String extractMatchedInfobox(String infobox, String title) {
-        String extract = super.extractMatchedInfobox(infobox, title);
+    public String validateMatchedInfobox(String infobox, String title) {
+        String extract = super.validateMatchedInfobox(infobox, title);
         boolean titleMatch = this.titleNumberMatch(title);
         if(titleMatch) {
             return extract;
