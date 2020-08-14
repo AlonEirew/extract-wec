@@ -9,6 +9,7 @@ import data.WECMention;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import wec.extractors.WikipediaLinkExtractor;
 import wec.validators.DefaultInfoboxValidator;
 
 import java.io.FileNotFoundException;
@@ -18,16 +19,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class TestWECLinksExtractor {
+public class TestWikipediaLinkExtractor {
 
     private static final Gson GSON = new Gson();
 
     private InfoboxConfiguration infoboxConfiguration;
     private InfoboxFilter filter;
+    private WikipediaLinkExtractor extractor = new WikipediaLinkExtractor();
 
     @Before
     public void initTest() throws FileNotFoundException {
-        String inputStreamNlp = Objects.requireNonNull(TestWECLinksExtractor.class.getClassLoader()
+        String inputStreamNlp = Objects.requireNonNull(TestWikipediaLinkExtractor.class.getClassLoader()
                 .getResource("en_infobox_config.json")).getFile();
 
         infoboxConfiguration = GSON.fromJson(new FileReader(inputStreamNlp), InfoboxConfiguration.class);
@@ -46,7 +48,7 @@ public class TestWECLinksExtractor {
             RawElasticResult rawElasticResult = new RawElasticResult(title, pageText, infobox);
             List<WECMention> extractMentions1 = new ArrayList<>();
             if(infobox != null && !infobox.isEmpty()) {
-                extractMentions1 = WECLinksExtractor.extractFromWikipedia(rawElasticResult);
+                extractMentions1 = extractor.extract(rawElasticResult);
             }
             Assert.assertEquals(title, expected, extractMentions1.size());
         }

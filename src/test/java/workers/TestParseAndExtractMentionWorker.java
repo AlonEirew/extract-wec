@@ -8,7 +8,7 @@ import data.WECMention;
 import org.junit.Assert;
 import org.junit.Test;
 import wec.InfoboxFilter;
-import wec.TestWECLinksExtractor;
+import wec.TestWikipediaLinkExtractor;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -52,7 +52,7 @@ public class TestParseAndExtractMentionWorker {
         crs4.setWasAlreadyRetrived(false);
         mention4.setCorefChain(crs4);
 
-        String inputStreamNlp = Objects.requireNonNull(TestWECLinksExtractor.class.getClassLoader()
+        String inputStreamNlp = Objects.requireNonNull(TestWikipediaLinkExtractor.class.getClassLoader()
                 .getResource("en_infobox_config.json")).getFile();
 
         InfoboxConfiguration infoboxConfiguration = GSON.fromJson(new FileReader(inputStreamNlp), InfoboxConfiguration.class);

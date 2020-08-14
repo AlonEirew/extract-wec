@@ -7,7 +7,7 @@ import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
 import wec.InfoboxFilter;
-import wec.WECLinksExtractor;
+import wec.extractors.WikipediaLinkExtractor;
 
 import java.util.*;
 
@@ -17,6 +17,7 @@ public class ParseAndExtractMentionsWorker extends AWorker {
     private final SQLQueryApi sqlApi;
     private final ElasticQueryApi elasticApi;
     private final InfoboxFilter filter;
+    private final WikipediaLinkExtractor extractor = new WikipediaLinkExtractor();
 
     public ParseAndExtractMentionsWorker(List<RawElasticResult> rawElasticResults, SQLQueryApi sqlApi,
                                          ElasticQueryApi elasticApi, InfoboxFilter filter) {
@@ -37,7 +38,7 @@ public class ParseAndExtractMentionsWorker extends AWorker {
         LOGGER.info("Parsing the wikipedia pages and extracting mentions");
         for(RawElasticResult rawResult : this.rawElasticResults) {
             if(rawResult.getInfobox() != null && !rawResult.getInfobox().isEmpty()) {
-                List<WECMention> wecMentions = WECLinksExtractor.extractFromWikipedia(rawResult);
+                List<WECMention> wecMentions = extractor.extract(rawResult);
                 if (!wecMentions.isEmpty()) {
                     finalToCommit.addAll(wecMentions);
                 }

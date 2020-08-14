@@ -8,7 +8,6 @@ import data.RawElasticResult;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +15,7 @@ public class TestUtils {
     private static final Gson GSON = new Gson();
 
     public static List<RawElasticResult> getTextAndTitle(String fileName) {
-        InputStream inputStreamNlp = TestWECLinksExtractor.class.getClassLoader().getResourceAsStream(fileName);
+        InputStream inputStreamNlp = TestWikipediaLinkExtractor.class.getClassLoader().getResourceAsStream(fileName);
         assert inputStreamNlp != null;
         JsonArray inputJsonNlp = GSON.fromJson(new InputStreamReader(inputStreamNlp), JsonArray.class);
 
@@ -33,7 +32,7 @@ public class TestUtils {
     }
 
     public static List<JsonObject> getTextTitleAndExpected(String fileName) {
-        InputStream inputStreamNlp = TestWECLinksExtractor.class.getClassLoader().getResourceAsStream(fileName);
+        InputStream inputStreamNlp = TestWikipediaLinkExtractor.class.getClassLoader().getResourceAsStream(fileName);
         assert inputStreamNlp != null;
         JsonArray inputJsonNlp = GSON.fromJson(new InputStreamReader(inputStreamNlp), JsonArray.class);
 
@@ -47,7 +46,7 @@ public class TestUtils {
     }
 
     public static RawElasticResult getText(String fileNme) {
-        InputStream inputStreamNlp = TestWECLinksExtractor.class.getClassLoader().getResourceAsStream(fileNme);
+        InputStream inputStreamNlp = TestWikipediaLinkExtractor.class.getClassLoader().getResourceAsStream(fileNme);
         JsonObject inputJsonNlp = GSON.fromJson(new InputStreamReader(inputStreamNlp), JsonObject.class);
         String text = inputJsonNlp.get("text").getAsString();
         String title = inputJsonNlp.get("title").getAsString();

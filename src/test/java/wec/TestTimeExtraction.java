@@ -15,7 +15,7 @@ public class TestTimeExtraction {
 
     @Test
     public void testIsSpanSingleMonth() throws IOException {
-        InputStream inputStream = TestWECLinksExtractor.class.getClassLoader().getResourceAsStream("time/time_expr_2d.txt");
+        InputStream inputStream = TestWikipediaLinkExtractor.class.getClassLoader().getResourceAsStream("time/time_expr_2d.txt");
         assert inputStream != null;
         List<String> strings = IOUtils.readLines(new InputStreamReader(inputStream));
         TimeSpan1MonthInfoboxValidator extractor = new TimeSpan1MonthInfoboxValidator(null, null);
@@ -28,7 +28,7 @@ public class TestTimeExtraction {
 
     @Test
     public void testIsNotSpanSingleMonth() throws IOException {
-        InputStream inputStream = TestWECLinksExtractor.class.getClassLoader().getResourceAsStream("time/time_expr_unk.txt");
+        InputStream inputStream = TestWikipediaLinkExtractor.class.getClassLoader().getResourceAsStream("time/time_expr_unk.txt");
         assert inputStream != null;
         List<String> strings = IOUtils.readLines(new InputStreamReader(inputStream));
         TimeSpan1MonthInfoboxValidator extractor = new TimeSpan1MonthInfoboxValidator(null, null);
