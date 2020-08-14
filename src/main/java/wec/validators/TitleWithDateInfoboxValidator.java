@@ -1,7 +1,5 @@
 package wec.validators;
 
-import wec.DefaultInfoboxValidator;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

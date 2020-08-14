@@ -5,6 +5,7 @@ import data.RawElasticResult;
 import data.WECCoref;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import wec.validators.DefaultInfoboxValidator;
 
 public class InfoboxFilter implements ICorefFilter {
 

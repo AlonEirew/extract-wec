@@ -1,7 +1,5 @@
 package wec.validators;
 
-import wec.DefaultInfoboxValidator;
-
 import java.util.regex.Pattern;
 
 public class LocationInfoboxValdator extends DefaultInfoboxValidator {

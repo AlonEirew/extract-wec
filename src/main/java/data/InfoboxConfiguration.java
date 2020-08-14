@@ -1,6 +1,6 @@
 package data;
 
-import wec.DefaultInfoboxValidator;
+import wec.validators.DefaultInfoboxValidator;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;

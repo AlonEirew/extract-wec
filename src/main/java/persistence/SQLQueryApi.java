@@ -7,7 +7,7 @@ import experimentscripts.CorefResultSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import wec.DefaultInfoboxValidator;
+import wec.validators.DefaultInfoboxValidator;
 
 import java.sql.*;
 import java.util.*;

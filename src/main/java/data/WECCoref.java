@@ -3,7 +3,7 @@ package data;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import persistence.ISQLObject;
-import wec.DefaultInfoboxValidator;
+import wec.validators.DefaultInfoboxValidator;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

@@ -9,6 +9,7 @@ import data.WECMention;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import wec.validators.DefaultInfoboxValidator;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
