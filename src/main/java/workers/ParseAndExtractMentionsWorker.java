@@ -6,7 +6,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
-import wec.ICorefFilter;
 import wec.InfoboxFilter;
 import wec.WECLinksExtractor;
 

@@ -8,3 +8,9 @@ out
 logs
 output
 src/service/node_modules
+
+src/main/java/workers/ReadCompanyFactory.java
+src/main/java/workers/ReadCompanyWorker.java
+src/main/java/experimentscripts/ExtractCompany.java
+src/main/java/data/CompanyObj.java
+infobox_config/company_info.json

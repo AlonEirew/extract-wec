@@ -1,9 +1,8 @@
 {
-  "poolSize": "8",
+  "poolSize": "-1",
   "elasticHost": "localhost",
   "elasticPort": 9200,
-  "elasticWikiIndex": "enwiki_v3",
-  "elasticWikinewsIndex": "wikinews_v1",
+  "elasticWikiIndex": "enwiki_v4",
   "infoboxConfiguration": "/infobox_config/en_infobox_config.json",
   "multiRequestInterval" : 100,
   "elasticSearchInterval" : 100,

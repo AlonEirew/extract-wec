@@ -7,7 +7,7 @@ import experimentscripts.CorefResultSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import wec.DefaultInfoboxExtractor;
+import wec.DefaultInfoboxValidator;
 
 import java.sql.*;
 import java.util.*;
@@ -235,7 +235,7 @@ public class SQLQueryApi {
         LOGGER.info("Persisting corefs tables values");
         final Collection<WECCoref> allCorefs = WECCoref.getGlobalCorefMap().values();
         allCorefs.removeIf(wikiLinksCoref -> wikiLinksCoref.getMentionsCount() == 0 ||
-                wikiLinksCoref.getCorefType().equals(DefaultInfoboxExtractor.NA) ||
+                wikiLinksCoref.getCorefType().equals(DefaultInfoboxValidator.NA) ||
                 wikiLinksCoref.isMarkedForRemoval());
 
         LOGGER.info("Preparing to add " + allCorefs.size() + " corefs tables values");

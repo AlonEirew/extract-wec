@@ -1,11 +1,10 @@
 package data;
 
-import wec.DefaultInfoboxExtractor;
+import wec.DefaultInfoboxValidator;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 public class InfoboxConfiguration {
@@ -45,21 +44,21 @@ public class InfoboxConfiguration {
         this.infoboxConfigs = infoboxConfigs;
     }
 
-    private DefaultInfoboxExtractor initExtractorAndGet(InfoboxConfig locConfig) {
-        DefaultInfoboxExtractor extractor = locConfig.getExtractor();
+    private DefaultInfoboxValidator initValidatorAndGet(InfoboxConfig locConfig) {
+        DefaultInfoboxValidator extractor = locConfig.getExtractor();
         if (extractor == null) {
             String regex = "\\{\\{" + this.infoboxLangText.toLowerCase() +
                     "[\\w|]*?(" + String.join("|", locConfig.getInfoboxs()) + ")";
             Pattern pattern = Pattern.compile(regex);
-            if (locConfig.getUseExtractorClass() != null && !locConfig.getUseExtractorClass().isEmpty()) {
+            if (locConfig.getUseValidatorClass() != null && !locConfig.getUseValidatorClass().isEmpty()) {
                 try {
-                    Constructor<?>[] constructors = Class.forName(locConfig.getUseExtractorClass()).getConstructors();
-                    extractor = (DefaultInfoboxExtractor) constructors[0].newInstance(locConfig.getCorefType(), pattern);
+                    Constructor<?>[] constructors = Class.forName(locConfig.getUseValidatorClass()).getConstructors();
+                    extractor = (DefaultInfoboxValidator) constructors[0].newInstance(locConfig.getCorefType(), pattern);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
             } else {
-                extractor = new DefaultInfoboxExtractor(locConfig.getCorefType(), pattern);
+                extractor = new DefaultInfoboxValidator(locConfig.getCorefType(), pattern);
             }
             locConfig.extractor = extractor;
         }
@@ -67,34 +66,34 @@ public class InfoboxConfiguration {
         return extractor;
     }
 
-    public DefaultInfoboxExtractor getExtractorByCorefType(String corefType) {
+    public DefaultInfoboxValidator getExtractorByCorefType(String corefType) {
         for(InfoboxConfig locConfig : this.infoboxConfigs) {
             if(locConfig.getCorefType().equals(corefType)) {
-                return this.initExtractorAndGet(locConfig);
+                return this.initValidatorAndGet(locConfig);
             }
         }
 
         return null;
     }
 
-    public List<DefaultInfoboxExtractor> getAllIncludedExtractor() {
-        List<DefaultInfoboxExtractor> includedExtractors = new ArrayList<>();
+    public List<DefaultInfoboxValidator> getAllIncludedValidators() {
+        List<DefaultInfoboxValidator> includedValidators = new ArrayList<>();
         for(InfoboxConfig locConfig : this.infoboxConfigs) {
             if(locConfig.isInclude()) {
-                includedExtractors.add(this.initExtractorAndGet(locConfig));
+                includedValidators.add(this.initValidatorAndGet(locConfig));
             }
         }
 
-        return includedExtractors;
+        return includedValidators;
     }
 
     public static class InfoboxConfig {
         private String corefType;
         private boolean include;
-        private String useExtractorClass;
+        private String useValidatorClass;
         private List<String> infoboxs;
 
-        private transient DefaultInfoboxExtractor extractor;
+        private transient DefaultInfoboxValidator extractor;
 
         public String getCorefType() {
             return corefType;
@@ -112,12 +111,12 @@ public class InfoboxConfiguration {
             this.include = include;
         }
 
-        public String getUseExtractorClass() {
-            return useExtractorClass;
+        public String getUseValidatorClass() {
+            return useValidatorClass;
         }
 
-        public void setUseExtractorClass(String useExtractorClass) {
-            this.useExtractorClass = useExtractorClass;
+        public void setUseValidatorClass(String useValidatorClass) {
+            this.useValidatorClass = useValidatorClass;
         }
 
         public List<String> getInfoboxs() {
@@ -128,7 +127,7 @@ public class InfoboxConfiguration {
             this.infoboxs = infoboxs;
         }
 
-        private DefaultInfoboxExtractor getExtractor() {
+        private DefaultInfoboxValidator getExtractor() {
             return this.extractor;
         }
     }

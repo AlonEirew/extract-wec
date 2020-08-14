@@ -1,21 +1,21 @@
-package wec.extractors;
+package wec.validators;
 
-import wec.DefaultInfoboxExtractor;
+import wec.DefaultInfoboxValidator;
 
 import java.util.regex.Pattern;
 
-public class CompanyInfoboxExtractor extends DefaultInfoboxExtractor {
+public class CompanyInfoboxValidator extends DefaultInfoboxValidator {
 
     private static final int MAX_EMPLOYEES = 1700;
 
-    public CompanyInfoboxExtractor(String corefType, Pattern pattern) {
+    public CompanyInfoboxValidator(String corefType, Pattern pattern) {
         super(corefType, pattern);
     }
 
     @Override
     public String extractMatchedInfobox(String infobox, String title) {
         String extract = super.extractMatchedInfobox(infobox, title);
-        if(!extract.equals(DefaultInfoboxExtractor.NA)) {
+        if(!extract.equals(DefaultInfoboxValidator.NA)) {
             String infoboxLow = infobox.toLowerCase().replaceAll(" ", "");
             for (String line : infoboxLow.split("\n")) {
                 if (line.startsWith("|num_employees=")) {
@@ -33,6 +33,6 @@ public class CompanyInfoboxExtractor extends DefaultInfoboxExtractor {
             }
         }
 
-        return DefaultInfoboxExtractor.NA;
+        return DefaultInfoboxValidator.NA;
     }
 }

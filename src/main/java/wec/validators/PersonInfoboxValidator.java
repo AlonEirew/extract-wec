@@ -1,12 +1,12 @@
-package wec.extractors;
+package wec.validators;
 
-import wec.DefaultInfoboxExtractor;
+import wec.DefaultInfoboxValidator;
 
 import java.util.regex.Pattern;
 
-public class PersonInfoboxExtractor extends DefaultInfoboxExtractor {
+public class PersonInfoboxValidator extends DefaultInfoboxValidator {
 
-    public PersonInfoboxExtractor(String corefType, Pattern pattern) {
+    public PersonInfoboxValidator(String corefType, Pattern pattern) {
         super(corefType, pattern);
     }
 
@@ -18,6 +18,6 @@ public class PersonInfoboxExtractor extends DefaultInfoboxExtractor {
             return this.getCorefType();
         }
 
-        return DefaultInfoboxExtractor.NA;
+        return DefaultInfoboxValidator.NA;
     }
 }

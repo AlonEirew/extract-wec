@@ -28,7 +28,7 @@
     {
       "corefType": "AWARD_EVENT",
       "include": true,
-      "useExtractorClass": "wec.extractors.TitleWithDateInfoboxExtractor",
+      "useValidatorClass": "wec.validators.TitleWithDateInfoboxValidator",
       "infoboxs": [
         "award",
         "awards",
@@ -143,14 +143,14 @@
     {
       "corefType": "PERSON",
       "include": false,
-      "useExtractorClass": "wec.extractors.PersonInfoboxExtractor",
+      "useValidatorClass": "wec.validators.PersonInfoboxValidator",
       "infoboxs": [
       ]
     },
     {
       "corefType": "COMPANY",
       "include": false,
-      "useExtractorClass": "wec.extractors.CompanyInfoboxExtractor",
+      "useValidatorClass": "wec.validators.CompanyInfoboxValidator",
       "infoboxs": [
         "company"
       ]

@@ -1,12 +1,12 @@
-package wec.extractors;
+package wec.validators;
 
-import wec.DefaultInfoboxExtractor;
+import wec.DefaultInfoboxValidator;
 
 import java.util.regex.Pattern;
 
-public class LocationInfoboxExtractor extends DefaultInfoboxExtractor {
+public class LocationInfoboxValdator extends DefaultInfoboxValidator {
 
-    public LocationInfoboxExtractor(String corefType, Pattern pattern) {
+    public LocationInfoboxValdator(String corefType, Pattern pattern) {
         super(corefType, pattern);
     }
 
@@ -14,14 +14,14 @@ public class LocationInfoboxExtractor extends DefaultInfoboxExtractor {
     public String extractMatchedInfobox(String infobox, String title) {
         String extract = super.extractMatchedInfobox(infobox, title);
 
-        if(!extract.equals(DefaultInfoboxExtractor.NA)) {
+        if(!extract.equals(DefaultInfoboxValidator.NA)) {
             String location = this.extractLocationLine(infobox);
             if(location != null && !location.isEmpty()) {
                 return extract;
             }
         }
 
-        return DefaultInfoboxExtractor.NA;
+        return DefaultInfoboxValidator.NA;
     }
 
     public String extractLocationLine(String infoBox) {

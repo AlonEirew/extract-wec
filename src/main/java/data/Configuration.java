@@ -5,7 +5,6 @@ public class Configuration {
     private String elasticHost;
     private int elasticPort;
     private String elasticWikiIndex;
-    private String elasticWikinewsIndex;
     private String infoboxConfiguration;
     private int multiRequestInterval;
     private int elasticSearchInterval;
@@ -42,14 +41,6 @@ public class Configuration {
 
     public void setElasticWikiIndex(String elasticWikiIndex) {
         this.elasticWikiIndex = elasticWikiIndex;
-    }
-
-    public String getElasticWikinewsIndex() {
-        return elasticWikinewsIndex;
-    }
-
-    public void setElasticWikinewsIndex(String elasticWikinewsIndex) {
-        this.elasticWikinewsIndex = elasticWikinewsIndex;
     }
 
     public int getMultiRequestInterval() {

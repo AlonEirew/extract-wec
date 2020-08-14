@@ -1,14 +1,13 @@
-package wec.extractors;
+package wec.validators;
 
-import wec.DefaultInfoboxExtractor;
+import wec.DefaultInfoboxValidator;
 
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class TitleWithDateInfoboxExtractor extends DefaultInfoboxExtractor {
+public class TitleWithDateInfoboxValidator extends DefaultInfoboxValidator {
 
-    public TitleWithDateInfoboxExtractor(String corefType, Pattern pattern) {
+    public TitleWithDateInfoboxValidator(String corefType, Pattern pattern) {
         super(corefType, pattern);
     }
 
@@ -20,7 +19,7 @@ public class TitleWithDateInfoboxExtractor extends DefaultInfoboxExtractor {
             return extract;
         }
 
-        return DefaultInfoboxExtractor.NA;
+        return DefaultInfoboxValidator.NA;
     }
 
     private boolean titleNumberMatch(String title) {

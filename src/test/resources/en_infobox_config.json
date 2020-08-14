@@ -19,7 +19,7 @@
     {
       "corefType": "ATTACK_EVENT",
       "include": true,
-      "useExtractorClass": "wec.extractors.TimeSpan1MonthInfoboxExtractor",
+      "useValidatorClass": "wec.validators.TimeSpan1MonthInfoboxValidator",
       "infoboxs": [
         "civilianattack",
         "terroristattack",
@@ -30,7 +30,7 @@
     {
       "corefType": "AWARD_EVENT",
       "include": true,
-      "useExtractorClass": "wec.extractors.TitleWithDateInfoboxExtractor",
+      "useValidatorClass": "wec.validators.TitleWithDateInfoboxValidator",
       "infoboxs": [
         "award",
         "awards",
@@ -52,7 +52,7 @@
     {
       "corefType": "GENERAL_EVENT",
       "include": true,
-      "useExtractorClass": "wec.extractors.TimeSpan1MonthInfoboxExtractor",
+      "useValidatorClass": "wec.validators.TimeSpan1MonthInfoboxValidator",
       "infoboxs": [
         "newsevent",
         "concert",
@@ -146,14 +146,14 @@
     {
       "corefType": "PERSON",
       "include": false,
-      "useExtractorClass": "wec.extractors.PersonInfoboxExtractor",
+      "useValidatorClass": "wec.validators.PersonInfoboxValidator",
       "infoboxs": [
       ]
     },
     {
       "corefType": "COMPANY",
       "include": false,
-      "useExtractorClass": "wec.extractors.CompanyInfoboxExtractor",
+      "useValidatorClass": "wec.validators.CompanyInfoboxValidator",
       "infoboxs": [
         "company"
       ]

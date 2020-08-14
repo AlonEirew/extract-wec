@@ -1,11 +1,11 @@
-package wec.extractors;
+package wec.validators;
 
 import edu.stanford.nlp.pipeline.CoreDocument;
 import edu.stanford.nlp.pipeline.CoreEntityMention;
 import edu.stanford.nlp.time.TimeAnnotations;
 import edu.stanford.nlp.time.Timex;
 import utils.StanfordNlpApi;
-import wec.DefaultInfoboxExtractor;
+import wec.DefaultInfoboxValidator;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -15,11 +15,11 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class TimeSpan1MonthInfoboxExtractor extends DefaultInfoboxExtractor {
+public class TimeSpan1MonthInfoboxValidator extends DefaultInfoboxValidator {
 
     private static final Pattern datePattern = Pattern.compile("\\|[\\s\\t]*date[\\s\\t]*=");
 
-    public TimeSpan1MonthInfoboxExtractor(String corefType, Pattern pattern) {
+    public TimeSpan1MonthInfoboxValidator(String corefType, Pattern pattern) {
         super(corefType, pattern);
     }
 
@@ -27,13 +27,13 @@ public class TimeSpan1MonthInfoboxExtractor extends DefaultInfoboxExtractor {
     public String extractMatchedInfobox(String infobox, String title) {
         String extract = super.extractMatchedInfobox(infobox, title);
 
-        if(!extract.equals(DefaultInfoboxExtractor.NA)) {
+        if(!extract.equals(DefaultInfoboxValidator.NA)) {
             if (this.isSpanSingleMonth(infobox)) {
                 return extract;
             }
         }
 
-        return DefaultInfoboxExtractor.NA;
+        return DefaultInfoboxValidator.NA;
     }
 
     public boolean isSpanSingleMonth(String infoBox) {

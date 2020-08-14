@@ -3,7 +3,7 @@ package data;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import persistence.ISQLObject;
-import wec.DefaultInfoboxExtractor;
+import wec.DefaultInfoboxValidator;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,8 +24,8 @@ public class WECCoref implements ISQLObject<WECCoref> {
     private int corefId = runningId.incrementAndGet();
     private String corefValue;
     private AtomicInteger mentionsCount = new AtomicInteger(0);
-    private String corefType = DefaultInfoboxExtractor.NA;
-    private String corefSubType = DefaultInfoboxExtractor.NA;
+    private String corefType = DefaultInfoboxValidator.NA;
+    private String corefSubType = DefaultInfoboxValidator.NA;
     private boolean markedForRemoval = false;
     private boolean wasRetrived = false;
 

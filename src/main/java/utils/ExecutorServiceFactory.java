@@ -17,6 +17,10 @@ public class ExecutorServiceFactory {
     }
 
     public static void initExecutorService(int poolSize) {
+        if(poolSize <= 0) {
+            poolSize = Runtime.getRuntime().availableProcessors();
+        }
+
         lock.lock();
         if (elasticSearchPool == null) {
             LOGGER.info("Starting new ExecutorService...");

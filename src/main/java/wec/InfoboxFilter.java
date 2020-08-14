@@ -20,11 +20,11 @@ public class InfoboxFilter implements ICorefFilter {
     public boolean isConditionMet(RawElasticResult result) {
         if (result != null && result.getText() != null && !result.getText().isEmpty()) {
             if (result.getInfobox() != null && !result.getInfobox().isEmpty()) {
-                for (DefaultInfoboxExtractor extractor : this.infoboxConfiguration.getAllIncludedExtractor()) {
-                    final String extractMatchedInfobox = extractor.extractMatchedInfobox(result.getInfobox(), result.getTitle());
-                    final String corefType = extractor.getCorefType();
+                for (DefaultInfoboxValidator validator : this.infoboxConfiguration.getAllIncludedValidators()) {
+                    final String extractMatchedInfobox = validator.extractMatchedInfobox(result.getInfobox(), result.getTitle());
+                    final String corefType = validator.getCorefType();
 
-                    if (!extractMatchedInfobox.equals(DefaultInfoboxExtractor.NA)) {
+                    if (!extractMatchedInfobox.equals(DefaultInfoboxValidator.NA)) {
                         LOGGER.info(result.getTitle() + " passed as " + extractMatchedInfobox + " infobox");
                         WECCoref wecCoref = WECCoref.getAndSetIfNotExist(result.getTitle());
                         wecCoref.setCorefType(corefType);

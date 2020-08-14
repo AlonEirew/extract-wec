@@ -1,10 +1,7 @@
 package workers;
 
-import data.InfoboxConfiguration;
 import data.RawElasticResult;
-import wec.DefaultInfoboxExtractor;
-import wec.InfoboxFilter;
-import wec.extractors.TimeSpan1MonthInfoboxExtractor;
+import wec.validators.TimeSpan1MonthInfoboxValidator;
 
 import java.util.List;
 
@@ -32,7 +29,7 @@ public class ReadDateWorker extends AWorker {
         if (infoboxLow.contains("{{infoboxcivilianattack") || infoboxLow.contains("{{infoboxterroristattack") ||
                 infoboxLow.contains("{{infoboxmilitaryattack") || infoboxLow.contains("{{infoboxcivilconflict") ||
                 infoboxLow.contains("{{infoboxmilitaryconflict")) {
-            String dateline = TimeSpan1MonthInfoboxExtractor.extractDateLine(rawResult.getInfobox());
+            String dateline = TimeSpan1MonthInfoboxValidator.extractDateLine(rawResult.getInfobox());
 //            String dateString = attack.extractDateString(dateline);
 
             if (!dateline.isEmpty()) {// && !dateString.isEmpty()) {

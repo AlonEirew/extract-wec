@@ -53,7 +53,7 @@ public class TestWECLinksExtractor {
 
 //    @Test
 //    public void testHasDateAndLocationExtractor() {
-//        DefaultInfoboxExtractor extractor = new DefaultInfoboxExtractor(null, null);
+//        DefaultInfoboxValidator extractor = new DefaultInfoboxValidator(null, null);
 //
 //        List<RawElasticResult> pageTexts = getCivilAttack();
 //        for(RawElasticResult text : pageTexts) {
@@ -100,23 +100,23 @@ public class TestWECLinksExtractor {
     @Test
     public void testIsPerson() {
         String corefType = "PERSON";
-        DefaultInfoboxExtractor personExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
+        DefaultInfoboxValidator personExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
         final List<RawElasticResult> peopleText = getPeopleText();
         for(RawElasticResult text : peopleText) {
             String ret = personExtractor.extractMatchedInfobox(text.getInfobox(), "");
-            Assert.assertNotSame(DefaultInfoboxExtractor.NA, ret);
+            Assert.assertNotSame(DefaultInfoboxValidator.NA, ret);
         }
     }
 
     @Test
     public void testIsElection() {
         String corefType = "ELECTION_EVENT";
-        DefaultInfoboxExtractor electionExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
+        DefaultInfoboxValidator electionExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
         List<RawElasticResult> pageText = getElectionText();
         for(RawElasticResult text : pageText) {
             String infoBox = text.getInfobox();
             String ret = electionExtractor.extractMatchedInfobox(infoBox, text.getTitle());
-            Assert.assertNotSame(text.getTitle(), DefaultInfoboxExtractor.NA, ret);
+            Assert.assertNotSame(text.getTitle(), DefaultInfoboxValidator.NA, ret);
         }
 
         List<RawElasticResult> other = new ArrayList<>();
@@ -132,19 +132,19 @@ public class TestWECLinksExtractor {
          for(RawElasticResult text : other) {
             String infoBox = text.getInfobox();
             String ret = electionExtractor.extractMatchedInfobox(infoBox, text.getTitle());
-            Assert.assertSame(text.getTitle(), DefaultInfoboxExtractor.NA, ret);
+            Assert.assertSame(text.getTitle(), DefaultInfoboxValidator.NA, ret);
         }
     }
 
     @Test
     public void testAccident() {
         String corefType = "ACCIDENT_EVENT";
-        DefaultInfoboxExtractor accidentExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
+        DefaultInfoboxValidator accidentExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
         List<RawElasticResult> pageTexts = getAccidentText();
         for(RawElasticResult text : pageTexts) {
             String infoBox = text.getInfobox();
             String ret = accidentExtractor.extractMatchedInfobox(infoBox, "");
-            Assert.assertNotSame(text.getTitle(), DefaultInfoboxExtractor.NA, ret);
+            Assert.assertNotSame(text.getTitle(), DefaultInfoboxValidator.NA, ret);
         }
 
         List<RawElasticResult> other = new ArrayList<>();
@@ -160,27 +160,27 @@ public class TestWECLinksExtractor {
         for(RawElasticResult text : other) {
             String infoBox = text.getInfobox();
             String ret = accidentExtractor.extractMatchedInfobox(infoBox, "");
-            Assert.assertSame(text.getTitle(), DefaultInfoboxExtractor.NA, ret);
+            Assert.assertSame(text.getTitle(), DefaultInfoboxValidator.NA, ret);
         }
     }
 
     @Test
     public void testSmallCompany() {
         String corefType = "COMPANY";
-        DefaultInfoboxExtractor companyExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
+        DefaultInfoboxValidator companyExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
         RawElasticResult smallCompanyText = getSmallCompanyText();
         String ret = companyExtractor.extractMatchedInfobox(smallCompanyText.getInfobox(), "");
-        Assert.assertNotSame(smallCompanyText.getTitle(), DefaultInfoboxExtractor.NA, ret);
+        Assert.assertNotSame(smallCompanyText.getTitle(), DefaultInfoboxValidator.NA, ret);
     }
 
     @Test
     public void testIsSport() {
         String corefType = "SPORT_EVENT";
-        DefaultInfoboxExtractor sportExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
+        DefaultInfoboxValidator sportExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
         final List<RawElasticResult> sportText = getSportText();
         for(RawElasticResult text : sportText) {
             String ret = sportExtractor.extractMatchedInfobox(text.getInfobox(), text.getTitle());
-            Assert.assertNotSame(text.getText(), DefaultInfoboxExtractor.NA, ret);
+            Assert.assertNotSame(text.getText(), DefaultInfoboxValidator.NA, ret);
         }
 
         List<RawElasticResult> other = new ArrayList<>();
@@ -196,18 +196,18 @@ public class TestWECLinksExtractor {
         for(RawElasticResult text : other) {
             String infoBox = text.getInfobox();
             String ret = sportExtractor.extractMatchedInfobox(infoBox, text.getTitle());
-            Assert.assertSame(text.getTitle(), DefaultInfoboxExtractor.NA, ret);
+            Assert.assertSame(text.getTitle(), DefaultInfoboxValidator.NA, ret);
         }
     }
 
     @Test
     public void testIsAward() {
         String corefType = "AWARD_EVENT";
-        DefaultInfoboxExtractor awardExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
+        DefaultInfoboxValidator awardExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
         final List<RawElasticResult> awardPair = getAwards();
         for(RawElasticResult pair : awardPair) {
             String ret = awardExtractor.extractMatchedInfobox(pair.getInfobox(), pair.getTitle());
-            Assert.assertNotSame(pair.getTitle(), DefaultInfoboxExtractor.NA, ret);
+            Assert.assertNotSame(pair.getTitle(), DefaultInfoboxValidator.NA, ret);
         }
 
         List<RawElasticResult> other = new ArrayList<>();
@@ -222,7 +222,7 @@ public class TestWECLinksExtractor {
 
         for(RawElasticResult pair : other) {
             String ret = awardExtractor.extractMatchedInfobox(pair.getInfobox(), pair.getTitle());
-            Assert.assertSame(pair.getTitle(), DefaultInfoboxExtractor.NA, ret);
+            Assert.assertSame(pair.getTitle(), DefaultInfoboxValidator.NA, ret);
         }
     }
 
@@ -230,18 +230,18 @@ public class TestWECLinksExtractor {
     public void testIsConcreteGeneralEvent() {
         String generalEvent = "GENERAL_EVENT";
         String otherEvent = "OTHERS";
-        DefaultInfoboxExtractor generalExtractor = infoboxConfiguration.getExtractorByCorefType(generalEvent);
+        DefaultInfoboxValidator generalExtractor = infoboxConfiguration.getExtractorByCorefType(generalEvent);
         final List<RawElasticResult> newsPair = getConcreteGeneralTexts();
         for(RawElasticResult pair : newsPair) {
             String ret1 = generalExtractor.extractMatchedInfobox(pair.getInfobox(), pair.getTitle());
-            Assert.assertNotSame(pair.getTitle(), DefaultInfoboxExtractor.NA, ret1);
+            Assert.assertNotSame(pair.getTitle(), DefaultInfoboxValidator.NA, ret1);
         }
 
-        DefaultInfoboxExtractor otherExtractor = infoboxConfiguration.getExtractorByCorefType(otherEvent);
+        DefaultInfoboxValidator otherExtractor = infoboxConfiguration.getExtractorByCorefType(otherEvent);
         final List<RawElasticResult> othersEvents = getOthersTexts();
         for(RawElasticResult pair : othersEvents) {
             String ret2 = otherExtractor.extractMatchedInfobox(pair.getInfobox(), pair.getTitle());
-            Assert.assertNotSame(pair.getTitle(), DefaultInfoboxExtractor.NA, ret2);
+            Assert.assertNotSame(pair.getTitle(), DefaultInfoboxValidator.NA, ret2);
         }
 
         List<RawElasticResult> other = new ArrayList<>();
@@ -256,20 +256,20 @@ public class TestWECLinksExtractor {
         for(RawElasticResult pair : other) {
             String ret1 = generalExtractor.extractMatchedInfobox(pair.getInfobox(), pair.getTitle());
             String ret2 = otherExtractor.extractMatchedInfobox(pair.getInfobox(), pair.getTitle());
-            Assert.assertSame(pair.getTitle(), DefaultInfoboxExtractor.NA, ret1);
-            Assert.assertSame(pair.getTitle(), DefaultInfoboxExtractor.NA, ret2);
+            Assert.assertSame(pair.getTitle(), DefaultInfoboxValidator.NA, ret1);
+            Assert.assertSame(pair.getTitle(), DefaultInfoboxValidator.NA, ret2);
         }
     }
 
     @Test
     public void testIsDisaster() {
         String corefType = "DISASTER_EVENT";
-        DefaultInfoboxExtractor disasterExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
+        DefaultInfoboxValidator disasterExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
         final List<RawElasticResult> disasterText = getDisasterText();
         for(RawElasticResult text : disasterText) {
             String infoBox = text.getInfobox();
             String ret = disasterExtractor.extractMatchedInfobox(infoBox, "");
-            Assert.assertNotSame(text.getTitle(), DefaultInfoboxExtractor.NA, ret);
+            Assert.assertNotSame(text.getTitle(), DefaultInfoboxValidator.NA, ret);
         }
 
         List<RawElasticResult> other = new ArrayList<>();
@@ -285,19 +285,19 @@ public class TestWECLinksExtractor {
         for(RawElasticResult text : other) {
             String infoBox = text.getInfobox();
             String ret = disasterExtractor.extractMatchedInfobox(infoBox, "");
-            Assert.assertSame(text.getTitle(), DefaultInfoboxExtractor.NA, ret);
+            Assert.assertSame(text.getTitle(), DefaultInfoboxValidator.NA, ret);
         }
     }
 
     @Test
     public void testIsCivilAttack() {
         String corefType = "ATTACK_EVENT";
-        DefaultInfoboxExtractor attackExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
+        DefaultInfoboxValidator attackExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
         final List<RawElasticResult> civilAttack = getCivilAttack();
         for(RawElasticResult text : civilAttack) {
             String infoBox = text.getInfobox();
             String ret = attackExtractor.extractMatchedInfobox(infoBox, "");
-            Assert.assertNotSame(text.getTitle(), DefaultInfoboxExtractor.NA, ret);
+            Assert.assertNotSame(text.getTitle(), DefaultInfoboxValidator.NA, ret);
         }
 
         List<RawElasticResult> other = new ArrayList<>();
@@ -314,7 +314,7 @@ public class TestWECLinksExtractor {
         for(RawElasticResult text : other) {
             String infoBox = text.getInfobox();
             String ret = attackExtractor.extractMatchedInfobox(infoBox, "");
-            Assert.assertSame(text.getTitle(), DefaultInfoboxExtractor.NA, ret);
+            Assert.assertSame(text.getTitle(), DefaultInfoboxValidator.NA, ret);
         }
     }
 
@@ -327,9 +327,9 @@ public class TestWECLinksExtractor {
         final List<RawElasticResult> rejectTexts = getRejectTexts();
         for(RawElasticResult pair : rejectTexts) {
             String infoBox = pair.getInfobox();
-            for (DefaultInfoboxExtractor extractor : infoboxConfiguration.getAllIncludedExtractor()) {
+            for (DefaultInfoboxValidator extractor : infoboxConfiguration.getAllIncludedValidators()) {
                 String ret = extractor.extractMatchedInfobox(infoBox, pair.getTitle());
-                Assert.assertSame(pair.getTitle(), DefaultInfoboxExtractor.NA, ret);
+                Assert.assertSame(pair.getTitle(), DefaultInfoboxValidator.NA, ret);
             }
         }
     }

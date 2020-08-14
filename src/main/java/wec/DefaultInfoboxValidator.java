@@ -3,14 +3,14 @@ package wec;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class DefaultInfoboxExtractor {
+public class DefaultInfoboxValidator {
 
     public static final String NA = "NA";
 
     private final String corefType;
     private final Pattern pattern;
 
-    public DefaultInfoboxExtractor(String corefType, Pattern pattern) {
+    public DefaultInfoboxValidator(String corefType, Pattern pattern) {
         this.corefType = corefType;
         this.pattern = pattern;
     }
