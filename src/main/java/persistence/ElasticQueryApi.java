@@ -45,18 +45,8 @@ public class ElasticQueryApi implements Closeable {
     }
 
     public ElasticQueryApi(Configuration config) {
-        this.elasticIndex = config.getElasticWikiIndex();
-        this.queryInterval = config.getElasticSearchInterval();
-        this.multiRequestInterval = config.getMultiRequestInterval();
-
-        this.elasticClient = new RestHighLevelClient(
-                RestClient.builder(new HttpHost(config.getElasticHost(),
-                        config.getElasticPort(), "http")).setRequestConfigCallback(
-                        requestConfigBuilder -> requestConfigBuilder
-                                .setConnectionRequestTimeout(60*60*10000)
-                                .setConnectTimeout(60*60*10000)
-                                .setSocketTimeout(60*60*10000))
-                        .setMaxRetryTimeoutMillis(60*60*10000));
+        this(config.getElasticWikiIndex(), config.getElasticSearchInterval(), config.getMultiRequestInterval(),
+                config.getElasticHost(), config.getElasticPort());
     }
 
     public long getTotalDocsCount() throws IOException {
