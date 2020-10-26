@@ -368,59 +368,59 @@ public class TestWikipediaLinkExtractor {
     }
 
     private RawElasticResult getSmallCompanyText() {
-        return TestUtils.getText("wiki_links/mobileye.json");
+        return TestUtils.getText("wikipedia/mobileye.json");
     }
 
     private List<RawElasticResult> getSportText() {
-        return TestUtils.getTextAndTitle("wiki_links/sport.json");
+        return TestUtils.getTextAndTitle("wikipedia/sport.json");
     }
 
     private List<RawElasticResult> getDisasterText() {
-        return TestUtils.getTextAndTitle("wiki_links/disaster.json");
+        return TestUtils.getTextAndTitle("wikipedia/disaster.json");
     }
 
     private List<RawElasticResult> getCivilAttack() {
-        return TestUtils.getTextAndTitle("wiki_links/civil_attack.json");
+        return TestUtils.getTextAndTitle("wikipedia/civil_attack.json");
     }
 
     private List<RawElasticResult> getPeopleText() {
-        return TestUtils.getTextAndTitle("wiki_links/people.json");
+        return TestUtils.getTextAndTitle("wikipedia/people.json");
     }
 
     private RawElasticResult getWeddingText() {
-        return TestUtils.getText("wiki_links/wedding.json");
+        return TestUtils.getText("wikipedia/wedding.json");
     }
 
     private List<RawElasticResult> getElectionText() {
-        return TestUtils.getTextAndTitle("wiki_links/election.json");
+        return TestUtils.getTextAndTitle("wikipedia/election.json");
     }
 
     private List<RawElasticResult> getAccidentText() {
-        return TestUtils.getTextAndTitle("wiki_links/accident.json");
+        return TestUtils.getTextAndTitle("wikipedia/accident.json");
     }
 
     private List<RawElasticResult> getAwards() {
-        return TestUtils.getTextAndTitle("wiki_links/award.json");
+        return TestUtils.getTextAndTitle("wikipedia/award.json");
     }
 
     private List<RawElasticResult> getConcreteGeneralTexts() {
-        return TestUtils.getTextAndTitle("wiki_links/concrete_general.json");
+        return TestUtils.getTextAndTitle("wikipedia/concrete_general.json");
     }
 
     private List<RawElasticResult> getOthersTexts() {
-        return TestUtils.getTextAndTitle("wiki_links/others.json");
+        return TestUtils.getTextAndTitle("wikipedia/others.json");
     }
 
     private List<JsonObject> getExtractFromPage() {
-        return TestUtils.getTextTitleAndExpected("wiki_links/extractfrompage.json");
+        return TestUtils.getTextTitleAndExpected("wikipedia/extractfrompage.json");
     }
 
     private List<RawElasticResult> getRejectTexts() {
-        return TestUtils.getTextAndTitle("wiki_links/reject.json");
+        return TestUtils.getTextAndTitle("wikipedia/reject.json");
     }
 
     private RawElasticResult getInfoBoxs() {
-        return TestUtils.getText("wiki_links/many_infobox.json");
+        return TestUtils.getText("wikipedia/many_infobox.json");
     }
 
 }

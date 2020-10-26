@@ -1,4 +1,4 @@
-package wikinews;
+package experimentscripts;
 
 import com.google.gson.Gson;
 import org.apache.commons.io.FileUtils;
@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
 import wec.CreateWEC;
+import workers.WECResources;
 import workers.WikiNewsRedirectCounterWorker;
 import workers.WikiNewsRedirectCounterWorkerFactory;
 
@@ -13,8 +14,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-public class WikiNewsRedirecectCount {
-    private final static Logger LOGGER = LogManager.getLogger(WikiNewsRedirecectCount.class);
+public class WikiNewsRedirectCount {
+    private final static Logger LOGGER = LogManager.getLogger(WikiNewsRedirectCount.class);
     private final static Gson GSON = new Gson();
 
     public static void main(String[] args) throws IOException {
@@ -26,20 +27,22 @@ public class WikiNewsRedirecectCount {
                 new File(property + "/config.json"), "UTF-8"),
                 Map.class);
 
-        try (ElasticQueryApi elasticApi = new ElasticQueryApi(config.get("elastic_wikinews_index"),
+        WECResources.setElasticApi(new ElasticQueryApi(config.get("elastic_wikinews_index"),
                 Integer.parseInt(config.get("elastic_search_interval")),
                 Integer.parseInt(config.get("multi_request_interval")),
                 config.get("elastic_host"),
-                Integer.parseInt(config.get("elastic_port")))) {
+                Integer.parseInt(config.get("elastic_port"))));
+        try {
 
-            CreateWEC createWEC = new CreateWEC(elasticApi,
-                    new WikiNewsRedirectCounterWorkerFactory());
+            CreateWEC createWEC = new CreateWEC(new WikiNewsRedirectCounterWorkerFactory());
 
             createWEC.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
 
             LOGGER.info("Total redirect pages=" + WikiNewsRedirectCounterWorker.getCounter());
         } catch (Exception ex) {
             LOGGER.error(ex);
+        } finally {
+            WECResources.closeAllResources();
         }
     }
 }

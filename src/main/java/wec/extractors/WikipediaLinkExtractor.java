@@ -11,14 +11,11 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import utils.WikipediaUtils;
-import wec.extractors.IExtractor;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class WikipediaLinkExtractor implements IExtractor<List<WECMention>> {
 
@@ -27,7 +24,7 @@ public class WikipediaLinkExtractor implements IExtractor<List<WECMention>> {
         String pageName = rawElasticResult.getTitle();
         String text = rawElasticResult.getText();
         String htmlText = WikiModel.toHtml(text);
-        String cleanHtml = WikipediaUtils.cleanTextField(htmlText);
+        String cleanHtml = WikipediaUtils.cleanParentheses(htmlText);
         return extractMentions(pageName, cleanHtml);
     }
 

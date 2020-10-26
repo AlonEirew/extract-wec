@@ -11,7 +11,9 @@ import org.elasticsearch.search.SearchHit;
 import persistence.ElasticQueryApi;
 import utils.ExecutorServiceFactory;
 import workers.IWorkerFactory;
+import workers.WECResources;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,26 +22,25 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class CreateWEC {
+public class CreateWEC implements Closeable {
     private final static Logger LOGGER = LogManager.getLogger(CreateWEC.class);
 
-    private final IWorkerFactory workerFactory;
-    private final ElasticQueryApi elasticApi;
 
-    public CreateWEC(ElasticQueryApi elasticApi, IWorkerFactory workerFactory) {
-        this.elasticApi = elasticApi;
+    private final IWorkerFactory workerFactory;
+
+    public CreateWEC(IWorkerFactory workerFactory) {
         this.workerFactory = workerFactory;
     }
 
     public void readAllWikiPagesAndProcess(int totalAmountToExtract) throws IOException, InterruptedException, ExecutionException, TimeoutException {
         LOGGER.info("Strating process, Reading all documents from wikipedia (elastic)");
-
+        ElasticQueryApi elasticApi = WECResources.getElasticApi();
         List<Future<?>> allTasks = new ArrayList<>();
 
-        long totalDocsCount = this.elasticApi.getTotalDocsCount();
+        long totalDocsCount = elasticApi.getTotalDocsCount();
 
         final Scroll scroll = new Scroll(TimeValue.timeValueHours(5L));
-        SearchResponse searchResponse = this.elasticApi.createElasticSearchResponse(scroll);
+        SearchResponse searchResponse = elasticApi.createElasticSearchResponse(scroll);
 
         String scrollId = searchResponse.getScrollId();
         SearchHit[] searchHits = searchResponse.getHits().getHits();
@@ -51,7 +52,7 @@ public class CreateWEC {
             searchResponse = elasticApi.getSearchScroll(scrollRequest);
             scrollId = searchResponse.getScrollId();
 
-            List<RawElasticResult> rawElasticResults = this.elasticApi.getNextScrollResults(searchHits);
+            List<RawElasticResult> rawElasticResults = elasticApi.getNextScrollResults(searchHits);
             allTasks.add(ExecutorServiceFactory.submit(this.workerFactory.createNewWorker(rawElasticResults)));
             LOGGER.info((totalDocsCount - count) + " documents to go");
 
@@ -70,5 +71,10 @@ public class CreateWEC {
 
         this.workerFactory.finalizeIfNeeded();
         elasticApi.closeScroll(scrollId);
+    }
+
+    @Override
+    public void close() throws IOException {
+
     }
 }

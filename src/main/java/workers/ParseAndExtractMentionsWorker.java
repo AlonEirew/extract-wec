@@ -4,8 +4,6 @@ import data.RawElasticResult;
 import data.WECMention;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import persistence.ElasticQueryApi;
-import persistence.SQLQueryApi;
 import wec.InfoboxFilter;
 import wec.extractors.WikipediaLinkExtractor;
 
@@ -14,22 +12,17 @@ import java.util.*;
 public class ParseAndExtractMentionsWorker extends AWorker {
     private final static Logger LOGGER = LogManager.getLogger(ParseAndExtractMentionsWorker.class);
 
-    private final SQLQueryApi sqlApi;
-    private final ElasticQueryApi elasticApi;
     private final InfoboxFilter filter;
     private final WikipediaLinkExtractor extractor = new WikipediaLinkExtractor();
 
-    public ParseAndExtractMentionsWorker(List<RawElasticResult> rawElasticResults, SQLQueryApi sqlApi,
-                                         ElasticQueryApi elasticApi, InfoboxFilter filter) {
+    public ParseAndExtractMentionsWorker(List<RawElasticResult> rawElasticResults, InfoboxFilter filter) {
         super(rawElasticResults);
-        this.sqlApi = sqlApi;
-        this.elasticApi = elasticApi;
         this.filter = filter;
     }
 
     // Constructor for testing purposes
     ParseAndExtractMentionsWorker(InfoboxFilter filter) {
-        this(new ArrayList<>(), null, null, filter);
+        this(new ArrayList<>(), filter);
     }
 
     @Override
@@ -56,7 +49,7 @@ public class ParseAndExtractMentionsWorker extends AWorker {
         Map<String, RawElasticResult> allWikiPagesTitleAndText = new HashMap<>();
         if(!corefTitleSet.isEmpty()) {
             LOGGER.info("Sending-" + corefTitleSet.size() + " coref titles to be retrieved");
-            allWikiPagesTitleAndText = this.elasticApi.getAllWikiCorefPagesFromTitle(corefTitleSet);
+            allWikiPagesTitleAndText = WECResources.getElasticApi().getAllWikiCorefPagesFromTitle(corefTitleSet);
         }
 
         onResponse(finalToCommit, allWikiPagesTitleAndText);
@@ -66,7 +59,7 @@ public class ParseAndExtractMentionsWorker extends AWorker {
         LOGGER.info("processing returned results from elastic MultiSearchRequest");
         if(!finalToCommit.isEmpty()) {
             finalToCommit = filterUnwantedMentions(finalToCommit, pagesResults);
-            sqlApi.commitMentions(finalToCommit);
+            WECResources.getSqlApi().commitMentions(finalToCommit);
         }
     }
 

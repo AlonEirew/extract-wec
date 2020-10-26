@@ -12,21 +12,19 @@ import java.util.Map;
 public class WikiNewsWorkerFactory implements IWorkerFactory {
 
     private final Map<String, WECCoref> wikiLinksCorefMap;
-    private final SQLQueryApi sqlApi;
 
-    public WikiNewsWorkerFactory(Map<String, WECCoref> wikiLinksCorefMap, SQLQueryApi sqlApi) {
+    public WikiNewsWorkerFactory(Map<String, WECCoref> wikiLinksCorefMap) {
         this.wikiLinksCorefMap = wikiLinksCorefMap;
-        this.sqlApi = sqlApi;
     }
 
     @Override
     public AWorker createNewWorker(List<RawElasticResult> rawElasticResults) {
-        return new WikiNewsWorker(rawElasticResults, sqlApi, wikiLinksCorefMap);
+        return new WikiNewsWorker(rawElasticResults, wikiLinksCorefMap);
     }
 
     @Override
     public void finalizeIfNeeded() {
-        WikiNewsWorker worker = new WikiNewsWorker(new ArrayList<>(), sqlApi, new HashMap<>());
+        WikiNewsWorker worker = new WikiNewsWorker(new ArrayList<>(), new HashMap<>());
         worker.handle(new ArrayList<>(), true);
     }
 }

@@ -10,6 +10,7 @@ import utils.ExecutorServiceFactory;
 import data.Configuration;
 import wec.CreateWEC;
 import workers.ReadDateWorkerFactory;
+import workers.WECResources;
 
 import java.io.File;
 import java.io.FileReader;
@@ -30,10 +31,11 @@ public class ExtractDates {
         Configuration config = GSON.fromJson(new FileReader(property + "/config.json"), Configuration.class);
 
         ExecutorServiceFactory.initExecutorService();
+        WECResources.setElasticApi(new ElasticQueryApi(config));
 
-        try (ElasticQueryApi elasticApi = new ElasticQueryApi(config)) {
+        try {
             ReadDateWorkerFactory readDateWorkerFactory = new ReadDateWorkerFactory();
-            CreateWEC createWEC = new CreateWEC(elasticApi, readDateWorkerFactory);
+            CreateWEC createWEC = new CreateWEC(readDateWorkerFactory);
             createWEC.readAllWikiPagesAndProcess(config.getTotalAmountToExtract());
             final List<String> datesSchemas = readDateWorkerFactory.getDatesSchemas();
 

@@ -10,6 +10,7 @@ import utils.ExecutorServiceFactory;
 import data.Configuration;
 import wec.CreateWEC;
 import workers.ReadDateWorkerFactory;
+import workers.WECResources;
 
 import java.io.File;
 import java.io.FileReader;
@@ -30,10 +31,11 @@ public class ExtractTitleList {
         Configuration config = GSON.fromJson(new FileReader(property + "/config.json"), Configuration.class);
 
         ExecutorServiceFactory.initExecutorService();
+        WECResources.setElasticApi(new ElasticQueryApi(config));
 
-        try (ElasticQueryApi elasticApi = new ElasticQueryApi(config)) {
+        try {
             ReadDateWorkerFactory readDateWorkerFactory = new ReadDateWorkerFactory();
-            CreateWEC createWEC = new CreateWEC(elasticApi, readDateWorkerFactory);
+            CreateWEC createWEC = new CreateWEC(readDateWorkerFactory);
             createWEC.readAllWikiPagesAndProcess(config.getTotalAmountToExtract());
             final List<String> datesSchemas = readDateWorkerFactory.getDatesSchemas();
 
@@ -43,6 +45,7 @@ public class ExtractTitleList {
             FileUtils.writeLines(new File(property + "/output/datesParse.txt"), datesSchemas, "\n");
         } finally {
             ExecutorServiceFactory.closeService();
+            WECResources.closeAllResources();
             long end = System.currentTimeMillis();
             LOGGER.info("Process Done, took-" + (end - start) + "ms to run");
         }

@@ -5,7 +5,6 @@ import data.WECCoref;
 import data.WikiNewsMention;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import persistence.SQLQueryApi;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -18,14 +17,11 @@ public class WikiNewsWorker extends AWorker {
     private final static  int COMMIT_MAX_SIZE = 1000000;
     private final static  List<WikiNewsMention> finalToCommit = new ArrayList<>();
 
-    private final SQLQueryApi sqlApi;
     private final Map<String, WECCoref> wikiLinksCorefMap;
     private final ReentrantLock sLock = new ReentrantLock();
 
-    public WikiNewsWorker(List<RawElasticResult> rawElasticResults, SQLQueryApi sqlApi,
-                          Map<String, WECCoref> corefMap) {
+    public WikiNewsWorker(List<RawElasticResult> rawElasticResults, Map<String, WECCoref> corefMap) {
         super(rawElasticResults);
-        this.sqlApi = sqlApi;
         this.wikiLinksCorefMap = corefMap;
     }
 
@@ -77,7 +73,7 @@ public class WikiNewsWorker extends AWorker {
     private void commitCurrent(List<WikiNewsMention> localNewList) {
         LOGGER.info("Prepare to inset-" + localNewList.size() + " mentions to SQL");
         try {
-            if (!this.sqlApi.insertRowsToTable(localNewList)) {
+            if (!WECResources.getSqlApi().insertRowsToTable(localNewList)) {
                 LOGGER.error("Failed to insert mentions Batch!!!!");
             }
         } catch (SQLException e) {

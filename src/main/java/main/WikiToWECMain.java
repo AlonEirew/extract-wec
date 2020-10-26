@@ -1,4 +1,4 @@
-package wec;
+package main;
 
 import com.google.gson.Gson;
 import data.Configuration;
@@ -11,7 +11,10 @@ import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
 import persistence.SQLiteConnections;
 import utils.ExecutorServiceFactory;
+import wec.CreateWEC;
+import wec.InfoboxFilter;
 import workers.ParseAndExtractWorkersFactory;
+import workers.WECResources;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -19,16 +22,18 @@ import java.sql.SQLException;
 
 public class WikiToWECMain {
     private final static Logger LOGGER = LogManager.getLogger(WikiToWECMain.class);
-
     private final static Gson GSON = new Gson();
 
     public static void main(String[] args) throws IOException {
+        LOGGER.info("WikiToWECMain process started!");
         final String property = System.getProperty("user.dir");
         LOGGER.info("Working directory=" + property);
-
         Configuration config = GSON.fromJson(new FileReader(property + "/config.json"), Configuration.class);
-        InfoboxConfiguration infoboxConfiguration = GSON.fromJson(new FileReader(
+        InfoboxConfiguration infoboxConf = GSON.fromJson(new FileReader(
                 property + config.getInfoboxConfiguration()), InfoboxConfiguration.class);
+
+        WECResources.setSqlApi(new SQLQueryApi(new SQLiteConnections(config.getSqlConnectionUrl())));
+        WECResources.setElasticApi(new ElasticQueryApi(config));
 
         final int pool_size = Integer.parseInt(config.getPoolSize());
         if(pool_size > 0) {
@@ -37,13 +42,11 @@ public class WikiToWECMain {
             ExecutorServiceFactory.initExecutorService();
         }
 
-        SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections(config.getSqlConnectionUrl()));
         long start = System.currentTimeMillis();
-        try (ElasticQueryApi elasticApi = new ElasticQueryApi(config)) {
-            CreateWEC createWEC = new CreateWEC(elasticApi, new ParseAndExtractWorkersFactory(sqlApi, elasticApi,
-                    new InfoboxFilter(infoboxConfiguration)));
+        ParseAndExtractWorkersFactory workerFactory = new ParseAndExtractWorkersFactory(new InfoboxFilter(infoboxConf));
+        try (CreateWEC createWEC = new CreateWEC(workerFactory)) {
 
-            if (!createSQLWikiLinksTables(sqlApi)) {
+            if (!createSQLWECTables()) {
                 LOGGER.error("Failed to create Database and tables, finishing process");
                 return;
             }
@@ -53,16 +56,15 @@ public class WikiToWECMain {
             LOGGER.error("Could not start process", ex);
         } finally {
             ExecutorServiceFactory.closeService();
-            sqlApi.persistAllMentions();
-            sqlApi.persistAllCorefs();
-
+            WECResources.closeAllResources();
             long end = System.currentTimeMillis();
             LOGGER.info("Process Done, took-" + (end - start) + "ms to run");
         }
     }
 
-    private static boolean createSQLWikiLinksTables(SQLQueryApi sqlApi) throws SQLException {
+    private static boolean createSQLWECTables() throws SQLException {
         LOGGER.info("Creating SQL Tables");
+        SQLQueryApi sqlApi = WECResources.getSqlApi();
         return sqlApi.createTable(new WECMention()) &&
                 sqlApi.createTable(WECCoref.getAndSetIfNotExist("####TEMP####"));
     }

@@ -9,19 +9,15 @@ import java.util.List;
 
 public class ParseAndExtractWorkersFactory implements IWorkerFactory {
 
-    private final SQLQueryApi sqlApi;
-    private final ElasticQueryApi elasticApi;
     private final InfoboxFilter filter;
 
-    public ParseAndExtractWorkersFactory(SQLQueryApi sqlApi, ElasticQueryApi elasticApi, InfoboxFilter filter) {
-        this.sqlApi = sqlApi;
-        this.elasticApi = elasticApi;
+    public ParseAndExtractWorkersFactory(InfoboxFilter filter) {
         this.filter = filter;
     }
 
     @Override
     public AWorker createNewWorker(List<RawElasticResult> rawElasticResults) {
-        return new ParseAndExtractMentionsWorker(rawElasticResults, this.sqlApi, this.elasticApi, this.filter);
+        return new ParseAndExtractMentionsWorker(rawElasticResults, this.filter);
     }
 
     @Override

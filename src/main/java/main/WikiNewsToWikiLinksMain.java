@@ -1,4 +1,4 @@
-package wikinews;
+package main;
 
 import com.google.gson.Gson;
 import data.WECCoref;
@@ -47,8 +47,7 @@ public class WikiNewsToWikiLinksMain {
                 corefMap.put(coref.getCorefValue(), coref);
             }
 
-            CreateWEC createWEC = new CreateWEC(elasticApi,
-                    new WikiNewsWorkerFactory(corefMap, sqlApi));
+            CreateWEC createWEC = new CreateWEC(new WikiNewsWorkerFactory(corefMap));
 
             createWEC.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
         } catch (Exception ex) {
