@@ -49,4 +49,4 @@ test {
 }
 
 // Define the main class for the application
-mainClassName = "wec.WikiToWECMain"
+mainClassName = "main.WikiToWECMain"

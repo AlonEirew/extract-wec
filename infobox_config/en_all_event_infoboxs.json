@@ -1,0 +1,159 @@
+{
+  "infoboxLangText" : "Infobox",
+  "infoboxConfigs": [
+    {
+      "corefType": "ACCIDENT_EVENT",
+      "include": true,
+      "infoboxs": [
+        "airlinerincident",
+        "airlineraccident",
+        "aircraftcrash",
+        "aircraftaccident",
+        "aircraftincident",
+        "aircraftoccurrence",
+        "railaccident",
+        "busaccident",
+        "publictransitaccident"
+      ]
+    },
+    {
+      "corefType": "ATTACK_EVENT",
+      "include": true,
+      "infoboxs": [
+        "civilianattack",
+        "terroristattack",
+        "civilconflict"
+      ]
+    },
+    {
+      "corefType": "AWARD_EVENT",
+      "include": true,
+      "useValidatorClass": "wec.validators.TitleWithDateInfoboxValidator",
+      "infoboxs": [
+        "award",
+        "awards",
+        "contest",
+        "beautypageant"
+      ]
+    },
+    {
+      "corefType": "DISASTER_EVENT",
+      "include": true,
+      "infoboxs": [
+        "earthquake",
+        "wildfire",
+        "flood",
+        "eruption",
+        "oilspill"
+      ]
+    },
+    {
+      "corefType": "GENERAL_EVENT",
+      "include": true,
+      "infoboxs": [
+        "newsevent",
+        "concert",
+        "summit",
+        "convention",
+        "conference",
+        "summitmeeting",
+        "festival"
+      ]
+    },
+    {
+      "corefType": "OTHERS",
+      "include": true,
+      "infoboxs": [
+        "solareclipse",
+        "weaponstest",
+        "explosivetest"
+      ]
+    },
+    {
+      "corefType": "SPORT_EVENT",
+      "include": true,
+      "infoboxs": [
+        "halftimeshow",
+        "stanleycupfinal",
+        "universityboatrace",
+        "match",
+        "draft",
+        "nbadraft",
+        "racereport",
+        "footballmatch",
+        "speedwaygrandprix",
+        "indy500",
+        "championships",
+        "athleticscompetition",
+        "sailingcompetition",
+        "competitionevent",
+        "paralympicevent",
+        "tennisevent",
+        "tennistournament",
+        "grandslamevent",
+        "grandslamevent",
+        "tournamentevent",
+        "swimmingevent",
+        "all-stargame",
+        "grandprixevent",
+        "wrestlingevent",
+        "cupfinal",
+        "ncaabasketballsinglegame",
+        "baseballgame",
+        "nflgame",
+        "nflchamp",
+        "nfldraft",
+        "aflchamp",
+        "basketballgame",
+        "race",
+        "sportevent",
+        "singlegame",
+        "hockeygame",
+        "yearlygame",
+        "outdoorgame",
+        "frcgame",
+        "olympicevent",
+        "mmaevent",
+        "daytona500",
+        "gamesevent",
+        "swcevent"
+      ]
+    },
+    {
+      "corefType": "ELECTION_EVENT",
+      "include": true,
+      "infoboxs": [
+        "election"
+      ]
+    },
+    {
+      "corefType": "EVENT_UNK",
+      "include": true,
+      "infoboxs": [
+        "event"
+      ]
+    },
+    {
+      "corefType": "HISTORICAL_EVENT",
+      "include": true,
+      "infoboxs": [
+        "historicalevent"
+      ]
+    },
+    {
+      "corefType": "PERSON",
+      "include": false,
+      "useValidatorClass": "wec.validators.PersonInfoboxValidator",
+      "infoboxs": [
+      ]
+    },
+    {
+      "corefType": "COMPANY",
+      "include": false,
+      "useValidatorClass": "wec.validators.CompanyInfoboxValidator",
+      "infoboxs": [
+        "company"
+      ]
+    }
+  ]
+}

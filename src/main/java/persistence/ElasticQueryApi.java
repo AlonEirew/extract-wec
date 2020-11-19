@@ -103,8 +103,6 @@ public class ElasticQueryApi implements Closeable {
                 final RawElasticResult rawElasticResult = ElasticQueryApi.extractFromHit(hits[0]);
                 if(rawElasticResult != null) {
                     rawResults.put(rawElasticResult.getTitle(), rawElasticResult);
-                } else {
-                    LOGGER.debug("Missing Coref Result?!");
                 }
             }
         }
@@ -123,7 +121,7 @@ public class ElasticQueryApi implements Closeable {
         final String infobox = (String) relations.get("infobox");
 
         if(redirect != null && !redirect.isEmpty()) {
-                return null;
+            return null;
         }
 
         if (isDisambig) {
