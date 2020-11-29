@@ -1,14 +1,20 @@
 package wec;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import data.WECCoref;
 import data.WECMention;
 import org.junit.Assert;
-import persistence.*;
+import persistence.ISQLObject;
+import persistence.SQLQueryApi;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TestSQLQueryApi {
+    Gson GSON = new Gson();
 
     public void testCreateTable(SQLQueryApi api) throws SQLException {
         WECMention columns = new WECMention();
@@ -25,12 +31,20 @@ public class TestSQLQueryApi {
     public void testInsertToTable(SQLQueryApi api) throws SQLException {
         testCreateTable(api);
         List<ISQLObject> objList = new ArrayList<>();
-        Map.Entry[] contextSent = {
-                new AbstractMap.SimpleEntry<>("bolb", 0),
-                new AbstractMap.SimpleEntry<>("bolb", 1),
-                new AbstractMap.SimpleEntry<>("blogb", 2),
-                new AbstractMap.SimpleEntry<>("blob", 3)
-        };
+        JsonObject o1 = new JsonObject();
+        JsonObject o2 = new JsonObject();
+        JsonObject o3 = new JsonObject();
+        JsonObject o4 = new JsonObject();
+        o1.addProperty("bolb", 0);
+        o2.addProperty("bolb", 1);
+        o3.addProperty("blogb", 2);
+        o4.addProperty("blob", 3);
+
+        JsonArray asJsonArray = new JsonArray();
+        asJsonArray.add(o1);
+        asJsonArray.add(o2);
+        asJsonArray.add(o3);
+        asJsonArray.add(o4);
 
         objList.add(new WECMention(
                 WECCoref.getAndSetIfNotExist("test1"),
@@ -38,7 +52,7 @@ public class TestSQLQueryApi {
                 0,
                 1,
                 "Test",
-                Arrays.asList(contextSent)));
+                asJsonArray));
 
         objList.add(new WECMention(
                 WECCoref.getAndSetIfNotExist("test1"),
@@ -46,7 +60,7 @@ public class TestSQLQueryApi {
                 0,
                 1,
                 "Test",
-                Arrays.asList(contextSent)));
+                asJsonArray));
 
         final boolean b = api.insertRowsToTable(objList);
         Assert.assertTrue(b);

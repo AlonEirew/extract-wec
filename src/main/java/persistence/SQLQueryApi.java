@@ -150,6 +150,36 @@ public class SQLQueryApi {
         return resultList;
     }
 
+    public Map<Integer, List<WECMention>> readMentionsByCorefIds(Set<Integer> corefIds, int limit) {
+        WECMention parsingObj = new WECMention();
+        Map<Integer, List<WECMention>> results = new HashMap<>();
+        String query = "SELECT * from Mentions";
+        if(limit > 0) {
+            query += " limit " + limit;
+        }
+        try (Connection conn = this.sqlConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try(Statement stmt = conn.createStatement()) {
+                stmt.setFetchSize(500);
+                try (ResultSet rs = stmt.executeQuery(query)) {
+                    while (rs.next()) {
+                        WECMention mention = parsingObj.resultSetToObject(rs);
+                        if (corefIds.contains(mention.getCorefId())) {
+                            if (!results.containsKey(mention.getCorefId())) {
+                                results.put(mention.getCorefId(), new ArrayList<>());
+                            }
+                            results.get(mention.getCorefId()).add(mention);
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.error(e);
+        }
+
+        return results;
+    }
+
     public synchronized boolean updateCorefTable(String tableName, Map<Integer, WECCoref> corefs) {
         String query = "Select * from CorefChains where corefid in";
         try (Connection conn = this.sqlConnection.getConnection();

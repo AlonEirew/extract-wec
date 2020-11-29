@@ -26,11 +26,9 @@ public class WikiToWECMain {
 
     public static void main(String[] args) throws IOException {
         LOGGER.info("WikiToWECMain process started!");
-        final String property = System.getProperty("user.dir");
-        LOGGER.info("Working directory=" + property);
-        Configuration config = GSON.fromJson(new FileReader(property + "/config.json"), Configuration.class);
+        Configuration config = GSON.fromJson(new FileReader("config.json"), Configuration.class);
         InfoboxConfiguration infoboxConf = GSON.fromJson(new FileReader(
-                property + config.getInfoboxConfiguration()), InfoboxConfiguration.class);
+                config.getInfoboxConfiguration()), InfoboxConfiguration.class);
 
         WECResources.setSqlApi(new SQLQueryApi(new SQLiteConnections(config.getSqlConnectionUrl())));
         WECResources.setElasticApi(new ElasticQueryApi(config));

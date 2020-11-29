@@ -22,7 +22,8 @@
       "infoboxs": [
         "civilianattack",
         "terroristattack",
-        "civilconflict"
+        "civilconflict",
+        "militaryconflict"
       ]
     },
     {
@@ -44,7 +45,8 @@
         "wildfire",
         "flood",
         "eruption",
-        "oilspill"
+        "oilspill",
+        "pandemic"
       ]
     },
     {
@@ -73,6 +75,7 @@
       "corefType": "SPORT_EVENT",
       "include": true,
       "infoboxs": [
+        "games",
         "halftimeshow",
         "stanleycupfinal",
         "universityboatrace",
@@ -80,7 +83,9 @@
         "draft",
         "nbadraft",
         "racereport",
+        "cyclingrace",
         "footballmatch",
+        "footballgrandfinal",
         "speedwaygrandprix",
         "indy500",
         "championships",
@@ -116,7 +121,8 @@
         "mmaevent",
         "daytona500",
         "gamesevent",
-        "swcevent"
+        "swcevent",
+        "individualgolftournament"
       ]
     },
     {

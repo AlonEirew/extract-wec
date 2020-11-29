@@ -68,10 +68,7 @@ public class ElasticQueryApi implements Closeable {
         int index = 0;
         try {
             for (String page : pagesTitles) {
-                SearchRequest searchRequest = new SearchRequest(this.elasticIndex);
-                SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-                searchSourceBuilder.query(QueryBuilders.matchPhraseQuery("title.keyword", page));
-                searchRequest.source(searchSourceBuilder);
+                SearchRequest searchRequest = createSearchRequest(page);
                 multiSearchRequest.add(searchRequest);
 
                 index++;
@@ -95,14 +92,33 @@ public class ElasticQueryApi implements Closeable {
         return allResponses;
     }
 
-    private Map<String, RawElasticResult> onResponse(MultiSearchResponse response) {
+    private SearchRequest createSearchRequest(String query) {
+        SearchRequest searchRequest = new SearchRequest(this.elasticIndex);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.matchPhraseQuery("title.keyword", query));
+        searchRequest.source(searchSourceBuilder);
+        return searchRequest;
+    }
+
+    private Map<String, RawElasticResult> onResponse(MultiSearchResponse response) throws IOException {
         final Map<String, RawElasticResult> rawResults = new HashMap<>();
         for(MultiSearchResponse.Item item : response.getResponses()) {
-            final SearchHit[] hits = item.getResponse().getHits().getHits();
+            SearchHit[] hits = item.getResponse().getHits().getHits();
             if(hits.length > 0) {
-                final RawElasticResult rawElasticResult = ElasticQueryApi.extractFromHit(hits[0]);
+                RawElasticResult rawElasticResult = this.extractFromHit(hits[0]);
                 if(rawElasticResult != null) {
-                    rawResults.put(rawElasticResult.getTitle(), rawElasticResult);
+                    if (rawElasticResult.getRedirect() != null && !rawElasticResult.getRedirect().isEmpty()) {
+                        SearchResponse search = elasticClient.search(createSearchRequest(rawElasticResult.getRedirect()));
+                        hits = search.getHits().getHits();
+                        if (hits.length > 0) {
+                            rawElasticResult = extractFromHit(hits[0]);
+                            if (rawElasticResult != null) {
+                                rawResults.put(rawElasticResult.getTitle(), rawElasticResult);
+                            }
+                        }
+                    } else {
+                        rawResults.put(rawElasticResult.getTitle(), rawElasticResult);
+                    }
                 }
             }
         }
@@ -110,7 +126,7 @@ public class ElasticQueryApi implements Closeable {
         return rawResults;
     }
 
-    public static RawElasticResult extractFromHit(SearchHit hit) {
+    public RawElasticResult extractFromHit(SearchHit hit) {
         final String id = hit.getId();
         final Map map = hit.getSourceAsMap();
         final String text = (String) map.get("text");
@@ -120,22 +136,18 @@ public class ElasticQueryApi implements Closeable {
         final boolean isDisambig = (Boolean) relations.get("isDisambiguation");
         final String infobox = (String) relations.get("infobox");
 
-        if(redirect != null && !redirect.isEmpty()) {
-            return null;
-        }
-
         if (isDisambig) {
             return null;
         }
 
-        return new RawElasticResult(id, title, text, infobox);
+        return new RawElasticResult(id, title, text, infobox, redirect);
     }
 
     public List<RawElasticResult> getNextScrollResults(SearchHit[] searchHits) {
         List<RawElasticResult> rawElasticResults = new ArrayList<>();
         for (SearchHit hit : searchHits) {
-            RawElasticResult hitResult = ElasticQueryApi.extractFromHit(hit);
-            if(hitResult != null) {
+            RawElasticResult hitResult = this.extractFromHit(hit);
+            if(hitResult != null && (hitResult.getRedirect() == null || hitResult.getRedirect().isEmpty())) {
                 rawElasticResults.add(hitResult);
             }
         }

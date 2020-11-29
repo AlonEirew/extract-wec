@@ -1,5 +1,7 @@
 package wec.extractors;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import data.RawElasticResult;
 import data.WECCoref;
 import data.WECMention;
@@ -12,6 +14,8 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import utils.WikipediaUtils;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +38,7 @@ public class WikipediaLinkExtractor implements IExtractor<List<WECMention>> {
         Elements pElements = doc.getElementsByTag("p");
         for (Element paragraph : pElements) {
             int index = 0;
-            final List<Map.Entry<String, Integer>> contextAsStringList = new ArrayList<>();
+            final JsonArray contextAsStringList = new JsonArray();
             List<Node> nodes = paragraph.childNodes();
             List<WECMention> paragraphMentions = new ArrayList<>();
             for(Node child : nodes) {
@@ -58,13 +62,16 @@ public class WikipediaLinkExtractor implements IExtractor<List<WECMention>> {
 
                     int i = 0;
                     for(; i < splText.length ; i++) {
-                        contextAsStringList.add(new AbstractMap.SimpleEntry<>(splText[i], i+index));
+                        JsonObject jo = new JsonObject();
+                        jo.addProperty(splText[i], i+index);
+                        contextAsStringList.add(jo);
                     }
                     int startIndex = index;
                     index = index+i;
 
                     if(linkHref != null) {
-                        WECCoref wecCoref = WECCoref.getAndSetIfNotExist(linkHref);
+                        String decodedLink = URLDecoder.decode(linkHref, StandardCharsets.UTF_8);
+                        WECCoref wecCoref = WECCoref.getAndSetIfNotExist(decodedLink);
                         WECMention mention = new WECMention(
                                 wecCoref,
                                 text,

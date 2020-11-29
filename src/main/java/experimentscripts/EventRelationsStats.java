@@ -1,2 +1,7 @@
-package experimentscripts;public class EventRelationsStats {
+package experimentscripts;
+
+public class EventRelationsStats {
+    public static void main(String[] args) {
+
+    }
 }

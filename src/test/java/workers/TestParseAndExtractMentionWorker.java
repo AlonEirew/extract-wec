@@ -1,14 +1,17 @@
 package workers;
 
 import com.google.gson.Gson;
-import data.InfoboxConfiguration;
-import data.RawElasticResult;
-import data.WECCoref;
-import data.WECMention;
+import data.*;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import persistence.ElasticQueryApi;
+import persistence.SQLQueryApi;
+import persistence.SQLiteConnections;
 import wec.InfoboxFilter;
+import wec.TestUtils;
 import wec.TestWikipediaLinkExtractor;
+import wec.validators.DefaultInfoboxValidator;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -17,6 +20,25 @@ import java.util.*;
 public class TestParseAndExtractMentionWorker {
 
     private static final Gson GSON = new Gson();
+
+    private InfoboxConfiguration infoboxConfiguration;
+    private InfoboxFilter filter;
+
+    @Before
+    public void initTest() throws FileNotFoundException {
+        String config_file = Objects.requireNonNull(TestWikipediaLinkExtractor.class.getClassLoader()
+                .getResource("test_conf.json")).getFile();
+
+        Configuration config = GSON.fromJson(new FileReader(config_file), Configuration.class);
+        WECResources.setSqlApi(new SQLQueryApi(new SQLiteConnections(config.getSqlConnectionUrl())));
+        WECResources.setElasticApi(new ElasticQueryApi(config));
+
+        String inputStreamNlp = Objects.requireNonNull(TestWikipediaLinkExtractor.class.getClassLoader()
+                .getResource("en_infobox_config.json")).getFile();
+
+        infoboxConfiguration = GSON.fromJson(new FileReader(inputStreamNlp), InfoboxConfiguration.class);
+        filter = new InfoboxFilter(infoboxConfiguration);
+    }
 
     @Test
     public void testFilterUnwantedMentions() throws FileNotFoundException {
@@ -73,5 +95,17 @@ public class TestParseAndExtractMentionWorker {
                 Assert.fail("Not as expected-" + mention.getCorefChain().getCorefValue());
             }
         }
+    }
+
+//    @Test
+    public void testRun() {
+        String corefType = "SPORT_EVENT";
+        DefaultInfoboxValidator sportExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
+        final List<RawElasticResult> sportText = TestUtils.getTextAndTitle("wikipedia/tmp.json");
+
+        ParseAndExtractMentionsWorker worker = new ParseAndExtractMentionsWorker(sportText, filter);
+
+        worker.run();
+        System.out.println();
     }
 }

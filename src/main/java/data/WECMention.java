@@ -1,18 +1,13 @@
 package data;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.google.common.collect.Lists;
+import com.google.gson.*;
 import persistence.ISQLObject;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class WECMention implements ISQLObject<WECMention> {
@@ -22,6 +17,7 @@ public class WECMention implements ISQLObject<WECMention> {
     private static volatile AtomicInteger runningId = new AtomicInteger();
 
     private final long mentionId = runningId.incrementAndGet();
+    private int corefId = -1;
     private String mentionText = "";
     private int tokenStart = -1;
     private int tokenEnd = -1;
@@ -29,14 +25,15 @@ public class WECMention implements ISQLObject<WECMention> {
     private String extractedFromPage = "";
     private final List<String> mentionTokens = new ArrayList<>();
     private final List<String> mentionTokensPos = new ArrayList<>();
-    private List<Map.Entry<String, Integer>> context;
+    private JsonArray context;
 
     public WECMention() {
     }
 
     public WECMention(WECCoref coref, String mentionText,
-                      int tokenStart, int tokenEnd, String extractedFromPage, List<Map.Entry<String, Integer>> context) {
+                      int tokenStart, int tokenEnd, String extractedFromPage, JsonArray context) {
         this.coreChain = coref;
+        this.corefId = coref.getCorefId();
         this.mentionText = mentionText;
         this.tokenStart = tokenStart;
         this.tokenEnd = tokenEnd;
@@ -76,17 +73,18 @@ public class WECMention implements ISQLObject<WECMention> {
 
     public void setCorefChain(String corefChainValue) {
         this.coreChain = WECCoref.getAndSetIfNotExist(corefChainValue);
+        this.corefId = coreChain.getCorefId();
     }
 
     public void setCorefChain(WECCoref corefChainValue) {
         this.coreChain = corefChainValue;
     }
 
-    public List<Map.Entry<String, Integer>> getContext() {
+    public JsonArray getContext() {
         return context;
     }
 
-    public void setContext(List<Map.Entry<String, Integer>> context) {
+    public void setContext(JsonArray context) {
         this.context = context;
     }
 
@@ -100,6 +98,14 @@ public class WECMention implements ISQLObject<WECMention> {
 
     public long getMentionId() {
         return mentionId;
+    }
+
+    public int getCorefId() {
+        return corefId;
+    }
+
+    public void setCorefId(int corefId) {
+        this.corefId = corefId;
     }
 
     @Override
@@ -133,14 +139,7 @@ public class WECMention implements ISQLObject<WECMention> {
     }
 
     private String getContextAsSQLBlob() {
-        JsonArray rootArray = new JsonArray();
-        for (Map.Entry<String, Integer> entry : this.context) {
-            JsonObject jsonObject = new JsonObject();
-            jsonObject.addProperty(entry.getKey(), entry.getValue());
-            rootArray.add(jsonObject);
-        }
-
-        return GSON.toJson(rootArray);
+        return GSON.toJson(this.context);
     }
 
     @Override
@@ -175,7 +174,24 @@ public class WECMention implements ISQLObject<WECMention> {
 
     @Override
     public WECMention resultSetToObject(ResultSet rs) throws SQLException {
-        return null;
+        final int corefId = rs.getInt("coreChainId");
+        final String mentionText = rs.getString("mentionText");
+        final int tokenStart = rs.getInt("tokenStart");
+        final int tokenEnd = rs.getInt("tokenEnd");
+        final String extractedFromPage = rs.getString("extractedFromPage");
+        final String context = rs.getString("context");
+
+        WECMention mention = new WECMention();
+        mention.setCorefId(corefId);
+        mention.setMentionText(mentionText);
+        mention.setTokenStart(tokenStart);
+        mention.setTokenEnd(tokenEnd);
+        mention.setExtractedFromPage(extractedFromPage);
+
+        JsonArray asJsonObject = new JsonParser().parse(context).getAsJsonArray();
+        mention.setContext(asJsonObject);
+
+        return mention;
     }
 
     @Override

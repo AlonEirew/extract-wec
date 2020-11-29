@@ -85,6 +85,10 @@ public class WECCoref implements ISQLObject<WECCoref> {
         this.corefSubType = corefSubType;
     }
 
+    public String getCorefSubType() {
+        return corefSubType;
+    }
+
     public boolean isMarkedForRemoval() {
         return markedForRemoval;
     }

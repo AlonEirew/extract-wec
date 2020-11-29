@@ -6,6 +6,7 @@ public class RawElasticResult {
     private final String title;
     private final String text;
     private final String infobox;
+    private String redirect;
 
     public RawElasticResult(String title, String text, String infobox) {
         this.title = title;
@@ -13,9 +14,10 @@ public class RawElasticResult {
         this.infobox = infobox;
     }
 
-    public RawElasticResult(String id, String title, String text, String infobox) {
+    public RawElasticResult(String id, String title, String text, String infobox, String redirect) {
         this(title, text, infobox);
         this.id = id;
+        this.redirect = redirect;
     }
 
     public String getId() {
@@ -32,5 +34,9 @@ public class RawElasticResult {
 
     public String getInfobox() {
         return infobox;
+    }
+
+    public String getRedirect() {
+        return redirect;
     }
 }
