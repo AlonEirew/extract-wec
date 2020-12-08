@@ -23,3 +23,6 @@ CREATE DATABASE TestDB
   "sqlConnectionUrl": "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksExperiment.db"
 }
 ```
+
+Running events:
+`java -Xmx90000m -DentityExpansionLimit=2147480000 -DtotalEntitySizeLimit=2147480000 -Djdk.xml.totalEntitySizeLimit=2147480000 -cp "lib/*" experimentscripts.event.ReadFilteredJsonAndProcess`

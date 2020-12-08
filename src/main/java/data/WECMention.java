@@ -1,45 +1,36 @@
 package data;
 
-import com.google.common.collect.Lists;
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
 import persistence.ISQLObject;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class WECMention implements ISQLObject<WECMention> {
+public class WECMention extends BaseMention implements ISQLObject<WECMention> {
     private static final String TABLE_MENTIONS = "Mentions";
 
-    private static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
-    private static volatile AtomicInteger runningId = new AtomicInteger();
+    private static final AtomicInteger runningId = new AtomicInteger();
 
-    private final long mentionId = runningId.incrementAndGet();
-    private int corefId = -1;
-    private String mentionText = "";
-    private int tokenStart = -1;
-    private int tokenEnd = -1;
     private WECCoref coreChain;
-    private String extractedFromPage = "";
+    private String mentionText;
     private final List<String> mentionTokens = new ArrayList<>();
     private final List<String> mentionTokensPos = new ArrayList<>();
-    private JsonArray context;
 
     public WECMention() {
+        super(runningId.incrementAndGet());
     }
 
     public WECMention(WECCoref coref, String mentionText,
                       int tokenStart, int tokenEnd, String extractedFromPage, JsonArray context) {
+        super(runningId.incrementAndGet(), coref.getCorefId(), tokenStart, tokenEnd, extractedFromPage, context);
         this.coreChain = coref;
-        this.corefId = coref.getCorefId();
         this.mentionText = mentionText;
-        this.tokenStart = tokenStart;
-        this.tokenEnd = tokenEnd;
-        this.extractedFromPage = extractedFromPage;
-        this.context = context;
-
         this.coreChain.incMentionsCount();
     }
 
@@ -51,61 +42,17 @@ public class WECMention implements ISQLObject<WECMention> {
         this.mentionText = mentionText;
     }
 
-    public int getTokenStart() {
-        return tokenStart;
-    }
-
-    public void setTokenStart(int tokenStart) {
-        this.tokenStart = tokenStart;
-    }
-
-    public int getTokenEnd() {
-        return tokenEnd;
-    }
-
-    public void setTokenEnd(int tokenEnd) {
-        this.tokenEnd = tokenEnd;
-    }
-
     public WECCoref getCorefChain() {
         return this.coreChain;
     }
 
     public void setCorefChain(String corefChainValue) {
         this.coreChain = WECCoref.getAndSetIfNotExist(corefChainValue);
-        this.corefId = coreChain.getCorefId();
+        this.setCorefId(coreChain.getCorefId());
     }
 
     public void setCorefChain(WECCoref corefChainValue) {
         this.coreChain = corefChainValue;
-    }
-
-    public JsonArray getContext() {
-        return context;
-    }
-
-    public void setContext(JsonArray context) {
-        this.context = context;
-    }
-
-    public String getExtractedFromPage() {
-        return extractedFromPage;
-    }
-
-    public void setExtractedFromPage(String extractedFromPage) {
-        this.extractedFromPage = extractedFromPage;
-    }
-
-    public long getMentionId() {
-        return mentionId;
-    }
-
-    public int getCorefId() {
-        return corefId;
-    }
-
-    public void setCorefId(int corefId) {
-        this.corefId = corefId;
     }
 
     @Override
@@ -128,18 +75,14 @@ public class WECMention implements ISQLObject<WECMention> {
 
     @Override
     public String getValues() {
-        return mentionId + "," +
+        return getMentionId() + "," +
                 this.coreChain.getCorefId() + "," +
                 "'" + mentionText + "'" + "," +
-                tokenStart + "," +
-                tokenEnd + "," +
-                "'" + extractedFromPage + "'" +  "," +
+                getTokenStart() + "," +
+                getTokenEnd() + "," +
+                "'" + getExtractedFromPage() + "'" +  "," +
                 "'" + getContextAsSQLBlob() + "'" +
                 "'" + String.join(", ", this.mentionTokensPos) + "'";
-    }
-
-    private String getContextAsSQLBlob() {
-        return GSON.toJson(this.context);
     }
 
     @Override
@@ -149,12 +92,12 @@ public class WECMention implements ISQLObject<WECMention> {
 
     @Override
     public void setPrepareInsertStatementValues(PreparedStatement preparedStatement) throws SQLException {
-        preparedStatement.setLong(1, this.mentionId);
+        preparedStatement.setLong(1, this.getMentionId());
         preparedStatement.setInt(2, this.coreChain.getCorefId());
         preparedStatement.setString(3, this.mentionText);
-        preparedStatement.setInt(4, this.tokenStart);
-        preparedStatement.setInt(5, this.tokenEnd);
-        preparedStatement.setString(6, this.extractedFromPage);
+        preparedStatement.setInt(4, this.getTokenStart());
+        preparedStatement.setInt(5, this.getTokenEnd());
+        preparedStatement.setString(6, this.getExtractedFromPage());
         preparedStatement.setString(7, getContextAsSQLBlob());
         preparedStatement.setString(8, String.join(", ", this.mentionTokensPos));
     }
@@ -198,20 +141,16 @@ public class WECMention implements ISQLObject<WECMention> {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        WECMention mention = (WECMention) o;
-        return mentionId == mention.mentionId &&
-                tokenStart == mention.tokenStart &&
-                tokenEnd == mention.tokenEnd &&
-                Objects.equals(mentionText, mention.mentionText) &&
-                Objects.equals(coreChain, mention.coreChain) &&
-                Objects.equals(extractedFromPage, mention.extractedFromPage) &&
-                Objects.equals(mentionTokens, mention.mentionTokens) &&
-                Objects.equals(mentionTokensPos, mention.mentionTokensPos) &&
-                Objects.equals(context, mention.context);
+        if (!super.equals(o)) return false;
+        WECMention that = (WECMention) o;
+        return Objects.equals(coreChain, that.coreChain) &&
+                Objects.equals(mentionText, that.mentionText) &&
+                Objects.equals(mentionTokens, that.mentionTokens) &&
+                Objects.equals(mentionTokensPos, that.mentionTokensPos);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mentionId, mentionText, tokenStart, tokenEnd, coreChain, extractedFromPage, mentionTokens, mentionTokensPos, context);
+        return Objects.hash(super.hashCode(), coreChain, mentionText, mentionTokens, mentionTokensPos);
     }
 }

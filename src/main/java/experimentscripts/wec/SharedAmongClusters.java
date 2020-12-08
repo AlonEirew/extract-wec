@@ -1,4 +1,4 @@
-package experimentscripts;
+package experimentscripts.wec;
 
 import com.google.gson.Gson;
 import org.apache.logging.log4j.LogManager;

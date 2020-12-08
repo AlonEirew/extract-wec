@@ -1,4 +1,4 @@
-package experimentscripts;
+package experimentscripts.wec;
 
 import data.WECMention;
 
