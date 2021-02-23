@@ -20,6 +20,12 @@ public class BaseMention {
         this.mentionId = mentionId;
     }
 
+    public BaseMention(BaseMention mention) {
+        this(mention.mentionId, mention.corefId,
+                mention.tokenStart, mention.tokenEnd,
+                mention.extractedFromPage, mention.context);
+    }
+
     public BaseMention(long mentionId, int corefId, int tokenStart, int tokenEnd, String extractedFromPage, JsonArray context) {
         this.mentionId = mentionId;
         this.corefId = corefId;
@@ -73,7 +79,7 @@ public class BaseMention {
         this.context = context;
     }
 
-    protected String getContextAsSQLBlob() {
+    public String getContextAsJsonString() {
         return GSON.toJson(this.context);
     }
 

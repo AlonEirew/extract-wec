@@ -5,15 +5,18 @@ import com.google.common.graph.EndpointPair;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.google.gson.*;
-import data.EventSubEventPair;
-import data.WECCoref;
-import data.WECEventWithRelMention;
-import data.WECMention;
+import data.*;
+import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.pipeline.CoreDocument;
+import edu.stanford.nlp.pipeline.CoreSentence;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import persistence.SQLQueryApi;
 import persistence.SQLiteConnections;
 import utils.MyJsonWikidataParser;
+import utils.StanfordNlpApi;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -26,6 +29,7 @@ public class ReadFilteredJsonAndProcess {
     private static final String INPUT_JSON = "output/wikidata_filtered.json";
 //    private static final String SQL_URL = "jdbc:sqlite:/Users/aeirew/workspace/DataBase/EnWikiLinksAllEvents_v10.db";
     private static final String SQL_URL = "jdbc:sqlite:EnWikiLinksAllEvents_v10.db";
+    private static final int LIMIT = -1;
 
     public static void main(String[] args) throws Exception {
         MyJsonWikidataParser parser = new MyJsonWikidataParser();
@@ -43,13 +47,16 @@ public class ReadFilteredJsonAndProcess {
         List<WECCoref> allCorefs = queryApi.readTable(WECCoref.TABLE_COREF, new WECCoref(null));
 
         List<WECCoref> mergedCorefs = mergeLists(filteredPageList, allCorefs);
-        Map<String, WECCoref> allCorefMap = FilterInitialJson.fromListToMap(mergedCorefs);
+        MutableGraph<Integer> eventGraph = buildGraph(filteredPageList, mergedCorefs);
 
-        MutableGraph<Integer> eventGraph = buildGraph(filteredPageList, allCorefMap);
-        System.out.println("Total Pairs=" + eventGraph.edges().size());
-        sharingContextStats(eventGraph, mergedCorefs, queryApi);
+        LOGGER.info("Total Pairs=" + eventGraph.edges().size());
+//        sharingContextStats(eventGraph, mergedCorefs, queryApi);
+        allSharingContext(eventGraph, mergedCorefs, queryApi);
     }
 
+    /*
+        Return a list of all corefs events that are part of the events with relations list (from file)
+     */
     private static List<WECCoref> mergeLists(List<WECEventWithRelMention> filteredPageList, List<WECCoref> allCorefs) {
         Set<Integer> allCorefIds = new HashSet<>();
         for (WECEventWithRelMention eventCoref : filteredPageList) {
@@ -66,20 +73,136 @@ public class ReadFilteredJsonAndProcess {
         return filteredCorefs;
     }
 
-    private static void sharingContextStats(MutableGraph<Integer> eventGraph, List<WECCoref> mergedCorefs, SQLQueryApi queryApi) throws IOException {
-        Set<Integer> allCorefIds = new HashSet<>();
-        for(WECCoref coref : mergedCorefs) {
-            allCorefIds.add(coref.getCorefId());
-        }
-        System.out.println("Total unique Coref extracted=" + allCorefIds.size());
+    /*
+       Print a list to file of all event/sub-events and none relations events mentions that share the same
+       context (Negative sample)
+    */
+    private static void allSharingContext(MutableGraph<Integer> eventGraph, List<WECCoref> mergedCorefs, SQLQueryApi queryApi) throws IOException {
+        Map<Integer, WECCoref> allCorefIds = getCorefsAsIntegers(mergedCorefs);
 
-        int limit = -1;
-        Map<Integer, List<WECMention>> allCoreToMentions = queryApi.readMentionsByCorefIds(allCorefIds, limit);
+        Map<Integer, List<WECMention>> allCoreToMentions = queryApi.readMentionsByCorefIds(allCorefIds.keySet(), LIMIT);
+
+        // Generate a map containing contexts and all mentions that exist within them
+        Map<String, List<WECMentionSubEvent>> sharingContext = new HashMap<>();
+        Map<String, JsonArray> hashToContext = new HashMap<>();
+        int totalMentions = 0;
+
+        for(List<WECMention> mentionsList : allCoreToMentions.values()) {
+            totalMentions += mentionsList.size();
+            LOGGER.info("So far extracted-" + totalMentions);
+            LOGGER.info("Prepare to evaluate-" + mentionsList.size() + " mentions...");
+            for (WECMention mention : mentionsList) {
+                String md5 = DigestUtils.md5Hex(mention.getContextAsJsonString());
+                if(!sharingContext.containsKey(md5)) {
+                    sharingContext.put(md5, new ArrayList<>());
+                    hashToContext.put(md5, mention.getContext());
+                }
+
+                Set<Integer> allSuccessors = new HashSet<>();
+                if (eventGraph.nodes().contains(mention.getCorefId())) {
+                    allSuccessors = getAllSuccessors(eventGraph.successors(mention.getCorefId()), eventGraph);
+                }
+
+                if(!isMentionsInList(mention, sharingContext.get(md5)) && !isMentionLocationOrDate(mention)) {
+                    WECMentionSubEvent mentionSubEvent = new WECMentionSubEvent(mention, allSuccessors);
+                    sharingContext.get(md5).add(mentionSubEvent);
+                }
+            }
+        }
+
+        LOGGER.info("Total contexts extracted before filtering=" + totalMentions);
+        sharingContext.entrySet().removeIf(next -> next.getValue().size() <= 1);
+
+        // need to calc total mentions after removing singletons mentions in context
+        totalMentions = 0;
+        int totalSubeventRelations = 0;
+        int maxMentInContx = 0;
+        for(List<WECMentionSubEvent> mentions: sharingContext.values()) {
+            totalMentions += mentions.size();
+            if(mentions.size() > maxMentInContx) {
+                maxMentInContx = mentions.size();
+            }
+            for(WECMentionSubEvent mention : mentions) {
+                totalSubeventRelations += mention.getSubEventOf().size();
+            }
+        }
+
+        LOGGER.info("Total context extracted after filtering singletons mentions=" + totalMentions);
+        LOGGER.info("Total sub-events relations=" + totalSubeventRelations);
+        LOGGER.info("Total paragraphs=" + sharingContext.size());
+        LOGGER.info("Avg number of mentions in single context=" + (totalMentions / sharingContext.size()));
+        LOGGER.info("Context with max mentions=" + maxMentInContx);
+
+        FileWriter writer1 = new FileWriter("output/context_mentions_file.json");
+        GSON.toJson(sharingContext, writer1);
+        writer1.flush();
+        writer1.close();
+
+        FileWriter writer2 = new FileWriter("output/hashcode_to_context.json");
+        GSON.toJson(hashToContext, writer2);
+        writer2.flush();
+        writer2.close();
+//        printShareParagraph(sharingContext.values());
+    }
+
+    private static boolean isMentionsInList(WECMention o1, List<WECMentionSubEvent> mentionsList) {
+        for(WECMentionSubEvent o2 : mentionsList) {
+            if(Objects.equals(o1.getCorefId(), o2.getCorefId()) &&
+                    Objects.equals(o1.getMentionText(), o2.getMentionText()) &&
+                    Objects.equals(o1.getTokenStart(), o2.getTokenStart())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean isMentionLocationOrDate(WECMention mention) {
+        if(!StringUtils.isNumericSpace(mention.getMentionText())) {
+            CoreDocument coreDocument = StanfordNlpApi.withPosAnnotate(mention.getMentionText());
+            for(CoreSentence sent : coreDocument.sentences()) {
+                for(CoreLabel lab : sent.tokens()) {
+                    String ner = lab.ner();
+                    if (!ner.equals("CITY") && !ner.equals("COUNTRY") &&
+                            !ner.equals("STATE_OR_PROVINCE") && !ner.equals("DATE") && !ner.equals("TIME") &&
+                            !ner.equals("NUMBER") && !StringUtils.isNumericSpace(lab.originalText())) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    private static Set<Integer> getAllSuccessors(Set<Integer> corefRootIds, MutableGraph<Integer> eventGraph) {
+        Set<Integer> allSuccessors = new HashSet<>();
+        if(corefRootIds.isEmpty()) {
+            return allSuccessors;
+        }
+
+        allSuccessors.addAll(corefRootIds);
+        for(Integer coref : corefRootIds) {
+            if(eventGraph.nodes().contains(coref)) {
+                Set<Integer> directSuccess = eventGraph.successors(coref);
+                allSuccessors.addAll(getAllSuccessors(directSuccess, eventGraph));
+            }
+        }
+
+        return allSuccessors;
+    }
+
+    /*
+        Print a list to file of event sub-event that share the same context
+     */
+    private static void sharingContextStats(MutableGraph<Integer> eventGraph, List<WECCoref> mergedCorefs, SQLQueryApi queryApi) throws IOException {
+        Map<Integer, WECCoref> allCorefIds = getCorefsAsIntegers(mergedCorefs);
+
+        Map<Integer, List<WECMention>> allCoreToMentions = queryApi.readMentionsByCorefIds(allCorefIds.keySet(), LIMIT);
         int totalMentions = 0;
         for(List<WECMention> mentionsList : allCoreToMentions.values()) {
             totalMentions += mentionsList.size();
         }
-        System.out.println("Total Mentions extracted=" + totalMentions);
+        LOGGER.info("Total Mentions extracted=" + totalMentions);
 
 //        int stopCriteria = 100;
         int sharingDocumentPairs = 0;
@@ -107,31 +230,84 @@ public class ReadFilteredJsonAndProcess {
             }
         }
 
-        System.out.println("Sharing document=" + sharingDocumentPairs);
-        System.out.println("Sharing context=" + sharingContextPairs);
+        LOGGER.info("Sharing document=" + sharingDocumentPairs);
+        LOGGER.info("Sharing context=" + sharingContextPairs);
         FileWriter writer = new FileWriter("output/sub_events_sharing_context.json");
         GSON.toJson(allPairs, writer);
         writer.flush();
         writer.close();
-//        printShareParagraph(sharingContextPairs);
+//        printShareParagraphEventSubEventPairs(sharingContextPairs);
     }
 
-    private static void printShareParagraph(Set<Map.Entry<WECMention, WECMention>> sharingContextPairs) {
+    private static Map<Integer, WECCoref> getCorefsAsIntegers(List<WECCoref> mergedCorefs) {
+        Map<Integer, WECCoref> allCorefIds = new HashMap<>();
+        for(WECCoref coref : mergedCorefs) {
+            if(!allCorefIds.containsKey(coref.getCorefId())) {
+                allCorefIds.put(coref.getCorefId(), coref);
+            }
+        }
+        LOGGER.info("Total unique Coref extracted=" + allCorefIds.size());
+        return allCorefIds;
+    }
+
+    private static void printShareParagraph(Collection<List<WECMentionSubEvent>> allEventsWithinContext) {
         List<List<String>> contextsToPrint = new ArrayList<>();
-        for (Map.Entry<WECMention, WECMention> pair : sharingContextPairs) {
-            JsonArray context = pair.getKey().getContext();
+        for (List<WECMentionSubEvent> contextMent : allEventsWithinContext) {
+            contextsToPrint.add(printSingleParagraph(contextMent));
+        }
+
+        for(List<String> context : contextsToPrint) {
+            System.out.println(String.join(" " , context));
+            System.out.println();
+        }
+    }
+
+    static List<String> printSingleParagraph(List<WECMentionSubEvent> contextMent) {
+        JsonArray context = contextMent.get(0).getContext();
+        Stack<WECMentionSubEvent> startIndexMent = new Stack<>();
+        contextMent.sort(Comparator.comparingInt(BaseMention::getTokenStart).reversed());
+        for(WECMentionSubEvent ment : contextMent) {
+            startIndexMent.push(ment);
+        }
+
+        List<String> contextAsString = new ArrayList<>();
+        WECMentionSubEvent cur = startIndexMent.pop();
+        for(JsonElement elem : context) {
+            JsonObject asJsonObject = elem.getAsJsonObject();
+            List<Map.Entry<String, JsonElement>> entries = Lists.newArrayList(asJsonObject.entrySet());
+            String word = entries.get(0).getKey();
+            int index = entries.get(0).getValue().getAsInt();
+            if (index == cur.getTokenStart()) {
+                contextAsString.add("{{");
+            }
+            contextAsString.add(word);
+            if (index == cur.getTokenEnd()) {
+                contextAsString.add("(eventId=" + cur.getCorefId() + ", subEventOf=" + cur.getSubEventOf().toString() + ") }}");
+                if(!startIndexMent.empty()) {
+                    cur = startIndexMent.pop();
+                }
+            }
+        }
+
+        return contextAsString;
+    }
+
+    private static void printShareParagraphEventSubEventPairs(List<EventSubEventPair> sharingContextPairs) {
+        List<List<String>> contextsToPrint = new ArrayList<>();
+        for (EventSubEventPair pair : sharingContextPairs) {
+            JsonArray context = pair.getEvent().getContext();
             List<String> contextAsString = new ArrayList<>();
             for(JsonElement elem : context) {
                 JsonObject asJsonObject = elem.getAsJsonObject();
                 List<Map.Entry<String, JsonElement>> entries = Lists.newArrayList(asJsonObject.entrySet());
                 String word = entries.get(0).getKey();
                 int index = entries.get(0).getValue().getAsInt();
-                if (index == pair.getKey().getTokenStart() || index == pair.getValue().getTokenStart()) {
-                    contextAsString.add("[");
+                if (index == pair.getEvent().getTokenStart() || index == pair.getSubEvent().getTokenStart()) {
+                    contextAsString.add("{{");
                 }
                 contextAsString.add(word);
-                if (index == pair.getKey().getTokenEnd() || index == pair.getValue().getTokenEnd()) {
-                    contextAsString.add("]");
+                if (index == pair.getEvent().getTokenEnd() || index == pair.getSubEvent().getTokenEnd()) {
+                    contextAsString.add("}}");
                 }
             }
 
@@ -144,7 +320,8 @@ public class ReadFilteredJsonAndProcess {
         }
     }
 
-    private static MutableGraph<Integer> buildGraph(List<WECEventWithRelMention> pageList, Map<String, WECCoref> allCorefMap) {
+    private static MutableGraph<Integer> buildGraph(List<WECEventWithRelMention> pageList, List<WECCoref> mergedCorefs) {
+        Map<String, WECCoref> allCorefMap = FilterInitialJson.fromListToMap(mergedCorefs);
         MutableGraph<Integer> eventsGraph = GraphBuilder.directed().allowsSelfLoops(false).build();
 
         for(WECEventWithRelMention event : pageList) {
@@ -155,7 +332,8 @@ public class ReadFilteredJsonAndProcess {
                 for (String partOf : partOfSet) {
                     WECCoref targetEvent = allCorefMap.get(partOf);
                     if(!sourceEvent.equals(targetEvent)) {
-                        if (!eventsGraph.hasEdgeConnecting(sourceEvent.getCorefId(), targetEvent.getCorefId())) {
+                        if (!(eventsGraph.hasEdgeConnecting(sourceEvent.getCorefId(), targetEvent.getCorefId()) ||
+                                eventsGraph.hasEdgeConnecting(targetEvent.getCorefId(), sourceEvent.getCorefId()))) {
                             eventsGraph.putEdge(sourceEvent.getCorefId(), targetEvent.getCorefId());
                         }
                     }
@@ -167,7 +345,8 @@ public class ReadFilteredJsonAndProcess {
                 for (String hasPart : hasPartSet) {
                     WECCoref targetEvent = allCorefMap.get(hasPart);
                     if(!sourceEvent.equals(targetEvent)) {
-                        if (!eventsGraph.hasEdgeConnecting(targetEvent.getCorefId(), sourceEvent.getCorefId())) {
+                        if (!(eventsGraph.hasEdgeConnecting(sourceEvent.getCorefId(), targetEvent.getCorefId()) ||
+                                eventsGraph.hasEdgeConnecting(targetEvent.getCorefId(), sourceEvent.getCorefId()))) {
                             eventsGraph.putEdge(targetEvent.getCorefId(), sourceEvent.getCorefId());
                         }
                     }
@@ -175,7 +354,7 @@ public class ReadFilteredJsonAndProcess {
             }
         }
 
-        System.out.println("Done generating ");
+        LOGGER.info("Done generating ");
         return eventsGraph;
     }
 }

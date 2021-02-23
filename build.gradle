@@ -35,6 +35,7 @@ dependencies {
     compile group: 'edu.stanford.nlp', name: 'stanford-corenlp', classifier: 'models', version: '3.9.1'
     compile group: 'org.apache.commons', name: 'commons-dbcp2', version: '2.6.0'
     compile group: 'org.apache.commons', name: 'commons-text', version: '1.6'
+    compile group: 'commons-codec', name: 'commons-codec', version: '1.15'
     compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.27.2.1'
     compile group: 'info.bliki.wiki', name: 'bliki-core', version: '3.1.0'
     compile group: 'org.jsoup', name: 'jsoup', version: '1.13.1'

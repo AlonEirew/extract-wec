@@ -26,6 +26,15 @@ public class WECMention extends BaseMention implements ISQLObject<WECMention> {
         super(runningId.incrementAndGet());
     }
 
+    public WECMention(WECMention mention) {
+        super(mention);
+        this.coreChain = mention.coreChain;
+        this.mentionText = mention.mentionText;
+        if(this.coreChain != null) {
+            this.coreChain.incMentionsCount();
+        }
+    }
+
     public WECMention(WECCoref coref, String mentionText,
                       int tokenStart, int tokenEnd, String extractedFromPage, JsonArray context) {
         super(runningId.incrementAndGet(), coref.getCorefId(), tokenStart, tokenEnd, extractedFromPage, context);
@@ -81,7 +90,7 @@ public class WECMention extends BaseMention implements ISQLObject<WECMention> {
                 getTokenStart() + "," +
                 getTokenEnd() + "," +
                 "'" + getExtractedFromPage() + "'" +  "," +
-                "'" + getContextAsSQLBlob() + "'" +
+                "'" + getContextAsJsonString() + "'" +
                 "'" + String.join(", ", this.mentionTokensPos) + "'";
     }
 
@@ -98,7 +107,7 @@ public class WECMention extends BaseMention implements ISQLObject<WECMention> {
         preparedStatement.setInt(4, this.getTokenStart());
         preparedStatement.setInt(5, this.getTokenEnd());
         preparedStatement.setString(6, this.getExtractedFromPage());
-        preparedStatement.setString(7, getContextAsSQLBlob());
+        preparedStatement.setString(7, getContextAsJsonString());
         preparedStatement.setString(8, String.join(", ", this.mentionTokensPos));
     }
 

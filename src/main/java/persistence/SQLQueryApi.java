@@ -334,4 +334,19 @@ public class SQLQueryApi {
 
         return corefs;
     }
+
+    public WECCoref getCorefById(int corefId) {
+        WECCoref wecCoref = new WECCoref(null);
+        String query = "Select * from " + WECCoref.TABLE_COREF + " where corefId=" + corefId;
+        try (Connection conn = this.sqlConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+            try(ResultSet rs = stmt.executeQuery(query)) {
+                wecCoref = wecCoref.resultSetToObject(rs);
+            }
+        } catch (SQLException e) {
+            LOGGER.error(e);
+        }
+
+        return wecCoref;
+    }
 }

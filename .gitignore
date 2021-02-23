@@ -17,3 +17,5 @@ src/test/java/wec/TestExtractCompany.java
 src/main/java/data/CompanyObj.java
 infobox_config/company_info.json
 src/test/resources/wiki_links/company.json
+
+EnWikiLinksAllEvents_v10.db
