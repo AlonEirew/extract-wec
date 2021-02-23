@@ -2,7 +2,6 @@ package workers;
 
 import data.RawElasticResult;
 import data.WECCoref;
-import persistence.SQLQueryApi;
 
 import java.util.ArrayList;
 import java.util.HashMap;

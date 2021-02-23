@@ -4,6 +4,7 @@ import data.RawElasticResult;
 import data.WECMention;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import persistence.WECResources;
 import wec.InfoboxFilter;
 import wec.extractors.WikipediaLinkExtractor;
 

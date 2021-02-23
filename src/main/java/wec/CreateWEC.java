@@ -9,12 +9,13 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import persistence.ElasticQueryApi;
+import persistence.WECResources;
 import utils.ExecutorServiceFactory;
 import workers.IWorkerFactory;
-import workers.WECResources;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -32,7 +33,9 @@ public class CreateWEC implements Closeable {
         this.workerFactory = workerFactory;
     }
 
-    public void readAllWikiPagesAndProcess(int totalAmountToExtract) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+    public void readAllWikiPagesAndProcess(int totalAmountToExtract) throws IOException, InterruptedException,
+            ExecutionException, TimeoutException, ClassNotFoundException, NoSuchMethodException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
         LOGGER.info("Strating process, Reading all documents from wikipedia (elastic)");
         ElasticQueryApi elasticApi = WECResources.getElasticApi();
         List<Future<?>> allTasks = new ArrayList<>();
@@ -56,7 +59,7 @@ public class CreateWEC implements Closeable {
             allTasks.add(ExecutorServiceFactory.submit(this.workerFactory.createNewWorker(rawElasticResults)));
             LOGGER.info((totalDocsCount - count) + " documents to go");
 
-            if(count >= totalAmountToExtract) {
+            if(totalAmountToExtract > 0 && count >= totalAmountToExtract) {
                 break;
             }
 

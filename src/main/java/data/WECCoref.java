@@ -27,7 +27,7 @@ public class WECCoref implements ISQLObject<WECCoref> {
     private String corefType = DefaultInfoboxValidator.NA;
     private String corefSubType = DefaultInfoboxValidator.NA;
     private boolean markedForRemoval = false;
-    private boolean wasRetrived = false;
+    private boolean wasRetrieved = false;
 
     public WECCoref(String corefValue) {
         this.corefValue = corefValue;
@@ -98,11 +98,11 @@ public class WECCoref implements ISQLObject<WECCoref> {
     }
 
     public boolean wasAlreadyRetrived() {
-        return wasRetrived;
+        return wasRetrieved;
     }
 
     public void setWasAlreadyRetrived(boolean wasRetrived) {
-        this.wasRetrived = wasRetrived;
+        this.wasRetrieved = wasRetrived;
     }
 
     @Override
@@ -181,7 +181,7 @@ public class WECCoref implements ISQLObject<WECCoref> {
         WECCoref wecCoref = (WECCoref) o;
         return corefId == wecCoref.corefId &&
                 markedForRemoval == wecCoref.markedForRemoval &&
-                wasRetrived == wecCoref.wasRetrived &&
+                wasRetrieved == wecCoref.wasRetrieved &&
                 Objects.equals(corefValue, wecCoref.corefValue) &&
                 Objects.equals(mentionsCount, wecCoref.mentionsCount) &&
                 Objects.equals(corefType, wecCoref.corefType) &&
@@ -190,6 +190,6 @@ public class WECCoref implements ISQLObject<WECCoref> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(corefId, corefValue, mentionsCount, corefType, corefSubType, markedForRemoval, wasRetrived);
+        return Objects.hash(corefId, corefValue, mentionsCount, corefType, corefSubType, markedForRemoval, wasRetrieved);
     }
 }

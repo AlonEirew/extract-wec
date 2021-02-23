@@ -5,8 +5,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
+import persistence.WECResources;
 import wec.CreateWEC;
-import workers.WECResources;
 import workers.WikiNewsRedirectCounterWorker;
 import workers.WikiNewsRedirectCounterWorkerFactory;
 

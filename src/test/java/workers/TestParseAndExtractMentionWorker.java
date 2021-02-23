@@ -1,6 +1,8 @@
 package workers;
 
 import com.google.gson.Gson;
+import config.Configuration;
+import config.InfoboxConfiguration;
 import data.*;
 import org.junit.Assert;
 import org.junit.Before;
@@ -8,6 +10,7 @@ import org.junit.Test;
 import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
 import persistence.SQLiteConnections;
+import persistence.WECResources;
 import wec.InfoboxFilter;
 import wec.TestUtils;
 import wec.TestWikipediaLinkExtractor;

@@ -1,8 +1,8 @@
 package main;
 
 import com.google.gson.Gson;
-import data.Configuration;
-import data.InfoboxConfiguration;
+import config.Configuration;
+import config.InfoboxConfiguration;
 import data.WECCoref;
 import data.WECMention;
 import org.apache.logging.log4j.LogManager;
@@ -10,11 +10,12 @@ import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
 import persistence.SQLiteConnections;
+import persistence.WECResources;
 import utils.ExecutorServiceFactory;
 import wec.CreateWEC;
 import wec.InfoboxFilter;
-import workers.ParseAndExtractWorkersFactory;
-import workers.WECResources;
+import workers.ParseAndExtractMentionsWorker;
+import workers.WorkersFactory;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -41,7 +42,9 @@ public class WikiToWECMain {
         }
 
         long start = System.currentTimeMillis();
-        ParseAndExtractWorkersFactory workerFactory = new ParseAndExtractWorkersFactory(new InfoboxFilter(infoboxConf));
+        WorkersFactory<InfoboxFilter> workerFactory = new WorkersFactory<>(
+                ParseAndExtractMentionsWorker.class, InfoboxFilter.class, new InfoboxFilter(infoboxConf));
+
         try (CreateWEC createWEC = new CreateWEC(workerFactory)) {
 
             if (!createSQLWECTables()) {

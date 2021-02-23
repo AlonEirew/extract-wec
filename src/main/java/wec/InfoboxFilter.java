@@ -1,6 +1,6 @@
 package wec;
 
-import data.InfoboxConfiguration;
+import config.InfoboxConfiguration;
 import data.RawElasticResult;
 import data.WECCoref;
 import org.apache.logging.log4j.LogManager;

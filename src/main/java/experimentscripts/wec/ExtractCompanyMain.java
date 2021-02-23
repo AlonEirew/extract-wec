@@ -1,8 +1,8 @@
 package experimentscripts.wec;
 
 import com.google.gson.Gson;
-import data.Configuration;
-import data.InfoboxConfiguration;
+import config.Configuration;
+import config.InfoboxConfiguration;
 import data.WECCoref;
 import data.WECMention;
 import org.apache.logging.log4j.LogManager;
@@ -10,11 +10,12 @@ import org.apache.logging.log4j.Logger;
 import persistence.ElasticQueryApi;
 import persistence.SQLQueryApi;
 import persistence.SQLiteConnections;
+import persistence.WECResources;
 import utils.ExecutorServiceFactory;
 import wec.CreateWEC;
 import wec.InfoboxFilter;
-import workers.ReadCompanyFactory;
-import workers.WECResources;
+import workers.ReadCompanyWorker;
+import workers.WorkersFactory;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -44,7 +45,8 @@ public class ExtractCompanyMain {
         WECResources.setElasticApi(new ElasticQueryApi(config));
         long start = System.currentTimeMillis();
         try {
-            CreateWEC createWEC = new CreateWEC(new ReadCompanyFactory(new InfoboxFilter(infoboxConfiguration)));
+            CreateWEC createWEC = new CreateWEC(new WorkersFactory<>(ReadCompanyWorker.class,
+                    InfoboxFilter.class, new InfoboxFilter(infoboxConfiguration)));
 
             if (!createSQLWikiLinksTables()) {
                 LOGGER.error("Failed to create Database and tables, finishing process");

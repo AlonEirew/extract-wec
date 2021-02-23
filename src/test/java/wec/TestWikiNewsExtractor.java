@@ -5,7 +5,7 @@ import data.WECCoref;
 import org.junit.Assert;
 import persistence.SQLQueryApi;
 import persistence.SQLiteConnections;
-import workers.WECResources;
+import persistence.WECResources;
 import workers.WikiNewsWorker;
 
 import java.util.*;

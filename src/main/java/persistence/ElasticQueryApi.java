@@ -1,8 +1,7 @@
 package persistence;
 
-import data.Configuration;
+import config.Configuration;
 import data.RawElasticResult;
-import data.WECCoref;
 import org.apache.http.HttpHost;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

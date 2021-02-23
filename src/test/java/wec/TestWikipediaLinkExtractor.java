@@ -2,8 +2,8 @@ package wec;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import data.Configuration;
-import data.InfoboxConfiguration;
+import config.Configuration;
+import config.InfoboxConfiguration;
 import data.RawElasticResult;
 import data.WECMention;
 import org.junit.Assert;

@@ -1,7 +1,4 @@
-package workers;
-
-import persistence.ElasticQueryApi;
-import persistence.SQLQueryApi;
+package persistence;
 
 public class WECResources {
     private static SQLQueryApi sSqlApi;

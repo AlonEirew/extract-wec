@@ -5,6 +5,7 @@ import data.WECCoref;
 import data.WikiNewsMention;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import persistence.WECResources;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
