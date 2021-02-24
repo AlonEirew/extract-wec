@@ -3,8 +3,8 @@ package config;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Objects;
 
 public class WECConfigurations {
@@ -14,14 +14,11 @@ public class WECConfigurations {
     private static InfoboxConfiguration infoboxConf;
 
     static {
-        String configFile = Objects.requireNonNull(WECConfigurations.class.getClassLoader().getResource("config.json")).getFile();
-        try {
-            config = GSON.fromJson(new FileReader(configFile), Configuration.class);
-            String infoConfigFile = Objects.requireNonNull(WECConfigurations.class.getClassLoader().getResource(config.getInfoboxConfiguration())).getFile();
-            infoboxConf = GSON.fromJson(new FileReader(infoConfigFile), InfoboxConfiguration.class);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+        InputStream configFile = Objects.requireNonNull(WECConfigurations.class.getClassLoader().getResourceAsStream("config.json"));
+        config = GSON.fromJson(new InputStreamReader(configFile), Configuration.class);
+        InputStream infoConfigFile = Objects.requireNonNull(WECConfigurations.class.getClassLoader()
+                .getResourceAsStream(config.getInfoboxConfiguration()));
+        infoboxConf = GSON.fromJson(new InputStreamReader(infoConfigFile), InfoboxConfiguration.class);
     }
 
     public static Configuration getConfig() {

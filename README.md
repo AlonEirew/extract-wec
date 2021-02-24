@@ -35,7 +35,9 @@ Configuration file `conf.json` can be found in project root
 "sqlConnectionUrl": "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksExperiment.db" => Location where to generate the sql dataset
 ```
 
-#### Infobox Configuration:
+### Language Adaptation
+
+#### Infobox Configuration
 We have extracted the relevant infobox configuration to the English Wikipedia. In order to create a newer version of WEC-Eng, use the default `/infobox_config/en_infobox_config.json` in configuration. <br/><br/>
 To generate WEC in one of the supported languages (other than English) follow those steps:
 * Make sure the Wikipedia Elastic engine is running
