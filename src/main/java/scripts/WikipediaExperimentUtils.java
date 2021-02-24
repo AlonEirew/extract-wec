@@ -1,5 +1,7 @@
-package scripts.wec;
+package scripts;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import config.WECConfigurations;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -1,9 +1,9 @@
-package scripts.experiment;
+package scripts.experiments;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import scripts.wec.WikipediaExperimentUtils;
+import scripts.WikipediaExperimentUtils;
 import workers.ReadDateWorker;
 import workers.WorkerFactory;
 

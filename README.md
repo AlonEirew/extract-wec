@@ -42,7 +42,7 @@ To generate WEC in one of the supported languages (other than English) follow th
 * Export Wikipedia in the required language using *wikipedia-to-elastic* project
 * Explore for infoboxs categories, and their correlating names in the required language
 * In order to see candidate as well as investigate the amount of pages related to an infobox category. Run:<br/>
-`#>java -Xmx90000m -DentityExpansionLimit=2147480000 -DtotalEntitySizeLimit=2147480000 -Djdk.xml.totalEntitySizeLimit=2147480000 -cp "lib/*" scripts.wec.ExtractInfoboxs`<br/>
+`#>java -Xmx90000m -DentityExpansionLimit=2147480000 -DtotalEntitySizeLimit=2147480000 -Djdk.xml.totalEntitySizeLimit=2147480000 -cp "lib/*" scripts.ExtractInfoboxs`<br/>
 Report will be generated in `output/InfoboxCount.txt` 
   
 #### Infobox configuration file - `resources/infobox_config/*` <br/>
@@ -86,4 +86,4 @@ Make sure the Wikipedia Elastic engine is running <br/>
 
 
 [comment]: <> (Running events:)
-[comment]: <> (`java -Xmx90000m -DentityExpansionLimit=2147480000 -DtotalEntitySizeLimit=2147480000 -Djdk.xml.totalEntitySizeLimit=2147480000 -cp "lib/*" scripts.experiment.event.ReadFilteredJsonAndProcess`)
+[comment]: <> (`java -Xmx90000m -DentityExpansionLimit=2147480000 -DtotalEntitySizeLimit=2147480000 -Djdk.xml.totalEntitySizeLimit=2147480000 -cp "lib/*" scripts.experiments.event.ReadFilteredJsonAndProcess`)

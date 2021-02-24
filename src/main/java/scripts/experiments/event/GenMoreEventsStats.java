@@ -1,4 +1,4 @@
-package scripts.experiment.event;
+package scripts.experiments.event;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

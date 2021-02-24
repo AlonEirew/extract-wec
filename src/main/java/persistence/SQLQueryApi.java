@@ -3,7 +3,6 @@ package persistence;
 import com.google.common.collect.Iterables;
 import data.WECCoref;
 import data.WECMention;
-import scripts.wec.resultsets.CorefResultSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -129,6 +128,24 @@ public class SQLQueryApi {
         }
 
         return true;
+    }
+
+    public <T extends ISQLObject<T>> List<T> readJoinedMentionCorefTable(String table1, String table2, T resultObjectRef) {
+        List<T> resultList = new ArrayList<>();
+        String query = "SELECT * from Mentions INNER JOIN CorefChains ON Mentions.coreChainId=CorefChains.corefId";
+        try (Connection conn = this.sqlConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+            try(ResultSet rs = stmt.executeQuery(query)) {
+                while (rs.next()) {
+                    final T coref = resultObjectRef.resultSetToObject(rs);
+                    resultList.add(coref);
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.error(e);
+        }
+
+        return resultList;
     }
 
     public <T extends ISQLObject<T>> List<T> readTable(String table, T resultObjectRef) {
@@ -312,27 +329,6 @@ public class SQLQueryApi {
         } finally {
             accumulatedMentions.clear();
         }
-    }
-
-    public synchronized Map<String, CorefResultSet> getAllCorefByText(String table) {
-        Map<String, CorefResultSet> corefs = new HashMap<>();
-        String query = "Select * from " + table + " where corefType in (2,3,4,6,7,8)";
-        try (Connection conn = this.sqlConnection.getConnection();
-             Statement stmt = conn.createStatement()) {
-
-            try(ResultSet rs = stmt.executeQuery(query)) {
-                while (rs.next()) {
-                    final String corefValue = rs.getString("corefValue");
-                    final int corefId = rs.getInt("corefId");
-                    final int corefType = rs.getInt("corefType");
-                    corefs.put(corefValue, new CorefResultSet(corefId, corefType, corefValue));
-                }
-            }
-        } catch (SQLException e) {
-            LOGGER.error(e);
-        }
-
-        return corefs;
     }
 
     public WECCoref getCorefById(int corefId) {

@@ -13,7 +13,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class WECMention extends BaseMention implements ISQLObject<WECMention> {
-    private static final String TABLE_MENTIONS = "Mentions";
+    public static final String TABLE_MENTIONS = "Mentions";
 
     private static final AtomicInteger runningId = new AtomicInteger();
 

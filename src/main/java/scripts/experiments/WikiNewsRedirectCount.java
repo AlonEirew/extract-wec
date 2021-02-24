@@ -1,4 +1,4 @@
-package scripts.experiment;
+package scripts.experiments;
 
 import com.google.gson.Gson;
 import org.apache.commons.io.FileUtils;

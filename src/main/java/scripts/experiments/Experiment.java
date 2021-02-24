@@ -1,8 +1,8 @@
-package scripts.experiment;
+package scripts.experiments;
 
 import com.google.gson.Gson;
-import scripts.wec.resultsets.CorefResultSet;
-import scripts.wec.resultsets.MentionResultSet;
+import scripts.resultsets.CorefResultSet;
+import scripts.resultsets.MentionResultSet;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
