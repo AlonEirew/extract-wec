@@ -1,4 +1,4 @@
-package experimentscripts.wec;
+package experimentscripts.wec.resultsets;
 
 import org.apache.commons.text.similarity.LevenshteinDistance;
 

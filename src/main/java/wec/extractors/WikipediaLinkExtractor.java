@@ -12,7 +12,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
-import utils.WikipediaUtils;
+import utils.WikipediaParsingUtils;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -26,7 +26,7 @@ public class WikipediaLinkExtractor implements IExtractor<List<WECMention>> {
         String pageName = rawElasticResult.getTitle();
         String text = rawElasticResult.getText();
         String htmlText = WikiModel.toHtml(text);
-        String cleanHtml = WikipediaUtils.cleanParentheses(htmlText);
+        String cleanHtml = WikipediaParsingUtils.cleanParentheses(htmlText);
         return extractMentions(pageName, cleanHtml);
     }
 

@@ -1,5 +1,9 @@
 package experimentscripts.wec;
 
+import experimentscripts.wec.resultsets.CorefResultSet;
+import experimentscripts.wec.resultsets.MentionResultSet;
+import experimentscripts.wec.resultsets.ValidationMention;
+import experimentscripts.wec.resultsets.VerbMention;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import persistence.ISQLObject;

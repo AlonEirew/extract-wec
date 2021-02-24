@@ -1,4 +1,4 @@
-package experimentscripts.wec;
+package experimentscripts.wec.resultsets;
 
 import data.WECMention;
 import persistence.ISQLObject;

@@ -13,6 +13,13 @@ This method follow the research paper: (TBD - ADD PAPER LINK)
 
 In order to WEC in current supported languages (e.g., English, French, Spanish, German, Chinese), follow the steps needed in *wikipedia-to-elastic* and below in .
 
+### Building the project:
+From extract-wec root folder do the following:
+- `#>./gradlew clean build -x test`
+- `#>cd build/distribution`
+- Extract the zip file (extract-wec.zip) and cd into created `extract-wec` folder
+
+
 ### Configuration:
 Configuration file `conf.json` can be found in project root
 ```
@@ -34,9 +41,6 @@ To generate WEC in one of the supported languages (other than English) follow th
 * Make sure the Wikipedia Elastic engine is running
 *  
 
-
-### Building the project:
-`#>./gradlew clean build -x test`
 
 ### Running process for generating the SQL Dataset:
 Make sure the Wikipedia Elastic engine is running

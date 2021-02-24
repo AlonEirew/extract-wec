@@ -8,7 +8,7 @@ import persistence.ElasticQueryApi;
 import persistence.WECResources;
 import wec.CreateWEC;
 import workers.WikiNewsRedirectCounterWorker;
-import workers.WikiNewsRedirectCounterWorkerFactory;
+import workers.WorkerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,8 +34,7 @@ public class WikiNewsRedirectCount {
                 Integer.parseInt(config.get("elastic_port"))));
         try {
 
-            CreateWEC createWEC = new CreateWEC(new WikiNewsRedirectCounterWorkerFactory());
-
+            CreateWEC createWEC = new CreateWEC(new WorkerFactory<>(WikiNewsRedirectCounterWorker.class));
             createWEC.readAllWikiPagesAndProcess(Integer.parseInt(config.get("total_amount_to_extract")));
 
             LOGGER.info("Total redirect pages=" + WikiNewsRedirectCounterWorker.getCounter());

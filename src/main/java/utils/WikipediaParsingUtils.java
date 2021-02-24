@@ -7,8 +7,8 @@ import org.apache.logging.log4j.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class WikipediaUtils {
-    private final static Logger LOGGER = LogManager.getLogger(WikipediaUtils.class);
+public class WikipediaParsingUtils {
+    private final static Logger LOGGER = LogManager.getLogger(WikipediaParsingUtils.class);
 
     @Deprecated
     public static String cleanParenthesesBkp(String html) {

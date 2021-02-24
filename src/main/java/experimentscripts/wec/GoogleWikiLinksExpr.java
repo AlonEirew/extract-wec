@@ -3,6 +3,8 @@ package experimentscripts.wec;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import data.WECCoref;
+import experimentscripts.wec.resultsets.CorefResultSet;
+import experimentscripts.wec.resultsets.MentionResultSet;
 import org.apache.commons.io.FileUtils;
 import persistence.SQLQueryApi;
 import persistence.SQLiteConnections;

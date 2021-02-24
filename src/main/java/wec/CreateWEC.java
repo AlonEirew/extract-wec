@@ -26,16 +26,13 @@ import java.util.concurrent.TimeoutException;
 public class CreateWEC implements Closeable {
     private final static Logger LOGGER = LogManager.getLogger(CreateWEC.class);
 
-
     private final IWorkerFactory workerFactory;
 
     public CreateWEC(IWorkerFactory workerFactory) {
         this.workerFactory = workerFactory;
     }
 
-    public void readAllWikiPagesAndProcess(int totalAmountToExtract) throws IOException, InterruptedException,
-            ExecutionException, TimeoutException, ClassNotFoundException, NoSuchMethodException,
-            InvocationTargetException, InstantiationException, IllegalAccessException {
+    public void readAllWikiPagesAndProcess(int totalAmountToExtract) throws IOException {
         LOGGER.info("Strating process, Reading all documents from wikipedia (elastic)");
         ElasticQueryApi elasticApi = WECResources.getElasticApi();
         List<Future<?>> allTasks = new ArrayList<>();
@@ -69,7 +66,11 @@ public class CreateWEC implements Closeable {
 
         LOGGER.info("Handling last mentions if exists");
         for (Future<?> future : allTasks) {
-            future.get(10, TimeUnit.MINUTES);
+            try {
+                future.get(10, TimeUnit.MINUTES);
+            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                LOGGER.error("Tasks failed to finish in a reasonable time!", e);
+            }
         }
 
         this.workerFactory.finalizeIfNeeded();

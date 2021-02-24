@@ -1,6 +1,7 @@
-package experimentscripts.wec;
+package experimentscripts.wec.resultsets;
 
 import data.WECMention;
+import experimentscripts.wec.resultsets.MentionResultSet;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;

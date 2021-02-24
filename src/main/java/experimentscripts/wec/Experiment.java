@@ -1,6 +1,8 @@
 package experimentscripts.wec;
 
 import com.google.gson.Gson;
+import experimentscripts.wec.resultsets.CorefResultSet;
+import experimentscripts.wec.resultsets.MentionResultSet;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

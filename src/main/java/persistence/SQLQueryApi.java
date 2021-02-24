@@ -3,7 +3,7 @@ package persistence;
 import com.google.common.collect.Iterables;
 import data.WECCoref;
 import data.WECMention;
-import experimentscripts.wec.CorefResultSet;
+import experimentscripts.wec.resultsets.CorefResultSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -1,31 +1,39 @@
 package experimentscripts.wec;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import config.Configuration;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import persistence.ElasticQueryApi;
-import persistence.WECResources;
-import utils.ExecutorServiceFactory;
+import workers.InfoboxWorker;
+import workers.WorkerFactory;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ExtractInfoboxs {
     private final static Logger LOGGER = LogManager.getLogger(ExtractInfoboxs.class);
-    private final static Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    public static void main(String[] args) throws FileNotFoundException {
-        long start = System.currentTimeMillis();
-        final String property = System.getProperty("user.dir");
-        LOGGER.info("Working directory=" + property);
+    public static void main(String[] args) throws IOException {
+        if (args.length == 1) {
+            InfoboxWorker.setInfoboxLang(args[0]);
+        }
+        WikipediaExperimentUtils wikipediaExperimentUtils = new WikipediaExperimentUtils();
+        Map<String, AtomicInteger> infoboxesCounts = new ConcurrentHashMap<>();
+        WorkerFactory infoboxWorkerFactory = new WorkerFactory(InfoboxWorker.class, Map.class, infoboxesCounts);
+        wikipediaExperimentUtils.runWikipediaExperiment(infoboxWorkerFactory);
 
-        Configuration config = GSON.fromJson(new FileReader(property + "/config.json"), Configuration.class);
+        List<Map.Entry<String, AtomicInteger>> sortedInfoboxs = new ArrayList<>(infoboxesCounts.entrySet());
+        sortedInfoboxs.sort(Comparator.comparingInt(o -> o.getValue().get()));
+        Collections.reverse(sortedInfoboxs);
 
-        ExecutorServiceFactory.initExecutorService();
-        WECResources.setElasticApi(new ElasticQueryApi(config));
+        List<String> result = new ArrayList<>();
+        for (Map.Entry<String, AtomicInteger> entry : sortedInfoboxs) {
+            result.add(entry.getKey() + "=" + entry.getValue());
+        }
 
-
+        FileUtils.writeLines(new File("output/InfoboxCount.txt"), result, "\n");
+        LOGGER.info(sortedInfoboxs.size());
     }
 }
