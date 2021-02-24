@@ -1,6 +1,5 @@
 package main;
 
-import com.google.gson.Gson;
 import config.WECConfigurations;
 import data.WECCoref;
 import data.WECMention;
