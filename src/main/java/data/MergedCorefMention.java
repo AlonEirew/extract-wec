@@ -44,7 +44,7 @@ public class MergedCorefMention implements ISQLObject<MergedCorefMention> {
     }
 
     @Override
-    public String getPrepareInsertStatementQuery(String tableName) {
+    public String getPrepareInsertStatementQuery() {
         return null;
     }
 

@@ -120,7 +120,7 @@ public class GenMoreEventsStats {
             if(contextEvents.size() %2 == 0 && !distributions.containsKey(contextEvents.size())) {
                 System.out.println("Found context " + contextKey + " with " + contextEvents.size() + " mentions");
                 distributions.put(contextEvents.size(), Boolean.TRUE);
-                contextEvents.get(0).setContext(contextToHash.get(contextKey));
+                contextEvents.get(0).getContext().setContext(contextToHash.get(contextKey));
 
                 System.out.println(String.join(" " , ReadFilteredJsonAndProcess.printSingleParagraph(contextEvents)));
                 System.out.println();

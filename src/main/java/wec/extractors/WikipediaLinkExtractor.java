@@ -3,6 +3,7 @@ package wec.extractors;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import data.RawElasticResult;
+import data.WECContext;
 import data.WECCoref;
 import data.WECMention;
 import info.bliki.wiki.model.WikiModel;
@@ -83,8 +84,10 @@ public class WikipediaLinkExtractor implements IExtractor<List<WECMention>> {
                 }
             }
 
+            WECContext wecContext = new WECContext(contextAsStringList);
+
             for(WECMention ment : paragraphMentions) {
-                ment.setContext(contextAsStringList);
+                ment.setContext(wecContext);
             }
 
             finalResults.addAll(paragraphMentions);

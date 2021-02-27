@@ -73,7 +73,7 @@ public class ValidationMention implements ISQLObject<ValidationMention> {
     }
 
     @Override
-    public String getPrepareInsertStatementQuery(String tableName) {
+    public String getPrepareInsertStatementQuery() {
         StringBuilder query = new StringBuilder();
         query.append("INSERT INTO ")
                 .append(tableName).append(" ")

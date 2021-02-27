@@ -1,20 +1,14 @@
 package data;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-
 import java.util.Objects;
 
 public class BaseMention {
-    private static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
-
     private final long mentionId;
     private int corefId;
     private int tokenStart;
     private int tokenEnd;
     private String extractedFromPage;
-    private transient JsonArray context;
+    private transient WECContext context;
 
     public BaseMention(long mentionId) {
         this.mentionId = mentionId;
@@ -26,7 +20,7 @@ public class BaseMention {
                 mention.extractedFromPage, mention.context);
     }
 
-    public BaseMention(long mentionId, int corefId, int tokenStart, int tokenEnd, String extractedFromPage, JsonArray context) {
+    public BaseMention(long mentionId, int corefId, int tokenStart, int tokenEnd, String extractedFromPage, WECContext context) {
         this.mentionId = mentionId;
         this.corefId = corefId;
         this.tokenStart = tokenStart;
@@ -59,8 +53,12 @@ public class BaseMention {
         return extractedFromPage;
     }
 
-    public JsonArray getContext() {
-        return context;
+    public WECContext getContext() {
+        return this.context;
+    }
+
+    public void setContext(WECContext context) {
+        this.context = context;
     }
 
     public void setTokenStart(int tokenStart) {
@@ -73,14 +71,6 @@ public class BaseMention {
 
     public void setExtractedFromPage(String extractedFromPage) {
         this.extractedFromPage = extractedFromPage;
-    }
-
-    public void setContext(JsonArray context) {
-        this.context = context;
-    }
-
-    public String getContextAsJsonString() {
-        return GSON.toJson(this.context);
     }
 
     @Override

@@ -11,7 +11,7 @@ public class StanfordNlpApi {
 
     static {
         Properties props1 = new Properties();
-        props1.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner");
+        props1.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, regexner, depparse");
 //        props1.setProperty("ner.docdate.usePresent", "true");
         props1.setProperty("sutime.includeRange", "true");
         props1.setProperty("sutime.markTimeRanges", "true");

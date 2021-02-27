@@ -27,7 +27,7 @@ public class WikiToWECMain {
         WECResources.setSqlApi(new SQLQueryApi(new SQLiteConnections(WECConfigurations.getConfig().getSqlConnectionUrl())));
         WECResources.setElasticApi(new ElasticQueryApi(WECConfigurations.getConfig()));
 
-        final int pool_size = Integer.parseInt(WECConfigurations.getConfig().getPoolSize());
+        final int pool_size = WECConfigurations.getConfig().getPoolSize();
         if(pool_size > 0) {
             ExecutorServiceFactory.initExecutorService(pool_size);
         } else {

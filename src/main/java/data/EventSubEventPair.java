@@ -1,18 +1,16 @@
 package data;
 
-import com.google.gson.JsonArray;
-
 import java.util.Objects;
 
 public class EventSubEventPair {
     private final BaseMention event;
     private final BaseMention subEvent;
-    private final JsonArray context;
+    private final int contextId;
 
-    public EventSubEventPair(BaseMention event, BaseMention subEvent, JsonArray context) {
+    public EventSubEventPair(BaseMention event, BaseMention subEvent, int contextId) {
         this.event = event;
         this.subEvent = subEvent;
-        this.context = context;
+        this.contextId = contextId;
     }
 
     public BaseMention getEvent() {
@@ -23,8 +21,8 @@ public class EventSubEventPair {
         return subEvent;
     }
 
-    public JsonArray getContext() {
-        return context;
+    public int getContextId() {
+        return contextId;
     }
 
     @Override
@@ -32,13 +30,11 @@ public class EventSubEventPair {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         EventSubEventPair that = (EventSubEventPair) o;
-        return Objects.equals(event, that.event) &&
-                Objects.equals(subEvent, that.subEvent) &&
-                Objects.equals(context, that.context);
+        return contextId == that.contextId && Objects.equals(event, that.event) && Objects.equals(subEvent, that.subEvent);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(event, subEvent, context);
+        return Objects.hash(event, subEvent, contextId);
     }
 }

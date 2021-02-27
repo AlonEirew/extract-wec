@@ -1,6 +1,9 @@
 package main;
 
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import config.Configuration;
 import config.WECConfigurations;
 import data.MergedCorefMention;
 import data.WECCoref;
@@ -10,29 +13,58 @@ import org.apache.logging.log4j.Logger;
 import persistence.SQLQueryApi;
 import persistence.SQLiteConnections;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
 public class ExtractWECToJson {
     private final static Logger LOGGER = LogManager.getLogger(ExtractWECToJson.class);
-    private final static Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
     public static void main(String[] args) throws SQLException, IOException {
         LOGGER.info("Starting process to generate WEC dataset json");
         SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections(WECConfigurations.getConfig().getSqlConnectionUrl()));
-        JsonArray corefs = extractClusters(sqlApi);
+
+        File folder = new File("output");
+        if (!folder.exists()) {
+            if(!folder.mkdir()) {
+                LOGGER.error("Could not create output folder!");
+                return;
+            }
+        }
+
         try(FileWriter fw = new FileWriter("output/corefs.json")) {
-            GSON.toJson(corefs, fw);
+            List<MergedCorefMention> mergedCorefMentions = sqlApi.readJoinedMentionCorefTable(new MergedCorefMention());
+            fillAndCleanNoise(mergedCorefMentions);
+            JsonArray corefs = extractClusters(mergedCorefMentions);
+            Configuration.GSONPretty.toJson(corefs, fw);
         }
         LOGGER.info("process complete!");
     }
 
-    private static JsonArray extractClusters(SQLQueryApi sqlApi) {
-        List<MergedCorefMention> mergedCorefMentions = sqlApi.readJoinedMentionCorefTable(WECMention.TABLE_MENTIONS, WECCoref.TABLE_COREF, new MergedCorefMention());
+    private static void fillAndCleanNoise(List<MergedCorefMention> mergedCorefMentions) {
+        Iterator<MergedCorefMention> iterator = mergedCorefMentions.iterator();
+        while(iterator.hasNext()) {
+            MergedCorefMention coreMention = iterator.next();
+            String contextAsString = coreMention.getMention().getContext().getContextAsString();
+            if (contextAsString.contains("colspan") || contextAsString.contains("http")) {
+                iterator.remove();
+            }
+
+            coreMention.getMention().fillMentionNerPosLemma();
+            String mentionNer = coreMention.getMention().getMentionNer();
+            if(mentionNer.equals("PERSON") || mentionNer.equals("LOCATION") || mentionNer.equals("DATE") ||
+                    mentionNer.equals("NATIONALITY")) {
+                iterator.remove();
+            }
+        }
+    }
+
+    private static JsonArray extractClusters(List<MergedCorefMention> mergedCorefMentions) {
         JsonArray root = new JsonArray();
         for(MergedCorefMention mergedCorefMention : mergedCorefMentions) {
             WECMention mention = mergedCorefMention.getMention();
@@ -44,13 +76,17 @@ public class ExtractWECToJson {
             jo.addProperty("tokens_str", mention.getMentionText());
             jo.addProperty("mention_type", coref.getCorefType());
             jo.addProperty("mention_id", mention.getMentionId());
+            jo.addProperty("mention_head", mention.getMentionHead());
+            jo.addProperty("mention_head_lemma", mention.getMentionLemma());
+            jo.addProperty("mention_head_pos", mention.getMentionPos());
+            jo.addProperty("mention_ner", mention.getMentionNer());
 
             JsonArray tokNum = new JsonArray();
             IntStream.range(mention.getTokenStart(), mention.getTokenEnd() + 1).forEachOrdered(tokNum::add);
             jo.add("tokens_number", tokNum);
 
             JsonArray context = new JsonArray();
-            for(JsonElement tok : mention.getContext()) {
+            for(JsonElement tok : mention.getContext().getContext()) {
                 for (Map.Entry<String, JsonElement> entry : tok.getAsJsonObject().entrySet()) {
                     context.add(entry.getKey());
                 }

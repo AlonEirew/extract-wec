@@ -112,7 +112,7 @@ public class SQLQueryApi {
             final T objRep = insertRows.get(0);
 
             try (Connection con = this.sqlConnection.getConnection();
-                 PreparedStatement stmt = con.prepareStatement(objRep.getPrepareInsertStatementQuery(objRep.getTableName()))) {
+                 PreparedStatement stmt = con.prepareStatement(objRep.getPrepareInsertStatementQuery())) {
                 for (List<T> partRows : Iterables.partition(insertRows, MAX_BULK_SIZE)) {
                     for (ISQLObject sqlObject : partRows) {
                         sqlObject.setPrepareInsertStatementValues(stmt);
@@ -130,7 +130,7 @@ public class SQLQueryApi {
         return true;
     }
 
-    public <T extends ISQLObject<T>> List<T> readJoinedMentionCorefTable(String table1, String table2, T resultObjectRef) {
+    public <T extends ISQLObject<T>> List<T> readJoinedMentionCorefTable(T resultObjectRef) {
         List<T> resultList = new ArrayList<>();
         String query = "SELECT * from Mentions INNER JOIN CorefChains ON Mentions.coreChainId=CorefChains.corefId";
         try (Connection conn = this.sqlConnection.getConnection();
@@ -228,7 +228,7 @@ public class SQLQueryApi {
             WECCoref tmp = WECCoref.getAndSetIfNotExist("####TEMP####");
 
             if(!copyCoref.isEmpty()) {
-                try (PreparedStatement ps = conn.prepareStatement(tmp.getPrepareInsertStatementQuery(tableName))) {
+                try (PreparedStatement ps = conn.prepareStatement(tmp.getPrepareInsertStatementQuery())) {
                     for (WECCoref remainCoref : copyCoref.values()) {
                         remainCoref.setPrepareInsertStatementValues(ps);
                         ps.addBatch();

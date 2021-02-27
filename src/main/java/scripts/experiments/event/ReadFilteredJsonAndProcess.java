@@ -92,10 +92,10 @@ public class ReadFilteredJsonAndProcess {
             LOGGER.info("So far extracted-" + totalMentions);
             LOGGER.info("Prepare to evaluate-" + mentionsList.size() + " mentions...");
             for (WECMention mention : mentionsList) {
-                String md5 = DigestUtils.md5Hex(mention.getContextAsJsonString());
+                String md5 = DigestUtils.md5Hex(mention.getContext().getContextAsJsonString());
                 if(!sharingContext.containsKey(md5)) {
                     sharingContext.put(md5, new ArrayList<>());
-                    hashToContext.put(md5, mention.getContext());
+                    hashToContext.put(md5, mention.getContext().getContext());
                 }
 
                 Set<Integer> allSuccessors = new HashSet<>();
@@ -220,8 +220,8 @@ public class ReadFilteredJsonAndProcess {
                     for (WECMention mentV : allCoreToMentions.get(V)) {
                         if (mentU.getExtractedFromPage().equals(mentV.getExtractedFromPage())) {
                             sharingDocumentPairs ++;
-                            if (mentU.getContext().equals(mentV.getContext())) {
-                                allPairs.add(new EventSubEventPair(mentV, mentU, mentU.getContext()));
+                            if (mentU.getContextId() == mentV.getContextId()) {
+                                allPairs.add(new EventSubEventPair(mentV, mentU, mentU.getContextId()));
                                 sharingContextPairs ++;
                             }
                         }
@@ -263,7 +263,7 @@ public class ReadFilteredJsonAndProcess {
     }
 
     static List<String> printSingleParagraph(List<WECMentionSubEvent> contextMent) {
-        JsonArray context = contextMent.get(0).getContext();
+        int contextId = contextMent.get(0).getContextId();
         Stack<WECMentionSubEvent> startIndexMent = new Stack<>();
         contextMent.sort(Comparator.comparingInt(BaseMention::getTokenStart).reversed());
         for(WECMentionSubEvent ment : contextMent) {
@@ -272,7 +272,7 @@ public class ReadFilteredJsonAndProcess {
 
         List<String> contextAsString = new ArrayList<>();
         WECMentionSubEvent cur = startIndexMent.pop();
-        for(JsonElement elem : context) {
+        for(JsonElement elem : contextId) {
             JsonObject asJsonObject = elem.getAsJsonObject();
             List<Map.Entry<String, JsonElement>> entries = Lists.newArrayList(asJsonObject.entrySet());
             String word = entries.get(0).getKey();
@@ -295,7 +295,7 @@ public class ReadFilteredJsonAndProcess {
     private static void printShareParagraphEventSubEventPairs(List<EventSubEventPair> sharingContextPairs) {
         List<List<String>> contextsToPrint = new ArrayList<>();
         for (EventSubEventPair pair : sharingContextPairs) {
-            JsonArray context = pair.getEvent().getContext();
+            JsonArray context = pair.getEvent().getContextId();
             List<String> contextAsString = new ArrayList<>();
             for(JsonElement elem : context) {
                 JsonObject asJsonObject = elem.getAsJsonObject();

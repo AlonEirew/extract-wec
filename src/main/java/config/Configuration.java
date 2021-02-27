@@ -1,7 +1,13 @@
 package config;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 public class Configuration {
-    private String poolSize;
+    public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
+    public static final Gson GSONPretty = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+
+    private int poolSize;
     private String elasticHost;
     private int elasticPort;
     private String elasticWikiIndex;
@@ -11,11 +17,11 @@ public class Configuration {
     private int totalAmountToExtract;
     private String sqlConnectionUrl;
 
-    public String getPoolSize() {
+    public int getPoolSize() {
         return poolSize;
     }
 
-    public void setPoolSize(String poolSize) {
+    public void setPoolSize(int poolSize) {
         this.poolSize = poolSize;
     }
 

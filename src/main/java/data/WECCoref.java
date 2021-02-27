@@ -145,10 +145,10 @@ public class WECCoref implements ISQLObject<WECCoref> {
     }
 
     @Override
-    public String getPrepareInsertStatementQuery(String tableName) {
+    public String getPrepareInsertStatementQuery() {
         StringBuilder query = new StringBuilder();
         query.append("INSERT INTO ")
-                .append(tableName).append(" ")
+                .append(TABLE_COREF).append(" ")
                 .append("(").append(getColumnNames()).append(")").append(" ")
                 .append("VALUES").append(" ")
                 .append("(?,?,?,?,?)")

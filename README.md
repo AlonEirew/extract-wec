@@ -79,11 +79,10 @@ A new file will need to be created and replace in with current in `config.json`<
 
 ### Extracting WEC-Lang
 Make sure the Wikipedia Elastic engine is running <br/>
-* In order to generate the SQL dataset `#>./bin/extract-wec`
-* 
-
-### Helper Scripts
-
+* Generate the SQL dataset:<br/>
+  `#>./bin/extract-wec`
+* Generate the WEC-Lang Json format file:<br/> 
+  `java -cp "lib/*" main.ExtractWECToJson`
 
 [comment]: <> (Running events:)
 [comment]: <> (`java -Xmx90000m -DentityExpansionLimit=2147480000 -DtotalEntitySizeLimit=2147480000 -Djdk.xml.totalEntitySizeLimit=2147480000 -cp "lib/*" scripts.experiments.event.ReadFilteredJsonAndProcess`)

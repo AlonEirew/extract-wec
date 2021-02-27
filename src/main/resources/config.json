@@ -1,11 +1,11 @@
 {
-  "poolSize": "-1",
+  "poolSize": 4,
   "elasticHost": "localhost",
   "elasticPort": 9200,
   "elasticWikiIndex": "test_en",
   "infoboxConfiguration": "infobox_config/en_all_event_infoboxs.json",
   "multiRequestInterval" : 100,
   "elasticSearchInterval" : 100,
-  "totalAmountToExtract" : 10000,
-  "sqlConnectionUrl": "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WikiLinksTestDB.db"
+  "totalAmountToExtract" : -1,
+  "sqlConnectionUrl": "jdbc:sqlite:/Users/aeirew/workspace/DataBase/EnWikiExperiment_v11.db"
 }

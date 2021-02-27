@@ -20,7 +20,7 @@ public class WikipediaExperimentUtils {
 
     public void runWikipediaExperiment(IWorkerFactory workerFactory) throws IOException {
         long start = System.currentTimeMillis();
-        ExecutorServiceFactory.initExecutorService(Integer.parseInt(WECConfigurations.getConfig().getPoolSize()));
+        ExecutorServiceFactory.initExecutorService(WECConfigurations.getConfig().getPoolSize());
         WECResources.setElasticApi(new ElasticQueryApi(WECConfigurations.getConfig()));
         WECResources.setSqlApi(new SQLQueryApi(new SQLiteConnections(WECConfigurations.getConfig().getSqlConnectionUrl())));
 

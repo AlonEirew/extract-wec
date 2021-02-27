@@ -11,6 +11,6 @@ public interface ISQLObject<T> {
     String getValues();
     String getTableName();
     void setPrepareInsertStatementValues(PreparedStatement statement) throws SQLException;
-    String getPrepareInsertStatementQuery(String tableName);
+    String getPrepareInsertStatementQuery();
     T resultSetToObject(ResultSet rs) throws SQLException;
 }

@@ -3,6 +3,7 @@ package utils;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import config.Configuration;
 import data.WECEventWithRelMention;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,11 +16,10 @@ import java.util.Set;
 
 public class MyJsonWikidataParser {
     private final static Logger LOGGER = LogManager.getLogger(MyJsonWikidataParser.class);
-    private final static Gson GSON = new Gson();
 
     public List<WECEventWithRelMention> parse(InputStreamReader inputStreamReader) throws Exception {
         List<WECEventWithRelMention> allParsedWikidataPages;
-        try(JsonReader reader = GSON.newJsonReader(inputStreamReader)) {
+        try(JsonReader reader = Configuration.GSON.newJsonReader(inputStreamReader)) {
             allParsedWikidataPages = read(reader);
         } catch (Exception ex) {
             LOGGER.error("Failed to parse JSON file", ex);
@@ -42,7 +42,7 @@ public class MyJsonWikidataParser {
                     LOGGER.info("Pages parsed-" + counter);
                 }
 
-                WECEventWithRelMention wikidataPage = GSON.fromJson(reader, WECEventWithRelMention.class);
+                WECEventWithRelMention wikidataPage = Configuration.GSON.fromJson(reader, WECEventWithRelMention.class);
                 allParsedWikidataPages.add(wikidataPage);
             }
 
