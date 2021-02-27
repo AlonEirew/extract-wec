@@ -3,6 +3,7 @@ package wec;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import data.WECContext;
 import data.WECCoref;
 import data.WECMention;
 import org.junit.Assert;
@@ -14,8 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TestSQLQueryApi {
-    Gson GSON = new Gson();
-
     public void testCreateTable(SQLQueryApi api) throws SQLException {
         WECMention columns = new WECMention();
         final boolean table = api.createTable( columns);
@@ -52,7 +51,7 @@ public class TestSQLQueryApi {
                 0,
                 1,
                 "Test",
-                asJsonArray));
+                new WECContext(1, asJsonArray)));
 
         objList.add(new WECMention(
                 WECCoref.getAndSetIfNotExist("test1"),
@@ -60,7 +59,7 @@ public class TestSQLQueryApi {
                 0,
                 1,
                 "Test",
-                asJsonArray));
+                new WECContext(1, asJsonArray)));
 
         final boolean b = api.insertRowsToTable(objList);
         Assert.assertTrue(b);

@@ -1,6 +1,7 @@
 package main;
 
 import config.WECConfigurations;
+import data.WECContext;
 import data.WECCoref;
 import data.WECMention;
 import org.apache.logging.log4j.LogManager;
@@ -60,6 +61,7 @@ public class WikiToWECMain {
         LOGGER.info("Creating SQL Tables");
         SQLQueryApi sqlApi = WECResources.getSqlApi();
         return sqlApi.createTable(new WECMention()) &&
-                sqlApi.createTable(WECCoref.getAndSetIfNotExist("####TEMP####"));
+                sqlApi.createTable(WECCoref.getAndSetIfNotExist("####TEMP####")) &&
+                sqlApi.createTable(new WECContext(-1));
     }
 }

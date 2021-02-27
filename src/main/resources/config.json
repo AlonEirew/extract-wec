@@ -6,6 +6,6 @@
   "infoboxConfiguration": "infobox_config/en_all_event_infoboxs.json",
   "multiRequestInterval" : 100,
   "elasticSearchInterval" : 100,
-  "totalAmountToExtract" : -1,
-  "sqlConnectionUrl": "jdbc:sqlite:/Users/aeirew/workspace/DataBase/EnWikiExperiment_v11.db"
+  "totalAmountToExtract" : 10000,
+  "sqlConnectionUrl": "jdbc:sqlite:/Users/aeirew/workspace/DataBase/WECTest.db"
 }

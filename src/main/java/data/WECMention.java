@@ -73,7 +73,7 @@ public class WECMention extends BaseMention implements ISQLObject<WECMention> {
 
     @Override
     public String getColumnNames() {
-        return "mentionId, coreChainId, mentionText, tokenStart, tokenEnd, extractedFromPage, contextId, PartOfSpeech";
+        return "mentionId, coreChainId, mentionText, tokenStart, tokenEnd, extractedFromPage, contextId";
     }
 
     @Override
@@ -85,7 +85,6 @@ public class WECMention extends BaseMention implements ISQLObject<WECMention> {
                 "tokenEnd INT," +
                 "extractedFromPage VARCHAR(500)," +
                 "contextId INT," +
-                "PartOfSpeech TEXT," +
                 "PRIMARY KEY (mentionId)";
     }
 
@@ -123,7 +122,7 @@ public class WECMention extends BaseMention implements ISQLObject<WECMention> {
                 .append(TABLE_MENTIONS).append(" ")
                 .append("(").append(getColumnNames()).append(")").append(" ")
                 .append("VALUES").append(" ")
-                .append("(?,?,?,?,?,?,?,?)")
+                .append("(?,?,?,?,?,?,?)")
                 .append(";");
 
         return query.toString();
@@ -180,7 +179,10 @@ public class WECMention extends BaseMention implements ISQLObject<WECMention> {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         WECMention mention = (WECMention) o;
-        return Objects.equals(coreChain, mention.coreChain) && Objects.equals(mentionText, mention.mentionText) && Objects.equals(mentionTokens, mention.mentionTokens) && Objects.equals(mentionNer, mention.mentionNer) && Objects.equals(mentionLemma, mention.mentionLemma) && Objects.equals(mentionPos, mention.mentionPos) && Objects.equals(mentionHead, mention.mentionHead);
+        return Objects.equals(coreChain, mention.coreChain) && Objects.equals(mentionText, mention.mentionText) &&
+                Objects.equals(mentionTokens, mention.mentionTokens) && Objects.equals(mentionNer, mention.mentionNer) &&
+                Objects.equals(mentionLemma, mention.mentionLemma) && Objects.equals(mentionPos, mention.mentionPos) &&
+                Objects.equals(mentionHead, mention.mentionHead);
     }
 
     @Override
