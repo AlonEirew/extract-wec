@@ -9,9 +9,11 @@ import javax.persistence.*;
 import java.util.Objects;
 
 @Entity
+@Table(name = "MENTIONS")
 public class WECMention extends BaseMention {
 
     @ManyToOne(fetch = FetchType.LAZY, cascade= CascadeType.ALL)
+    @JoinColumn(name="coref_id", nullable=false)
     private WECCoref coreChain;
     private String mentionText;
 
@@ -25,20 +27,6 @@ public class WECMention extends BaseMention {
     private String mentionHead;
 
     public WECMention() {
-    }
-
-    public WECMention(WECMention mention) {
-        super(mention);
-        this.coreChain = mention.coreChain;
-        this.mentionText = mention.mentionText;
-        this.mentionHead = mention.mentionHead;
-        this.mentionPos = mention.mentionPos;
-        this.mentionLemma = mention.mentionLemma;
-        this.mentionNer = mention.mentionNer;
-
-        if(this.coreChain != null) {
-            this.coreChain.incMentionsCount();
-        }
     }
 
     public WECMention(WECCoref coref, String mentionText,

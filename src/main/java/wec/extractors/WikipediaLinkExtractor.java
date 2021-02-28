@@ -84,7 +84,7 @@ public class WikipediaLinkExtractor implements IExtractor<List<WECMention>> {
                 }
             }
 
-            WECContext wecContext = new WECContext(contextAsStringList);
+            WECContext wecContext = new WECContext(WECContext.getContextAsJsonString(contextAsStringList));
 
             for(WECMention ment : paragraphMentions) {
                 ment.setContext(wecContext);

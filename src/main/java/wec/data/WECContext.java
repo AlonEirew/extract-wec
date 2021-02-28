@@ -11,18 +11,18 @@ import java.util.Map;
 import java.util.Objects;
 
 @Entity
+@Table(name = "CONTEXTS")
 public class WECContext {
 
-    @Id @GeneratedValue(strategy=GenerationType.AUTO)
+    @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
     private long contextId;
-    @Column(columnDefinition="TEXT")
     private String context;
 
     protected WECContext() {
     }
 
-    public WECContext(JsonArray context) {
-        this.context = getContextAsJsonString(context);
+    public WECContext(String context) {
+        this.context = context;
     }
 
     public long getContextId() {
@@ -41,7 +41,7 @@ public class WECContext {
         this.context = context;
     }
 
-    public String getContextAsJsonString(JsonArray contextAsArray) {
+    public static String getContextAsJsonString(JsonArray contextAsArray) {
         return Configuration.GSON.toJson(contextAsArray);
     }
 

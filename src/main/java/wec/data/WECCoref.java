@@ -9,11 +9,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Entity
+@Table(name = "COREFS")
 public class WECCoref {
     @Transient
     private static final ConcurrentHashMap<String, WECCoref> globalCorefIds = new ConcurrentHashMap<>();
 
-    @Id @GeneratedValue(strategy= GenerationType.AUTO)
+    @Id @GeneratedValue(strategy= GenerationType.IDENTITY)
     private int corefId;
     private String corefValue;
     @Transient

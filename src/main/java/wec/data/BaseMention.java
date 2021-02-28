@@ -5,13 +5,14 @@ import java.util.Objects;
 
 @MappedSuperclass
 public class BaseMention {
-    @Id @GeneratedValue(strategy=GenerationType.AUTO)
+    @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
     private long mentionId;
     private int tokenStart;
     private int tokenEnd;
     private String extractedFromPage;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade=CascadeType.ALL)
+    @JoinColumn(name="context_id", nullable=false)
     private WECContext context;
 
     protected BaseMention() {
