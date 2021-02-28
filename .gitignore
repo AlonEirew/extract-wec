@@ -9,11 +9,11 @@ logs
 output
 src/service/node_modules
 
-src/main/java/workers/ReadCompanyFactory.java
-src/main/java/workers/ReadCompanyWorker.java
+src/main/java/wec.workers/ReadCompanyFactory.java
+src/main/java/wec.workers/ReadCompanyWorker.java
 src/main/java/experimentscripts/ExtractCompanyMain.java
 src/main/java/wec/extractors/ExtractCompany.java
 src/test/java/wec/TestExtractCompany.java
-src/main/java/data/CompanyObj.java
+src/main/java/wec.data/CompanyObj.java
 src/main/resources/infobox_config/company_info.json
 src/test/resources/wiki_links/company.json

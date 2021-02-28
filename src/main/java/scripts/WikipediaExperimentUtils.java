@@ -1,28 +1,23 @@
 package scripts;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import config.WECConfigurations;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import persistence.ElasticQueryApi;
-import persistence.SQLQueryApi;
-import persistence.SQLiteConnections;
-import persistence.WECResources;
-import utils.ExecutorServiceFactory;
+import wec.config.WECConfigurations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import wec.persistence.ElasticQueryApi;
+import wec.persistence.WECResources;
+import wec.utils.ExecutorServiceFactory;
 import wec.CreateWEC;
-import workers.IWorkerFactory;
+import wec.workers.IWorkerFactory;
 
 import java.io.IOException;
 
 public class WikipediaExperimentUtils {
-    private final static Logger LOGGER = LogManager.getLogger(WikipediaExperimentUtils.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(WikipediaExperimentUtils.class);
 
     public void runWikipediaExperiment(IWorkerFactory workerFactory) throws IOException {
         long start = System.currentTimeMillis();
         ExecutorServiceFactory.initExecutorService(WECConfigurations.getConfig().getPoolSize());
         WECResources.setElasticApi(new ElasticQueryApi(WECConfigurations.getConfig()));
-        WECResources.setSqlApi(new SQLQueryApi(new SQLiteConnections(WECConfigurations.getConfig().getSqlConnectionUrl())));
 
         try {
             CreateWEC createWEC = new CreateWEC(workerFactory);

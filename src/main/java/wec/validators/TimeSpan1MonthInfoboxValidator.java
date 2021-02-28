@@ -4,7 +4,7 @@ import edu.stanford.nlp.pipeline.CoreDocument;
 import edu.stanford.nlp.pipeline.CoreEntityMention;
 import edu.stanford.nlp.time.TimeAnnotations;
 import edu.stanford.nlp.time.Timex;
-import utils.StanfordNlpApi;
+import wec.utils.StanfordNlpApi;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

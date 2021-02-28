@@ -2,14 +2,15 @@ package wec;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import config.Configuration;
-import config.InfoboxConfiguration;
-import data.RawElasticResult;
-import data.WECMention;
+import wec.config.Configuration;
+import wec.config.InfoboxConfiguration;
+import wec.data.RawElasticResult;
+import wec.data.WECMention;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import wec.extractors.WikipediaLinkExtractor;
+import wec.filters.InfoboxFilter;
 import wec.validators.DefaultInfoboxValidator;
 
 import java.io.FileNotFoundException;

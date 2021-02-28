@@ -1,6 +1,6 @@
 package wec;
 
-import data.RawElasticResult;
+import wec.data.RawElasticResult;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;

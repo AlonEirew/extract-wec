@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import data.RawElasticResult;
+import wec.data.RawElasticResult;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;

@@ -2,10 +2,10 @@ package wec.extractors;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import data.RawElasticResult;
-import data.WECContext;
-import data.WECCoref;
-import data.WECMention;
+import wec.data.RawElasticResult;
+import wec.data.WECContext;
+import wec.data.WECCoref;
+import wec.data.WECMention;
 import info.bliki.wiki.model.WikiModel;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -13,7 +13,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
-import utils.WikipediaParsingUtils;
+import wec.utils.WikipediaParsingUtils;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;

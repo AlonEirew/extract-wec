@@ -1,21 +1,20 @@
 package wec;
 
-import data.RawElasticResult;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import wec.data.RawElasticResult;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
-import persistence.ElasticQueryApi;
-import persistence.WECResources;
-import utils.ExecutorServiceFactory;
-import workers.IWorkerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import wec.persistence.ElasticQueryApi;
+import wec.persistence.WECResources;
+import wec.utils.ExecutorServiceFactory;
+import wec.workers.IWorkerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -24,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class CreateWEC implements Closeable {
-    private final static Logger LOGGER = LogManager.getLogger(CreateWEC.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CreateWEC.class);
 
     private final IWorkerFactory workerFactory;
 
