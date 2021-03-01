@@ -15,7 +15,6 @@ public class Configuration {
     private int multiRequestInterval;
     private int elasticSearchInterval;
     private int totalAmountToExtract;
-    private String sqlConnectionUrl;
 
     public int getPoolSize() {
         return poolSize;
@@ -83,13 +82,4 @@ public class Configuration {
         if(this.totalAmountToExtract == -1)
             this.totalAmountToExtract = Integer.MAX_VALUE;
     }
-
-    public String getSqlConnectionUrl() {
-        return sqlConnectionUrl;
-    }
-
-    public void setSqlConnectionUrl(String sqlConnectionUrl) {
-        this.sqlConnectionUrl = sqlConnectionUrl;
-    }
-
 }

@@ -5,10 +5,8 @@ import com.google.gson.JsonElement;
 import wec.config.Configuration;
 
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 @Entity
 @Table(name = "CONTEXTS")
@@ -25,6 +23,10 @@ public class WECContext {
         this.context = context;
     }
 
+    public WECContext(JsonArray contextAsArray) {
+        this.context = Configuration.GSON.toJson(contextAsArray);
+    }
+
     public long getContextId() {
         return contextId;
     }
@@ -39,10 +41,6 @@ public class WECContext {
 
     public void setContext(String context) {
         this.context = context;
-    }
-
-    public static String getContextAsJsonString(JsonArray contextAsArray) {
-        return Configuration.GSON.toJson(contextAsArray);
     }
 
     public String getContextAsString() {

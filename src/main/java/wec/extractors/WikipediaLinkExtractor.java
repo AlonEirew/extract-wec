@@ -70,9 +70,8 @@ public class WikipediaLinkExtractor implements IExtractor<List<WECMention>> {
 
                     if(linkHref != null) {
                         String decodedLink = URLDecoder.decode(linkHref, StandardCharsets.UTF_8);
-                        WECCoref wecCoref = WECCoref.getAndSetIfNotExist(decodedLink);
                         WECMention mention = new WECMention(
-                                wecCoref,
+                                WECCoref.getAndSetIfNotExist(decodedLink),
                                 text,
                                 startIndex,
                                 index-1,
@@ -84,7 +83,7 @@ public class WikipediaLinkExtractor implements IExtractor<List<WECMention>> {
                 }
             }
 
-            WECContext wecContext = new WECContext(WECContext.getContextAsJsonString(contextAsStringList));
+            WECContext wecContext = new WECContext(contextAsStringList);
 
             for(WECMention ment : paragraphMentions) {
                 ment.setContext(wecContext);

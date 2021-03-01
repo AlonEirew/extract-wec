@@ -16,7 +16,8 @@ CREATE TABLE COREFS (
     coref_id INT AUTO_INCREMENT PRIMARY KEY,
     coref_value VARCHAR(250) NOT NULL,
     coref_type VARCHAR(250) DEFAULT NULL,
-    coref_sub_type VARCHAR(250) DEFAULT NULL
+    coref_sub_type VARCHAR(250) DEFAULT NULL,
+    mentions_count int NOT NULL
 );
 
 CREATE TABLE CONTEXTS (

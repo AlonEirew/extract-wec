@@ -7,17 +7,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import wec.data.WECContext;
-import wec.data.WECCoref;
-import wec.data.WECMention;
-import wec.persistence.ElasticQueryApi;
-import wec.persistence.WecRepository;
-import wec.persistence.WECResources;
+import wec.persistence.*;
 import wec.utils.ExecutorServiceFactory;
 import wec.filters.InfoboxFilter;
 import wec.workers.ParseAndExtractMentionsWorker;
 import wec.workers.WorkerFactory;
 
+import javax.persistence.EntityManager;
 import java.io.IOException;
 
 @SpringBootApplication
@@ -30,11 +26,16 @@ public class WikiToWECMain {
     }
 
     @Bean
-    public CommandLineRunner runner(WecRepository repository) {
+    public CommandLineRunner runner(MentionsRepository repository, CorefRepository corefRepository,
+                                    ContextRepository contextRepository, EntityManager entityManager) {
         return (args) -> {
             LOGGER.info("Runner start...");
             WECResources.setElasticApi(new ElasticQueryApi(WECConfigurations.getConfig()));
-            WECResources.setWECRepository(repository);
+            WECResources.setEntityManager(entityManager);
+            WECResources.setMentionsRepository(repository);
+            WECResources.setCorefRepository(corefRepository);
+            WECResources.setContextRepository(contextRepository);
+
             final int pool_size = WECConfigurations.getConfig().getPoolSize();
             if (pool_size > 0) {
                 ExecutorServiceFactory.initExecutorService(pool_size);

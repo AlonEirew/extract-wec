@@ -11,18 +11,11 @@ public class BaseMention {
     private int tokenEnd;
     private String extractedFromPage;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade=CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
     @JoinColumn(name="context_id", nullable=false)
     private WECContext context;
 
     protected BaseMention() {
-    }
-
-    public BaseMention(BaseMention mention) {
-        this(mention.tokenStart, mention.tokenEnd,
-                mention.extractedFromPage, mention.context);
-
-        this.mentionId = mention.mentionId;
     }
 
     public BaseMention(int tokenStart, int tokenEnd, String extractedFromPage, WECContext context) {

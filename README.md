@@ -7,7 +7,7 @@ Datset location is at `WEC` folder
 
 ## Generating WEC
 ### Requisites
-* Creating a Wikipedia ElasticSearch Index using <a href="https://github.com/AlonEirew/wikipedia-to-elastic">wikipedia-to-elastic</a> project
+* A Wikipedia ElasticSearch Index created by <a href="https://github.com/AlonEirew/wikipedia-to-elastic">wikipedia-to-elastic</a> project (with infobox relationType).
 * Java 11
 * A relational Database like SQLite / SQLServer (default is set to SQLite)
 

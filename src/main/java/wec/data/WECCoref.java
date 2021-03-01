@@ -5,20 +5,19 @@ import wec.validators.DefaultInfoboxValidator;
 import javax.persistence.*;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 @Entity
 @Table(name = "COREFS")
 public class WECCoref {
-    @Transient
     private static final ConcurrentHashMap<String, WECCoref> globalCorefIds = new ConcurrentHashMap<>();
 
     @Id @GeneratedValue(strategy= GenerationType.IDENTITY)
     private int corefId;
     private String corefValue;
-    @Transient
-    private AtomicInteger mentionsCount = new AtomicInteger(0);
+    private int mentionsCount;
     private String corefType = DefaultInfoboxValidator.NA;
     private String corefSubType = DefaultInfoboxValidator.NA;
     @Transient
@@ -29,7 +28,7 @@ public class WECCoref {
     protected WECCoref() {
     }
 
-    public WECCoref(String corefValue) {
+    private WECCoref(String corefValue) {
         this.corefValue = corefValue;
     }
 
@@ -65,16 +64,12 @@ public class WECCoref {
         this.corefValue = corefValue;
     }
 
-    public void incMentionsCount() {
-        this.mentionsCount.incrementAndGet();
-    }
-
-    public int addAndGetMentionCount(int delta) {
-        return this.mentionsCount.addAndGet(delta);
+    public synchronized void incMentionsCount() {
+        this.mentionsCount++;
     }
 
     public int getMentionsCount() {
-        return this.mentionsCount.get();
+        return this.mentionsCount;
     }
 
     public String getCorefType() {
@@ -114,13 +109,7 @@ public class WECCoref {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         WECCoref wecCoref = (WECCoref) o;
-        return corefId == wecCoref.corefId &&
-                markedForRemoval == wecCoref.markedForRemoval &&
-                wasRetrieved == wecCoref.wasRetrieved &&
-                Objects.equals(corefValue, wecCoref.corefValue) &&
-                Objects.equals(mentionsCount, wecCoref.mentionsCount) &&
-                Objects.equals(corefType, wecCoref.corefType) &&
-                Objects.equals(corefSubType, wecCoref.corefSubType);
+        return corefId == wecCoref.corefId && mentionsCount == wecCoref.mentionsCount && markedForRemoval == wecCoref.markedForRemoval && wasRetrieved == wecCoref.wasRetrieved && Objects.equals(corefValue, wecCoref.corefValue) && Objects.equals(corefType, wecCoref.corefType) && Objects.equals(corefSubType, wecCoref.corefSubType);
     }
 
     @Override

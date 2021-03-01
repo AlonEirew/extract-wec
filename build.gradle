@@ -53,7 +53,7 @@ dependencies {
 
 test {
     useJUnit()
-    maxHeapSize = '1G'
+    maxHeapSize = '4g'
 }
 
 // Define the main class for the application

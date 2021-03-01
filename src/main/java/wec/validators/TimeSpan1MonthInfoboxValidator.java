@@ -94,7 +94,7 @@ public class TimeSpan1MonthInfoboxValidator extends DefaultInfoboxValidator {
             }
 
             CoreDocument coreDocument = StanfordNlpApi.withPosAnnotate(finalDateline);
-            if (coreDocument.entityMentions() != null) {
+            if (coreDocument != null && coreDocument.entityMentions() != null) {
                 for (CoreEntityMention cem : coreDocument.entityMentions()) {
                     Timex timex = cem.coreMap().get(TimeAnnotations.TimexAnnotation.class);
                     if (timex != null) {

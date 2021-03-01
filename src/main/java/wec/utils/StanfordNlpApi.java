@@ -7,7 +7,6 @@ import java.util.Properties;
 
 public class StanfordNlpApi {
     private final static StanfordCoreNLP pipelineWithPos;
-    private final static StanfordCoreNLP pipelineNoPos;
 
     static {
         Properties props1 = new Properties();
@@ -16,21 +15,14 @@ public class StanfordNlpApi {
         props1.setProperty("sutime.includeRange", "true");
         props1.setProperty("sutime.markTimeRanges", "true");
         pipelineWithPos = new StanfordCoreNLP(props1);
-
-        Properties props2 = new Properties();
-        props2.setProperty("annotators", "tokenize, ssplit");
-        pipelineNoPos = new StanfordCoreNLP(props2);
-    }
-
-    public static CoreDocument noPosAnnotate(String context) {
-        CoreDocument doc = new CoreDocument(context);
-        pipelineNoPos.annotate(doc);
-        return doc;
     }
 
     public static CoreDocument withPosAnnotate(String context) {
-        CoreDocument doc = new CoreDocument(context);
-        pipelineWithPos.annotate(doc);
-        return doc;
+        if(!context.isEmpty()) {
+            CoreDocument doc = new CoreDocument(context);
+            pipelineWithPos.annotate(doc);
+            return doc;
+        }
+        return null;
     }
 }

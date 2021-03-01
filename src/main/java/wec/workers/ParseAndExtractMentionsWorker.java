@@ -3,6 +3,8 @@ package wec.workers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import wec.data.RawElasticResult;
+import wec.data.WECContext;
+import wec.data.WECCoref;
 import wec.data.WECMention;
 import wec.extractors.WikipediaLinkExtractor;
 import wec.filters.InfoboxFilter;
@@ -61,9 +63,27 @@ public class ParseAndExtractMentionsWorker extends AWorker {
         if(!finalToCommit.isEmpty()) {
             finalToCommit = filterUnwantedMentions(finalToCommit, pagesResults);
             if(!finalToCommit.isEmpty()) {
-                WECResources.getWECRepository().saveAll(finalToCommit);
+                persistUnmanagedObjs(finalToCommit);
+                WECResources.getMentionsRepository().saveAll(finalToCommit);
             }
         }
+    }
+
+    private void persistUnmanagedObjs(List<WECMention> finalToCommit) {
+        Set<WECCoref> corefsToPersist = new HashSet<>();
+        Set<WECContext> contextsToPersist = new HashSet<>();
+        for (WECMention mention : finalToCommit) {
+            if(!WECResources.getEntityManager().contains(mention.getCorefChain())) {
+                corefsToPersist.add(mention.getCorefChain());
+            }
+
+            if(!WECResources.getEntityManager().contains(mention.getContext())) {
+                contextsToPersist.add(mention.getContext());
+            }
+        }
+
+        WECResources.getCorefRepository().saveAll(corefsToPersist);
+        WECResources.getContextRepository().saveAll(contextsToPersist);
     }
 
     List<WECMention> filterUnwantedMentions(List<WECMention> finalToCommit, Map<String, RawElasticResult> pagesResults) {

@@ -12,9 +12,9 @@ import java.util.Objects;
 @Table(name = "MENTIONS")
 public class WECMention extends BaseMention {
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade= CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
     @JoinColumn(name="coref_id", nullable=false)
-    private WECCoref coreChain;
+    private WECCoref corefChain;
     private String mentionText;
 
     @Transient
@@ -32,18 +32,9 @@ public class WECMention extends BaseMention {
     public WECMention(WECCoref coref, String mentionText,
                       int tokenStart, int tokenEnd, String extractedFromPage, WECContext context) {
         super(tokenStart, tokenEnd, extractedFromPage, context);
-
-        this.coreChain = coref;
+        this.corefChain = coref;
+        this.corefChain.incMentionsCount();
         this.mentionText = mentionText;
-        this.coreChain.incMentionsCount();
-    }
-
-    public WECCoref getCoreChain() {
-        return coreChain;
-    }
-
-    public void setCoreChain(WECCoref coreChain) {
-        this.coreChain = coreChain;
     }
 
     public String getMentionText() {
@@ -55,15 +46,11 @@ public class WECMention extends BaseMention {
     }
 
     public WECCoref getCorefChain() {
-        return this.coreChain;
+        return this.corefChain;
     }
 
-    public void setCorefChain(String corefChainValue) {
-        this.coreChain = WECCoref.getAndSetIfNotExist(corefChainValue);
-    }
-
-    public void setCorefChain(WECCoref corefChainValue) {
-        this.coreChain = corefChainValue;
+    public void setCorefChain(WECCoref corefChain) {
+        this.corefChain = corefChain;
     }
 
     public String getMentionNer() {
@@ -84,11 +71,13 @@ public class WECMention extends BaseMention {
 
     public void fillMentionNerPosLemma() {
         CoreDocument coreDocument = StanfordNlpApi.withPosAnnotate(this.mentionText);
-        CoreLabel coreLabel = coreDocument.sentences().get(0).dependencyParse().getFirstRoot().backingLabel();
-        this.mentionNer = coreLabel.ner();
-        this.mentionLemma = coreLabel.lemma();
-        this.mentionPos = coreLabel.get(CoreAnnotations.PartOfSpeechAnnotation.class);
-        this.mentionHead = coreLabel.value();
+        if(coreDocument != null) {
+            CoreLabel coreLabel = coreDocument.sentences().get(0).dependencyParse().getFirstRoot().backingLabel();
+            this.mentionNer = coreLabel.ner();
+            this.mentionLemma = coreLabel.lemma();
+            this.mentionPos = coreLabel.get(CoreAnnotations.PartOfSpeechAnnotation.class);
+            this.mentionHead = coreLabel.value();
+        }
     }
 
     @Override
@@ -97,11 +86,11 @@ public class WECMention extends BaseMention {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         WECMention mention = (WECMention) o;
-        return Objects.equals(coreChain, mention.coreChain) && Objects.equals(mentionText, mention.mentionText) && Objects.equals(mentionNer, mention.mentionNer) && Objects.equals(mentionLemma, mention.mentionLemma) && Objects.equals(mentionPos, mention.mentionPos) && Objects.equals(mentionHead, mention.mentionHead);
+        return Objects.equals(corefChain, mention.corefChain) && Objects.equals(mentionText, mention.mentionText) && Objects.equals(mentionNer, mention.mentionNer) && Objects.equals(mentionLemma, mention.mentionLemma) && Objects.equals(mentionPos, mention.mentionPos) && Objects.equals(mentionHead, mention.mentionHead);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), coreChain, mentionText, mentionNer, mentionLemma, mentionPos, mentionHead);
+        return Objects.hash(super.hashCode(), corefChain, mentionText, mentionNer, mentionLemma, mentionPos, mentionHead);
     }
 }
