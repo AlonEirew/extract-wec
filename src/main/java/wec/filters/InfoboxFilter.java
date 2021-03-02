@@ -26,7 +26,7 @@ public class InfoboxFilter implements ICorefFilter {
                     final String corefType = validator.getCorefType();
 
                     if (!extractMatchedInfobox.equals(DefaultInfoboxValidator.NA)) {
-                        LOGGER.info(result.getTitle() + " passed as " + extractMatchedInfobox + " infobox");
+                        LOGGER.debug(result.getTitle() + " passed as " + extractMatchedInfobox + " infobox");
                         WECCoref wecCoref = WECCoref.getAndSetIfNotExist(result.getTitle());
                         wecCoref.setCorefType(corefType);
                         wecCoref.setCorefSubType(extractMatchedInfobox);

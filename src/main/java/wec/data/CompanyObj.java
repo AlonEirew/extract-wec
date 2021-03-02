@@ -1,13 +1,9 @@
 package wec.data;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
 import java.util.Objects;
 
-@Entity
 public class CompanyObj {
 
-    @Id
     private int companyId;
     private String companyName;
     private int empCount;

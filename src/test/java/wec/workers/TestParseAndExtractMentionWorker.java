@@ -31,6 +31,7 @@ public class TestParseAndExtractMentionWorker {
 
     @Test
     public void testFilterUnwantedMentions() throws FileNotFoundException {
+        WECResources.setElasticApi(new ElasticQueryApi());
         WECMention mention1 = new WECMention();
         WECMention mention2 = new WECMention();
         WECMention mention3 = new WECMention();
@@ -79,5 +80,7 @@ public class TestParseAndExtractMentionWorker {
                 Assert.fail("Not as expected-" + mention.getCorefChain().getCorefValue());
             }
         }
+
+        WECResources.closeAllResources();
     }
 }

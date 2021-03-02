@@ -2,6 +2,7 @@ package wec;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -21,6 +22,9 @@ import java.io.IOException;
 public class WikiToWECMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(WikiToWECMain.class);
 
+    @Autowired
+    private ExtractWECToJson wecToJson;
+
     public static void main(String[] args) throws IOException {
         long start = System.currentTimeMillis();
         LOGGER.info("WikiToWECMain process started!");
@@ -38,20 +42,25 @@ public class WikiToWECMain {
             WECResources.setMentionsRepository(repository);
             WECResources.setCorefRepository(corefRepository);
             WECResources.setContextRepository(contextRepository);
-            WECResources.setElasticApi(new ElasticQueryApi());
 
             if(args.length > 0) {
                 if (args[0].equalsIgnoreCase("wecdb")) {
-                    LOGGER.info("Running wec unfiltered generation into ");
+                    LOGGER.info("Running wec unfiltered generation into");
                     runWecDb();
                 } else if(args[0].equalsIgnoreCase("wecjson")) {
-
+                    LOGGER.info("Generating WEC-Lang json");
+                    runWecJson();
+                } else {
+                    LOGGER.info("Nothing happened, argument not applicable");
                 }
+            } else {
+                LOGGER.info("Nothing happened, no argument provided");
             }
         };
     }
 
     private void runWecDb() {
+        WECResources.setElasticApi(new ElasticQueryApi());
         final int pool_size = Configuration.getConfiguration().getPoolSize();
         if (pool_size > 0) {
             ExecutorServiceFactory.initExecutorService(pool_size);
@@ -62,12 +71,23 @@ public class WikiToWECMain {
         WorkerFactory<InfoboxFilter> workerFactory = new WorkerFactory<>(
                 ParseAndExtractMentionsWorker.class, InfoboxFilter.class, new InfoboxFilter(Configuration.getConfiguration().getInfoboxConfiguration()));
 
-        try (CreateWEC createWEC = new CreateWEC(workerFactory)) {
-            createWEC.readAllWikiPagesAndProcess(Configuration.getConfiguration().getTotalAmountToExtract());
+        try (ExtractWECToDB extractWECToDB = new ExtractWECToDB(workerFactory)) {
+            extractWECToDB.readAllWikiPagesAndProcess(Configuration.getConfiguration().getTotalAmountToExtract());
         } catch (Exception ex) {
             LOGGER.error("Could not start process", ex);
         } finally {
             ExecutorServiceFactory.closeService();
+            WECResources.closeAllResources();
+        }
+    }
+
+    private void runWecJson() {
+        LOGGER.info("Starting process to generate WEC dataset json");
+        try {
+            this.wecToJson.generateJson();
+        } catch (IOException e) {
+            LOGGER.error("Failed to generate Json!", e);
+        } finally {
             WECResources.closeAllResources();
         }
     }

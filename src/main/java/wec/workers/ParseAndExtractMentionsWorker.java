@@ -59,12 +59,13 @@ public class ParseAndExtractMentionsWorker extends AWorker {
     }
 
     private void onResponse(List<WECMention> finalToCommit, Map<String, RawElasticResult> pagesResults) {
-        LOGGER.info("processing returned results from elastic MultiSearchRequest");
+        LOGGER.info("processing returned results and preparing to commit");
         if(!finalToCommit.isEmpty()) {
             finalToCommit = filterUnwantedMentions(finalToCommit, pagesResults);
             if(!finalToCommit.isEmpty()) {
                 persistUnmanagedObjs(finalToCommit);
                 WECResources.getMentionsRepository().saveAll(finalToCommit);
+                LOGGER.info(finalToCommit.size() + " mentions committed");
             }
         }
     }

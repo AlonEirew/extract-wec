@@ -1,12 +1,12 @@
 package scripts;
 
+import wec.ExtractWECToDB;
 import wec.config.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import wec.persistence.ElasticQueryApi;
 import wec.persistence.WECResources;
 import wec.utils.ExecutorServiceFactory;
-import wec.CreateWEC;
 import wec.workers.IWorkerFactory;
 
 import java.io.IOException;
@@ -20,8 +20,8 @@ public class WikipediaExperimentUtils {
         WECResources.setElasticApi(new ElasticQueryApi());
 
         try {
-            CreateWEC createWEC = new CreateWEC(workerFactory);
-            createWEC.readAllWikiPagesAndProcess(Configuration.getConfiguration().getTotalAmountToExtract());
+            ExtractWECToDB extractWECToDB = new ExtractWECToDB(workerFactory);
+            extractWECToDB.readAllWikiPagesAndProcess(Configuration.getConfiguration().getTotalAmountToExtract());
         } finally {
             ExecutorServiceFactory.closeService();
             WECResources.closeAllResources();

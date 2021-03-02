@@ -22,12 +22,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class CreateWEC implements Closeable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CreateWEC.class);
+public class ExtractWECToDB implements Closeable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExtractWECToDB.class);
 
     private final IWorkerFactory workerFactory;
 
-    public CreateWEC(IWorkerFactory workerFactory) {
+    public ExtractWECToDB(IWorkerFactory workerFactory) {
         this.workerFactory = workerFactory;
     }
 

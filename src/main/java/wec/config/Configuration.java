@@ -22,17 +22,21 @@ public class Configuration {
     private final int multiRequestInterval;
     private final int elasticSearchInterval;
     private final int totalAmountToExtract;
+    private final String jsonOutputDir;
+    private final String jsonOutputFile;
     private final InfoboxConfiguration infoboxConfiguration;
 
     private Configuration(Environment environment) {
-        this.poolSize = Integer.parseInt(Objects.requireNonNull(environment.getProperty("main.poolSize")));
+        this.poolSize = Integer.parseInt(Objects.requireNonNull(environment.getProperty("main.poolSize", "-1")));
         this.elasticHost = environment.getProperty("main.elasticHost");
         this.elasticPort = Integer.parseInt(Objects.requireNonNull(environment.getProperty("main.elasticPort")));
         this.elasticWikiIndex = environment.getProperty("main.elasticWikiIndex");
         this.infoboxConfigurationFile = environment.getProperty("main.infoboxConfiguration");
-        this.multiRequestInterval = Integer.parseInt(Objects.requireNonNull(environment.getProperty("main.multiRequestInterval")));
-        this.elasticSearchInterval = Integer.parseInt(Objects.requireNonNull(environment.getProperty("main.elasticSearchInterval")));
-        this.totalAmountToExtract = Integer.parseInt(Objects.requireNonNull(environment.getProperty("main.totalAmountToExtract")));
+        this.multiRequestInterval = Integer.parseInt(Objects.requireNonNull(environment.getProperty("main.multiRequestInterval", "100")));
+        this.elasticSearchInterval = Integer.parseInt(Objects.requireNonNull(environment.getProperty("main.elasticSearchInterval", "100")));
+        this.totalAmountToExtract = Integer.parseInt(Objects.requireNonNull(environment.getProperty("main.totalAmountToExtract", "1000")));
+        this.jsonOutputDir = environment.getProperty("main.outputDir", "output");
+        this.jsonOutputFile = environment.getProperty("main.outputFile", "GenWEC.json");
 
         InputStream inputStreamConfigFile = Objects.requireNonNull(Configuration.class.getClassLoader()
                 .getResourceAsStream(this.infoboxConfigurationFile));
@@ -83,5 +87,13 @@ public class Configuration {
 
     public InfoboxConfiguration getInfoboxConfiguration() {
         return infoboxConfiguration;
+    }
+
+    public String getJsonOutputDir() {
+        return jsonOutputDir;
+    }
+
+    public String getJsonOutputFile() {
+        return jsonOutputFile;
     }
 }

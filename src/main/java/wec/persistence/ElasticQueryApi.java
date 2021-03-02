@@ -78,7 +78,7 @@ public class ElasticQueryApi implements Closeable {
                     if(!multiSearchRequest.requests().isEmpty()) {
                         allResponses.putAll(onResponse(elasticClient.multiSearch(multiSearchRequest)));
                         multiSearchRequest = new MultiSearchRequest();
-                        LOGGER.info("Done extracting " + index + " coref pages");
+                        LOGGER.debug("Done extracting " + index + " coref pages");
                     }
                 }
             }

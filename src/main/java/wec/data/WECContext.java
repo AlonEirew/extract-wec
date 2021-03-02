@@ -16,13 +16,10 @@ public class WECContext {
 
     @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
     private long contextId;
+    @Lob
     private String context;
 
     protected WECContext() {
-    }
-
-    public WECContext(String context) {
-        this.context = context;
     }
 
     public WECContext(JsonArray contextAsArray) {
@@ -45,7 +42,7 @@ public class WECContext {
         this.context = context;
     }
 
-    public String getContextAsString() {
+    public List<String> getContextAsArray() {
         JsonArray jsonElements = Configuration.GSON.fromJson(this.context, JsonArray.class);
         List<String> contextList = new ArrayList<>();
         for(JsonElement tok : jsonElements) {
@@ -54,7 +51,7 @@ public class WECContext {
             }
         }
 
-        return String.join(" ", contextList);
+        return contextList;
     }
 
     @Override
