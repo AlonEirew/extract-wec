@@ -363,11 +363,6 @@ public class TestWikipediaLinkExtractor {
         }
     }
 
-    private Configuration getConfigFile() throws IOException {
-        final String property = System.getProperty("user.dir");
-        return GSON.fromJson(new FileReader(property + "/config.json"), Configuration.class);
-    }
-
     private RawElasticResult getSmallCompanyText() {
         return TestUtils.getText("wikipedia/mobileye.json");
     }

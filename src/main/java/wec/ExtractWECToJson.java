@@ -1,15 +1,13 @@
 //package main;
 //
+//import Configuration;
 //import com.google.gson.JsonArray;
 //import com.google.gson.JsonElement;
 //import com.google.gson.JsonObject;
-//import Configuration;
-//import WECConfigurations;
-//import wec.data.WECCoref;
-//import wec.data.WECMention;
 //import org.apache.logging.log4j.LogManager;
 //import org.apache.logging.log4j.Logger;
-//import wec.persistence.SQLQueryApi;
+//import wec.data.WECCoref;
+//import wec.data.WECMention;
 //
 //import java.io.File;
 //import java.io.FileWriter;
@@ -25,7 +23,6 @@
 //
 //    public static void main(String[] args) throws SQLException, IOException {
 //        LOGGER.info("Starting process to generate WEC dataset json");
-//        SQLQueryApi sqlApi = new SQLQueryApi(new SQLiteConnections(WECConfigurations.getConfig().getSqlConnectionUrl()));
 //
 //        File folder = new File("output");
 //        if (!folder.exists()) {
@@ -36,7 +33,7 @@
 //        }
 //
 //        try(FileWriter fw = new FileWriter("output/corefs.json")) {
-//            List<MergedCorefMention> mergedCorefMentions = sqlApi.readJoinedMentionCorefTable(new MergedCorefMention());
+//            List<WECMention> mergedCorefMentions = sqlApi.readJoinedMentionCorefTable(new MergedCorefMention());
 //            fillAndCleanNoise(mergedCorefMentions);
 //            JsonArray corefs = extractClusters(mergedCorefMentions);
 //            Configuration.GSONPretty.toJson(corefs, fw);

@@ -1,6 +1,6 @@
 package scripts;
 
-import wec.config.WECConfigurations;
+import wec.config.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import wec.persistence.ElasticQueryApi;
@@ -16,12 +16,12 @@ public class WikipediaExperimentUtils {
 
     public void runWikipediaExperiment(IWorkerFactory workerFactory) throws IOException {
         long start = System.currentTimeMillis();
-        ExecutorServiceFactory.initExecutorService(WECConfigurations.getConfig().getPoolSize());
-        WECResources.setElasticApi(new ElasticQueryApi(WECConfigurations.getConfig()));
+        ExecutorServiceFactory.initExecutorService(Configuration.getConfiguration().getPoolSize());
+        WECResources.setElasticApi(new ElasticQueryApi());
 
         try {
             CreateWEC createWEC = new CreateWEC(workerFactory);
-            createWEC.readAllWikiPagesAndProcess(WECConfigurations.getConfig().getTotalAmountToExtract());
+            createWEC.readAllWikiPagesAndProcess(Configuration.getConfiguration().getTotalAmountToExtract());
         } finally {
             ExecutorServiceFactory.closeService();
             WECResources.closeAllResources();

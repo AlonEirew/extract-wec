@@ -11,9 +11,6 @@ plugins {
     id 'org.springframework.boot' version '2.4.2'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
-
-    // Apply the application plugin to add support for building an application
-    id 'application'
 }
 
 sourceCompatibility = 11
@@ -55,6 +52,3 @@ test {
     useJUnit()
     maxHeapSize = '4g'
 }
-
-// Define the main class for the application
-mainClassName = "wec.WikiToWECMain"

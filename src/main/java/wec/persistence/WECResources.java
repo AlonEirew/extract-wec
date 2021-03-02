@@ -1,13 +1,16 @@
 package wec.persistence;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.EntityManager;
 
 @Component
 public class WECResources {
-    private static ElasticQueryApi elasticApi;
+    private static final Logger LOGGER = LoggerFactory.getLogger(WECResources.class);
 
+    private static ElasticQueryApi elasticApi;
     private static EntityManager entityManager;
     private static MentionsRepository mentionsRepository;
     private static CorefRepository corefRepository;
@@ -54,8 +57,13 @@ public class WECResources {
     }
 
     public static void closeAllResources() {
+        LOGGER.info("Closing all resources...");
         if(elasticApi != null) {
             elasticApi.close();
+        }
+
+        if(entityManager != null) {
+            entityManager.close();
         }
     }
 }

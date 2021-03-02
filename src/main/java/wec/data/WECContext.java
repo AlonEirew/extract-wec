@@ -5,8 +5,10 @@ import com.google.gson.JsonElement;
 import wec.config.Configuration;
 
 import javax.persistence.*;
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Entity
 @Table(name = "CONTEXTS")

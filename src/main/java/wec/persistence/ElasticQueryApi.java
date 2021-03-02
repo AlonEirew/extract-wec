@@ -43,9 +43,12 @@ public class ElasticQueryApi implements Closeable {
                         .setMaxRetryTimeoutMillis(60*60*10000));
     }
 
-    public ElasticQueryApi(Configuration config) {
-        this(config.getElasticWikiIndex(), config.getElasticSearchInterval(), config.getMultiRequestInterval(),
-                config.getElasticHost(), config.getElasticPort());
+    public ElasticQueryApi() {
+        this(Configuration.getConfiguration().getElasticWikiIndex(),
+                Configuration.getConfiguration().getElasticSearchInterval(),
+                Configuration.getConfiguration().getMultiRequestInterval(),
+                Configuration.getConfiguration().getElasticHost(),
+                Configuration.getConfiguration().getElasticPort());
     }
 
     public long getTotalDocsCount() throws IOException {

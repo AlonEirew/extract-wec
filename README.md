@@ -13,12 +13,6 @@ Datset location is at `WEC` folder
 
 In order to WEC in current supported languages (e.g., English, French, Spanish, German, Chinese), follow the steps needed in *wikipedia-to-elastic* and below in .
 
-### Building the project:
-From extract-wec root folder do the following:
-- `#>./gradlew clean build -x test`
-- `#>cd build/distribution`
-- Extract the zip file (extract-wec.zip) and cd into created `extract-wec` folder
-
 
 ### Configuration:
 Configuration file - `resources/conf.json`
@@ -79,10 +73,10 @@ A new file will need to be created and replace in with current in `config.json`<
 
 ### Extracting WEC-Lang
 Make sure the Wikipedia Elastic engine is running <br/>
-* Generate the SQL dataset:<br/>
-  `#>./bin/extract-wec`
+* Running WikiToWECMain in order to generate the SQL dataset:<br/>
+  `#>./gradlew bootRun --args=wecdb`
 * Generate the WEC-Lang Json format file:<br/> 
-  `java -cp "lib/*" main.ExtractWECToJson`
+  `#>./gradlew bootRun --args=wecjson`
 
 [comment]: <> (Running events:)
 [comment]: <> (`java -Xmx90000m -DentityExpansionLimit=2147480000 -DtotalEntitySizeLimit=2147480000 -Djdk.xml.totalEntitySizeLimit=2147480000 -cp "lib/*" scripts.experiments.event.ReadFilteredJsonAndProcess`)

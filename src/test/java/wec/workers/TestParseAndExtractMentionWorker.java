@@ -1,46 +1,33 @@
 package wec.workers;
 
-import com.google.gson.Gson;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.env.Environment;
+import org.springframework.test.context.junit4.SpringRunner;
+import wec.TestUtils;
 import wec.config.Configuration;
 import wec.config.InfoboxConfiguration;
 import wec.data.RawElasticResult;
 import wec.data.WECCoref;
 import wec.data.WECMention;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import wec.filters.InfoboxFilter;
 import wec.persistence.ElasticQueryApi;
 import wec.persistence.WECResources;
-import wec.filters.InfoboxFilter;
-import wec.TestUtils;
-import wec.TestWikipediaLinkExtractor;
 import wec.validators.DefaultInfoboxValidator;
 
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+@SpringBootTest
+@RunWith(SpringRunner.class)
 public class TestParseAndExtractMentionWorker {
-
-    private static final Gson GSON = new Gson();
-
-    private InfoboxConfiguration infoboxConfiguration;
-    private InfoboxFilter filter;
-
-    @Before
-    public void initTest() throws FileNotFoundException {
-        String config_file = Objects.requireNonNull(TestWikipediaLinkExtractor.class.getClassLoader()
-                .getResource("test_conf.json")).getFile();
-
-        Configuration config = GSON.fromJson(new FileReader(config_file), Configuration.class);
-        WECResources.setElasticApi(new ElasticQueryApi(config));
-
-        String inputStreamNlp = Objects.requireNonNull(TestWikipediaLinkExtractor.class.getClassLoader()
-                .getResource("en_infobox_config.json")).getFile();
-
-        infoboxConfiguration = GSON.fromJson(new FileReader(inputStreamNlp), InfoboxConfiguration.class);
-        filter = new InfoboxFilter(infoboxConfiguration);
-    }
 
     @Test
     public void testFilterUnwantedMentions() throws FileNotFoundException {
@@ -76,13 +63,8 @@ public class TestParseAndExtractMentionWorker {
         crs4.setWasAlreadyRetrived(false);
         mention4.setCorefChain(crs4);
 
-        String inputStreamNlp = Objects.requireNonNull(TestWikipediaLinkExtractor.class.getClassLoader()
-                .getResource("en_infobox_config.json")).getFile();
-
-        InfoboxConfiguration infoboxConfiguration = GSON.fromJson(new FileReader(inputStreamNlp), InfoboxConfiguration.class);
-
         ParseAndExtractMentionsWorker worker = new ParseAndExtractMentionsWorker(
-                new InfoboxFilter(infoboxConfiguration));
+                new InfoboxFilter(Configuration.getConfiguration().getInfoboxConfiguration()));
 
         Map<String, RawElasticResult> testMap = new HashMap<>();
         testMap.put("TEST3", new RawElasticResult("TEST3", "", "{{Infobox earthquake"));
@@ -97,17 +79,5 @@ public class TestParseAndExtractMentionWorker {
                 Assert.fail("Not as expected-" + mention.getCorefChain().getCorefValue());
             }
         }
-    }
-
-//    @Test
-    public void testRun() {
-        String corefType = "SPORT_EVENT";
-        DefaultInfoboxValidator sportExtractor = infoboxConfiguration.getExtractorByCorefType(corefType);
-        final List<RawElasticResult> sportText = TestUtils.getTextAndTitle("wikipedia/tmp.json");
-
-        ParseAndExtractMentionsWorker worker = new ParseAndExtractMentionsWorker(sportText, filter);
-
-        worker.run();
-        System.out.println();
     }
 }
