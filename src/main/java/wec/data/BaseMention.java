@@ -11,7 +11,7 @@ public class BaseMention {
     private int tokenEnd;
     private String extractedFromPage;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
     @JoinColumn(name="context_id", nullable=false)
     private WECContext context;
 
@@ -70,7 +70,8 @@ public class BaseMention {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         BaseMention that = (BaseMention) o;
-        return mentionId == that.mentionId && tokenStart == that.tokenStart && tokenEnd == that.tokenEnd && Objects.equals(extractedFromPage, that.extractedFromPage) && Objects.equals(context, that.context);
+        return mentionId == that.mentionId && tokenStart == that.tokenStart && tokenEnd == that.tokenEnd &&
+                extractedFromPage.equals(that.extractedFromPage) && context.equals(that.context);
     }
 
     @Override

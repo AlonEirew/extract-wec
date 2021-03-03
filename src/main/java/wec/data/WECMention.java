@@ -12,7 +12,7 @@ import java.util.Objects;
 @Table(name = "MENTIONS")
 public class WECMention extends BaseMention {
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
     @JoinColumn(name="coref_id", nullable=false)
     private WECCoref corefChain;
     private String mentionText;
@@ -86,7 +86,9 @@ public class WECMention extends BaseMention {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         WECMention mention = (WECMention) o;
-        return Objects.equals(corefChain, mention.corefChain) && Objects.equals(mentionText, mention.mentionText) && Objects.equals(mentionNer, mention.mentionNer) && Objects.equals(mentionLemma, mention.mentionLemma) && Objects.equals(mentionPos, mention.mentionPos) && Objects.equals(mentionHead, mention.mentionHead);
+        return corefChain.equals(mention.corefChain) && mentionText.equals(mention.mentionText) &&
+                Objects.equals(mentionNer, mention.mentionNer) && Objects.equals(mentionLemma, mention.mentionLemma) &&
+                Objects.equals(mentionPos, mention.mentionPos) && Objects.equals(mentionHead, mention.mentionHead);
     }
 
     @Override

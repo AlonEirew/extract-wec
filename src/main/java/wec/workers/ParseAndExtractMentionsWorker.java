@@ -2,6 +2,8 @@ package wec.workers;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import wec.data.RawElasticResult;
 import wec.data.WECContext;
 import wec.data.WECCoref;
@@ -10,6 +12,8 @@ import wec.extractors.WikipediaLinkExtractor;
 import wec.filters.InfoboxFilter;
 import wec.persistence.WECResources;
 
+import javax.persistence.EntityTransaction;
+import javax.transaction.UserTransaction;
 import java.util.*;
 
 public class ParseAndExtractMentionsWorker extends AWorker {
@@ -61,33 +65,12 @@ public class ParseAndExtractMentionsWorker extends AWorker {
     private void onResponse(List<WECMention> finalToCommit, Map<String, RawElasticResult> pagesResults) {
         LOGGER.info("processing returned results and preparing to commit");
         if(!finalToCommit.isEmpty()) {
-            finalToCommit = filterUnwantedMentions(finalToCommit, pagesResults);
-            if(!finalToCommit.isEmpty()) {
-                persistUnmanagedObjs(finalToCommit);
-                WECResources.getMentionsRepository().saveAll(finalToCommit);
-                LOGGER.info(finalToCommit.size() + " mentions committed");
-            }
+            filterUnwantedMentions(finalToCommit, pagesResults);
+            WECResources.getDbRepository().saveMentionsList(finalToCommit);
         }
     }
 
-    private void persistUnmanagedObjs(List<WECMention> finalToCommit) {
-        Set<WECCoref> corefsToPersist = new HashSet<>();
-        Set<WECContext> contextsToPersist = new HashSet<>();
-        for (WECMention mention : finalToCommit) {
-            if(!WECResources.getEntityManager().contains(mention.getCorefChain())) {
-                corefsToPersist.add(mention.getCorefChain());
-            }
-
-            if(!WECResources.getEntityManager().contains(mention.getContext())) {
-                contextsToPersist.add(mention.getContext());
-            }
-        }
-
-        WECResources.getCorefRepository().saveAll(corefsToPersist);
-        WECResources.getContextRepository().saveAll(contextsToPersist);
-    }
-
-    List<WECMention> filterUnwantedMentions(List<WECMention> finalToCommit, Map<String, RawElasticResult> pagesResults) {
+    void filterUnwantedMentions(List<WECMention> finalToCommit, Map<String, RawElasticResult> pagesResults) {
         final Iterator<WECMention> iterator = finalToCommit.iterator();
         while (iterator.hasNext()) {
             WECMention ment = iterator.next();
@@ -104,7 +87,5 @@ public class ParseAndExtractMentionsWorker extends AWorker {
                 ment.getCorefChain().setWasAlreadyRetrived(true);
             }
         }
-
-        return finalToCommit;
     }
 }

@@ -69,16 +69,18 @@ public class WikipediaLinkExtractor implements IExtractor<List<WECMention>> {
                     index = index+i;
 
                     if(linkHref != null) {
-                        String decodedLink = URLDecoder.decode(linkHref, StandardCharsets.UTF_8);
-                        WECMention mention = new WECMention(
-                                WECCoref.getAndSetIfNotExist(decodedLink),
-                                text,
-                                startIndex,
-                                index-1,
-                                pageName,
-                                null);
+                        try {
+                            String decodedLink = URLDecoder.decode(linkHref, StandardCharsets.UTF_8);
+                            WECMention mention = new WECMention(
+                                    WECCoref.getAndSetIfNotExist(decodedLink),
+                                    text,
+                                    startIndex,
+                                    index-1,
+                                    pageName,
+                                    null);
 
-                        paragraphMentions.add(mention);
+                            paragraphMentions.add(mention);
+                        } catch (IllegalArgumentException ignored) { }
                     }
                 }
             }

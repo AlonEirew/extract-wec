@@ -10,12 +10,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 import wec.config.Configuration;
 import wec.filters.InfoboxFilter;
-import wec.persistence.*;
+import wec.persistence.DBRepository;
+import wec.persistence.ElasticQueryApi;
+import wec.persistence.WECResources;
 import wec.utils.ExecutorServiceFactory;
 import wec.workers.ParseAndExtractMentionsWorker;
 import wec.workers.WorkerFactory;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 
 @SpringBootApplication
@@ -34,14 +35,10 @@ public class WikiToWECMain {
     }
 
     @Bean
-    public CommandLineRunner runner(Environment environment, MentionsRepository repository, CorefRepository corefRepository,
-                                    ContextRepository contextRepository, EntityManager entityManager) {
+    public CommandLineRunner runner(Environment environment, DBRepository dbRepository) {
         return (args) -> {
             Configuration.initConfiguration(environment);
-            WECResources.setEntityManager(entityManager);
-            WECResources.setMentionsRepository(repository);
-            WECResources.setCorefRepository(corefRepository);
-            WECResources.setContextRepository(contextRepository);
+            WECResources.setDbRepository(dbRepository);
 
             if(args.length > 0) {
                 if (args[0].equalsIgnoreCase("wecdb")) {
@@ -71,7 +68,8 @@ public class WikiToWECMain {
         WorkerFactory<InfoboxFilter> workerFactory = new WorkerFactory<>(
                 ParseAndExtractMentionsWorker.class, InfoboxFilter.class, new InfoboxFilter(Configuration.getConfiguration().getInfoboxConfiguration()));
 
-        try (ExtractWECToDB extractWECToDB = new ExtractWECToDB(workerFactory)) {
+        try {
+            ExtractWECToDB extractWECToDB = new ExtractWECToDB(workerFactory);
             extractWECToDB.readAllWikiPagesAndProcess(Configuration.getConfiguration().getTotalAmountToExtract());
         } catch (Exception ex) {
             LOGGER.error("Could not start process", ex);

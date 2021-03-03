@@ -109,7 +109,10 @@ public class WECCoref {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         WECCoref wecCoref = (WECCoref) o;
-        return corefId == wecCoref.corefId && mentionsCount == wecCoref.mentionsCount && markedForRemoval == wecCoref.markedForRemoval && wasRetrieved == wecCoref.wasRetrieved && Objects.equals(corefValue, wecCoref.corefValue) && Objects.equals(corefType, wecCoref.corefType) && Objects.equals(corefSubType, wecCoref.corefSubType);
+        return corefId == wecCoref.corefId && mentionsCount == wecCoref.mentionsCount &&
+                markedForRemoval == wecCoref.markedForRemoval && wasRetrieved == wecCoref.wasRetrieved &&
+                corefValue.equals(wecCoref.corefValue) && corefType.equals(wecCoref.corefType) &&
+                corefSubType.equals(wecCoref.corefSubType);
     }
 
     @Override

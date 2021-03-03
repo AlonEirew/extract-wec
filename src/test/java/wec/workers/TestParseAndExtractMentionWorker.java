@@ -71,10 +71,10 @@ public class TestParseAndExtractMentionWorker {
         testMap.put("TEST3", new RawElasticResult("TEST3", "", "{{Infobox earthquake"));
         testMap.put("TEST4", new RawElasticResult("TEST4", "", "{Infobox tofilter}"));
 
-        final List<WECMention> finalToCommit = worker.filterUnwantedMentions(mentions, testMap);
+        worker.filterUnwantedMentions(mentions, testMap);
 
-        Assert.assertEquals(1, finalToCommit.size());
-        for(WECMention mention : finalToCommit) {
+        Assert.assertEquals(1, mentions.size());
+        for(WECMention mention : mentions) {
             if(!mention.getCorefChain().getCorefValue().equals("TEST2") &&
                     !mention.getCorefChain().getCorefValue().equals("TEST3")) {
                 Assert.fail("Not as expected-" + mention.getCorefChain().getCorefValue());

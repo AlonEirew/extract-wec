@@ -22,7 +22,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class ExtractWECToDB implements Closeable {
+public class ExtractWECToDB {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExtractWECToDB.class);
 
     private final IWorkerFactory workerFactory;
@@ -74,10 +74,5 @@ public class ExtractWECToDB implements Closeable {
 
         this.workerFactory.finalizeIfNeeded();
         elasticApi.closeScroll(scrollId);
-    }
-
-    @Override
-    public void close() throws IOException {
-
     }
 }
