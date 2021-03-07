@@ -4,7 +4,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import wec.data.RawElasticResult;
 import wec.data.WECContext;
-import wec.data.WECCoref;
 import wec.data.WECMention;
 import info.bliki.wiki.model.WikiModel;
 import org.jsoup.Jsoup;
@@ -20,10 +19,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WikipediaLinkExtractor implements IExtractor<List<WECMention>> {
+public class WikipediaLinkExtractor implements IExtractor<List<WECContext>> {
 
     @Override
-    public List<WECMention> extract(RawElasticResult rawElasticResult) {
+    public List<WECContext> extract(RawElasticResult rawElasticResult) {
         String pageName = rawElasticResult.getTitle();
         String text = rawElasticResult.getText();
         String htmlText = WikiModel.toHtml(text);
@@ -31,8 +30,8 @@ public class WikipediaLinkExtractor implements IExtractor<List<WECMention>> {
         return extractMentions(pageName, cleanHtml);
     }
 
-    private List<WECMention> extractMentions(String pageName, String cleanHtml) {
-        List<WECMention> finalResults = new ArrayList<>();
+    private List<WECContext> extractMentions(String pageName, String cleanHtml) {
+        List<WECContext> finalResults = new ArrayList<>();
         Document doc = Jsoup.parse(cleanHtml);
         Elements pElements = doc.getElementsByTag("p");
         for (Element paragraph : pElements) {
@@ -72,12 +71,11 @@ public class WikipediaLinkExtractor implements IExtractor<List<WECMention>> {
                         try {
                             String decodedLink = URLDecoder.decode(linkHref, StandardCharsets.UTF_8);
                             WECMention mention = new WECMention(
-                                    WECCoref.getAndSetIfNotExist(decodedLink),
+                                    decodedLink,
                                     text,
                                     startIndex,
                                     index-1,
-                                    pageName,
-                                    null);
+                                    pageName);
 
                             paragraphMentions.add(mention);
                         } catch (IllegalArgumentException ignored) { }
@@ -85,13 +83,7 @@ public class WikipediaLinkExtractor implements IExtractor<List<WECMention>> {
                 }
             }
 
-            WECContext wecContext = new WECContext(contextAsStringList);
-
-            for(WECMention ment : paragraphMentions) {
-                ment.setContext(wecContext);
-            }
-
-            finalResults.addAll(paragraphMentions);
+            finalResults.add(new WECContext(contextAsStringList, paragraphMentions));
         }
 
         return finalResults;

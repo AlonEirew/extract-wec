@@ -11,18 +11,16 @@ public class BaseMention {
     private int tokenEnd;
     private String extractedFromPage;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
     @JoinColumn(name="context_id", nullable=false)
-    private WECContext context;
+    private long contextId;
 
     protected BaseMention() {
     }
 
-    public BaseMention(int tokenStart, int tokenEnd, String extractedFromPage, WECContext context) {
+    public BaseMention(int tokenStart, int tokenEnd, String extractedFromPage) {
         this.tokenStart = tokenStart;
         this.tokenEnd = tokenEnd;
         this.extractedFromPage = extractedFromPage;
-        this.context = context;
     }
 
     public long getMentionId() {
@@ -45,12 +43,12 @@ public class BaseMention {
         return extractedFromPage;
     }
 
-    public WECContext getContext() {
-        return this.context;
+    public long getContextId() {
+        return this.contextId;
     }
 
-    public void setContext(WECContext context) {
-        this.context = context;
+    public void setContextId(long context) {
+        this.contextId = context;
     }
 
     public void setTokenStart(int tokenStart) {
@@ -70,12 +68,11 @@ public class BaseMention {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         BaseMention that = (BaseMention) o;
-        return mentionId == that.mentionId && tokenStart == that.tokenStart && tokenEnd == that.tokenEnd &&
-                extractedFromPage.equals(that.extractedFromPage) && context.equals(that.context);
+        return mentionId == that.mentionId && tokenStart == that.tokenStart && tokenEnd == that.tokenEnd && contextId == that.contextId && extractedFromPage.equals(that.extractedFromPage);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mentionId, tokenStart, tokenEnd, extractedFromPage, context);
+        return Objects.hash(mentionId, tokenStart, tokenEnd, extractedFromPage, contextId);
     }
 }

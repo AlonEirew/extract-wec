@@ -3,9 +3,7 @@ package wec.data;
 import wec.validators.DefaultInfoboxValidator;
 
 import javax.persistence.*;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -15,11 +13,15 @@ public class WECCoref {
     private static final ConcurrentHashMap<String, WECCoref> globalCorefIds = new ConcurrentHashMap<>();
 
     @Id @GeneratedValue(strategy= GenerationType.IDENTITY)
-    private int corefId;
+    private long corefId;
     private String corefValue;
     private int mentionsCount;
     private String corefType = DefaultInfoboxValidator.NA;
     private String corefSubType = DefaultInfoboxValidator.NA;
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "corefChain")
+    private final List<WECMention> mentionList = new ArrayList<>();
+
     @Transient
     private boolean markedForRemoval = false;
     @Transient
@@ -40,6 +42,14 @@ public class WECCoref {
         return globalCorefIds.get(corefValue);
     }
 
+    public List<WECMention> getMentionList() {
+        return mentionList;
+    }
+
+    public void addMention(WECMention mention) {
+        this.mentionList.add(mention);
+    }
+
     public static void removeKey(String keyToRemove) {
         globalCorefIds.remove(keyToRemove);
     }
@@ -48,11 +58,11 @@ public class WECCoref {
         return globalCorefIds;
     }
 
-    public int getCorefId() {
+    public long getCorefId() {
         return corefId;
     }
 
-    public void setCorefId(int corefId) {
+    public void setCorefId(long corefId) {
         this.corefId = corefId;
     }
 
@@ -109,14 +119,11 @@ public class WECCoref {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         WECCoref wecCoref = (WECCoref) o;
-        return corefId == wecCoref.corefId && mentionsCount == wecCoref.mentionsCount &&
-                markedForRemoval == wecCoref.markedForRemoval && wasRetrieved == wecCoref.wasRetrieved &&
-                corefValue.equals(wecCoref.corefValue) && corefType.equals(wecCoref.corefType) &&
-                corefSubType.equals(wecCoref.corefSubType);
+        return corefId == wecCoref.corefId && mentionsCount == wecCoref.mentionsCount && markedForRemoval == wecCoref.markedForRemoval && wasRetrieved == wecCoref.wasRetrieved && corefValue.equals(wecCoref.corefValue) && corefType.equals(wecCoref.corefType) && corefSubType.equals(wecCoref.corefSubType) && mentionList.equals(wecCoref.mentionList);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(corefId, corefValue, mentionsCount, corefType, corefSubType, markedForRemoval, wasRetrieved);
+        return Objects.hash(corefId, corefValue, mentionsCount, corefType, corefSubType, mentionList, markedForRemoval, wasRetrieved);
     }
 }

@@ -68,14 +68,15 @@ public class WikiToWECMain {
         WorkerFactory<InfoboxFilter> workerFactory = new WorkerFactory<>(
                 ParseAndExtractMentionsWorker.class, InfoboxFilter.class, new InfoboxFilter(Configuration.getConfiguration().getInfoboxConfiguration()));
 
+        ExtractWECToDB extractWECToDB = new ExtractWECToDB(workerFactory);
         try {
-            ExtractWECToDB extractWECToDB = new ExtractWECToDB(workerFactory);
             extractWECToDB.readAllWikiPagesAndProcess(Configuration.getConfiguration().getTotalAmountToExtract());
         } catch (Exception ex) {
             LOGGER.error("Could not start process", ex);
         } finally {
             ExecutorServiceFactory.closeService();
             WECResources.closeAllResources();
+            extractWECToDB.close();
         }
     }
 
@@ -87,6 +88,7 @@ public class WikiToWECMain {
             LOGGER.error("Failed to generate Json!", e);
         } finally {
             WECResources.closeAllResources();
+
         }
     }
 }

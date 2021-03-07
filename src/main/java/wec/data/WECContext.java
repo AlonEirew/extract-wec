@@ -18,12 +18,19 @@ public class WECContext {
     private long contextId;
     @Lob
     private String context;
+    @Transient
+    private List<WECMention> mentionList;
 
     protected WECContext() {
     }
 
-    public WECContext(JsonArray contextAsArray) {
+    public WECContext(List<WECMention> mentionList) {
+        this.mentionList = mentionList;
+    }
+
+    public WECContext(JsonArray contextAsArray, List<WECMention> mentionList) {
         this.context = Configuration.GSON.toJson(contextAsArray);
+        this.mentionList = mentionList;
     }
 
     public long getContextId() {
@@ -54,16 +61,24 @@ public class WECContext {
         return contextList;
     }
 
+    public List<WECMention> getMentionList() {
+        return mentionList;
+    }
+
+    public void setMentionList(List<WECMention> mentionList) {
+        this.mentionList = mentionList;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         WECContext that = (WECContext) o;
-        return contextId == that.contextId && Objects.equals(context, that.context);
+        return contextId == that.contextId && context.equals(that.context) && Objects.equals(mentionList, that.mentionList);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(contextId, context);
+        return Objects.hash(contextId, context, mentionList);
     }
 }

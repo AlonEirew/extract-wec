@@ -12,8 +12,7 @@ import java.util.Objects;
 @Table(name = "MENTIONS")
 public class WECMention extends BaseMention {
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
-    @JoinColumn(name="coref_id", nullable=false)
+    @ManyToOne(fetch = FetchType.LAZY)
     private WECCoref corefChain;
     private String mentionText;
 
@@ -29,10 +28,11 @@ public class WECMention extends BaseMention {
     public WECMention() {
     }
 
-    public WECMention(WECCoref coref, String mentionText,
-                      int tokenStart, int tokenEnd, String extractedFromPage, WECContext context) {
-        super(tokenStart, tokenEnd, extractedFromPage, context);
-        this.corefChain = coref;
+    public WECMention(String corefString, String mentionText,
+                      int tokenStart, int tokenEnd, String extractedFromPage) {
+        super(tokenStart, tokenEnd, extractedFromPage);
+        this.corefChain = WECCoref.getAndSetIfNotExist(corefString);
+        this.corefChain.addMention(this);
         this.corefChain.incMentionsCount();
         this.mentionText = mentionText;
     }

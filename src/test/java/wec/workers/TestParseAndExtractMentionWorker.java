@@ -12,6 +12,7 @@ import wec.TestUtils;
 import wec.config.Configuration;
 import wec.config.InfoboxConfiguration;
 import wec.data.RawElasticResult;
+import wec.data.WECContext;
 import wec.data.WECCoref;
 import wec.data.WECMention;
 import wec.filters.InfoboxFilter;
@@ -71,7 +72,9 @@ public class TestParseAndExtractMentionWorker {
         testMap.put("TEST3", new RawElasticResult("TEST3", "", "{{Infobox earthquake"));
         testMap.put("TEST4", new RawElasticResult("TEST4", "", "{Infobox tofilter}"));
 
-        worker.filterUnwantedMentions(mentions, testMap);
+        List<WECContext> contextList = new ArrayList<>();
+        contextList.add(new WECContext(mentions));
+        worker.filterUnwantedMentions(contextList, testMap);
 
         Assert.assertEquals(1, mentions.size());
         for(WECMention mention : mentions) {

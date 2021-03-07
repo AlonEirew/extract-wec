@@ -14,13 +14,14 @@ import wec.config.Configuration;
 import wec.data.WECCoref;
 import wec.data.WECMention;
 import wec.persistence.MentionsRepository;
-import wec.persistence.WECResources;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 @Component
@@ -56,23 +57,17 @@ public class ExtractWECToJson {
         int contextRemove = 0;
         int nerRemoved = 0;
         JsonArray root = new JsonArray();
+        Map<Long, Map<String, Integer>> lexicalDiversity = new HashMap<>();
         while(iterator.hasNext()) {
             WECMention wecMention = iterator.next();
-            List<String> contextAsList = wecMention.getContext().getContextAsArray();
-            String contextAsString = String.join(" ", contextAsList);
-            if (contextAsString.contains("colspan") || contextAsString.contains("http")) {
+            if (!isContextValid(wecMention) || !fillAndCheckIsMentionValid(wecMention)) {
                 iterator.remove();
                 contextRemove++;
                 continue;
             }
 
-            wecMention.fillMentionNerPosLemma();
-            String mentionNer = wecMention.getMentionNer();
-            if(mentionNer.equals("PERSON") || mentionNer.equals("LOCATION") || mentionNer.equals("DATE") ||
-                    mentionNer.equals("NATIONALITY")) {
-                iterator.remove();
-                nerRemoved++;
-                continue;
+            if(!lexicalDiversity.containsKey(wecMention.getCorefChain().getCorefId())) {
+                lexicalDiversity.put(wecMention.getCorefChain().getCorefId(), new HashMap<>());
             }
 
             JsonObject jsonObject = convertMentionToJson(wecMention);
@@ -84,6 +79,20 @@ public class ExtractWECToJson {
         LOGGER.info("Mentions remaining=" + Iterables.size(wecMentions));
 
         return root;
+    }
+
+    private boolean fillAndCheckIsMentionValid(WECMention mention) {
+        mention.fillMentionNerPosLemma();
+        String mentionNer = mention.getMentionNer();
+        return !mentionNer.equals("PERSON") && !mentionNer.equals("LOCATION") && !mentionNer.equals("DATE") &&
+                !mentionNer.equals("NATIONALITY");
+    }
+
+    private boolean isContextValid(WECMention mention) {
+//        List<String> contextAsList = mention.getContextId().getContextAsArray();
+//        String contextAsString = String.join(" ", contextAsList);
+//        return !contextAsString.contains("colspan") && !contextAsString.contains("http");
+        return true;
     }
 
     private JsonObject convertMentionToJson(WECMention mention) {
@@ -104,9 +113,9 @@ public class ExtractWECToJson {
         IntStream.range(mention.getTokenStart(), mention.getTokenEnd() + 1).forEachOrdered(tokNum::add);
         jo.add("tokens_number", tokNum);
 
-        JsonElement element = Configuration.GSON.toJsonTree(mention.getContext().getContextAsArray(),
-                new TypeToken<List<String>>() {}.getType());
-        jo.add("mention_context", element.getAsJsonArray());
+//        JsonElement element = Configuration.GSON.toJsonTree(mention.getContextId().getContextAsArray(),
+//                new TypeToken<List<String>>() {}.getType());
+//        jo.add("mention_context", element.getAsJsonArray());
 
         return jo;
     }

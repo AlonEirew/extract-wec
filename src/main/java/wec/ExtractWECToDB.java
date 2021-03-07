@@ -8,6 +8,8 @@ import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import wec.data.WECCoref;
+import wec.persistence.DBRepository;
 import wec.persistence.ElasticQueryApi;
 import wec.persistence.WECResources;
 import wec.utils.ExecutorServiceFactory;
@@ -16,6 +18,7 @@ import wec.workers.IWorkerFactory;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -74,5 +77,11 @@ public class ExtractWECToDB {
 
         this.workerFactory.finalizeIfNeeded();
         elasticApi.closeScroll(scrollId);
+    }
+
+
+    public void close() {
+        Collection<WECCoref> corefs = WECCoref.getGlobalCorefMap().values();
+        WECResources.getDbRepository().saveCorefAndMentions(corefs);
     }
 }

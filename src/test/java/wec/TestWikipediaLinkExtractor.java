@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import wec.config.Configuration;
 import wec.config.InfoboxConfiguration;
 import wec.data.RawElasticResult;
+import wec.data.WECContext;
 import wec.data.WECMention;
 import org.junit.Assert;
 import org.junit.Before;
@@ -47,11 +48,13 @@ public class TestWikipediaLinkExtractor {
             String infobox = jo.get("infobox").getAsString();
             int expected = jo.get("expected").getAsInt();
             RawElasticResult rawElasticResult = new RawElasticResult(title, pageText, infobox);
-            List<WECMention> extractMentions1 = new ArrayList<>();
+            List<WECContext> extractContexts = new ArrayList<>();
             if(infobox != null && !infobox.isEmpty()) {
-                extractMentions1 = extractor.extract(rawElasticResult);
+                extractContexts = extractor.extract(rawElasticResult);
             }
-            Assert.assertEquals(title, expected, extractMentions1.size());
+
+            int totalMentions = extractContexts.stream().mapToInt(wecContext -> wecContext.getMentionList().size()).sum();
+            Assert.assertEquals(title, expected, totalMentions);
         }
     }
 

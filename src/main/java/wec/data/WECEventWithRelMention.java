@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public class WECEventWithRelMention {
-    private int corefId;
+    private long corefId;
     private String wikidataPageId;
     private String wikipediaLangPageTitle;
     private String elasticPageId;
@@ -38,11 +38,11 @@ public class WECEventWithRelMention {
         this.immediateCauseOf = new HashSet<>();
     }
 
-    public int getCorefId() {
+    public long getCorefId() {
         return corefId;
     }
 
-    public void setCorefId(int corefId) {
+    public void setCorefId(long corefId) {
         this.corefId = corefId;
     }
 
