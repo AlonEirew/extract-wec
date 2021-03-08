@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 @Component
@@ -53,13 +54,28 @@ public class ExtractWECToJson {
         int contextRemove = 0;
         int nerRemoved = 0;
         int lexicalRemove = 0;
-        Map<Long, Map<String, Integer>> lexicalDiversity = new HashMap<>();
+        Map<Long, Map<String, AtomicInteger>> lexicalDiversity = new HashMap<>();
         writer.setIndent("\t");
         writer.beginArray();
         try (ProgressBar pb = new ProgressBar("Processing", sizeBefore)) {
             while (iterator.hasNext()) {
                 pb.step();
                 WECMention wecMention = iterator.next();
+                if (!lexicalDiversity.containsKey(wecMention.getCorefChain().getCorefId())) {
+                    lexicalDiversity.put(wecMention.getCorefChain().getCorefId(), new HashMap<>());
+                }
+
+                if(!lexicalDiversity.get(wecMention.getCorefChain().getCorefId()).containsKey(wecMention.getMentionText())) {
+                    lexicalDiversity.get(wecMention.getCorefChain().getCorefId()).put(wecMention.getMentionText(), new AtomicInteger(0));
+                }
+
+                if(lexicalDiversity.get(wecMention.getCorefChain().getCorefId()).get(wecMention.getMentionText()).getAndIncrement() >=
+                        Configuration.getConfiguration().getLexicalThresh()) {
+                    iterator.remove();
+                    lexicalRemove++;
+                    continue;
+                }
+
                 if(!fillAndCheckIsMentionValid(wecMention)) {
                     iterator.remove();
                     nerRemoved++;
@@ -73,21 +89,6 @@ public class ExtractWECToJson {
                     continue;
                 }
 
-                if (!lexicalDiversity.containsKey(wecMention.getCorefChain().getCorefId())) {
-                    lexicalDiversity.put(wecMention.getCorefChain().getCorefId(), new HashMap<>());
-                }
-
-                if(!lexicalDiversity.get(wecMention.getCorefChain().getCorefId()).containsKey(wecMention.getMentionText())) {
-                    lexicalDiversity.get(wecMention.getCorefChain().getCorefId()).put(wecMention.getMentionText(), 0);
-                }
-
-                if(lexicalDiversity.get(wecMention.getCorefChain().getCorefId()).get(wecMention.getMentionText()) >=
-                        Configuration.getConfiguration().getLexicalThresh()) {
-                    iterator.remove();
-                    lexicalRemove++;
-                    continue;
-                }
-
                 Configuration.GSON.toJson(convertMentionToJson(wecMention, retContext.get()), writer);
             }
         }
@@ -95,17 +96,21 @@ public class ExtractWECToJson {
         writer.endArray();
         writer.close();
 
-        LOGGER.info("Total of " + contextRemove + " mentions with problematic context");
+        LOGGER.info("Total of " + contextRemove + " mentions with problematic context removed");
         LOGGER.info("Total of " + nerRemoved + " mentions with suspicious NER removed");
         LOGGER.info("Total of " + lexicalRemove + " didn't pass lexical threshold");
-        LOGGER.info("Mentions remaining=" + Iterables.size(wecMentions));
+        LOGGER.info("Final total extracted mentions=" + Iterables.size(wecMentions));
     }
 
     private boolean fillAndCheckIsMentionValid(WECMention mention) {
-        mention.fillMentionNerPosLemma();
-        String mentionNer = mention.getMentionNer();
-        return !mentionNer.equals("PERSON") && !mentionNer.equals("LOCATION") && !mentionNer.equals("DATE") &&
-                !mentionNer.equals("NATIONALITY");
+        if((mention.getTokenEnd() - mention.getTokenStart() + 1) <= 7) {
+            mention.fillMentionNerPosLemma();
+            String mentionNer = mention.getMentionNer();
+            return mentionNer != null && !mentionNer.equals("PERSON") && !mentionNer.equals("LOCATION") && !mentionNer.equals("DATE") &&
+                    !mentionNer.equals("NATIONALITY") && !mentionNer.equals("CITY") && !mentionNer.equals("STATE_OR_PROVINCE") &&
+                    !mentionNer.equals("COUNTRY");
+        }
+        return false;
     }
 
     private boolean isContextValid(WECContext context) {

@@ -3,6 +3,7 @@ package wec.data;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.CoreDocument;
+import edu.stanford.nlp.semgraph.SemanticGraph;
 import wec.utils.StanfordNlpApi;
 
 import javax.persistence.*;
@@ -70,13 +71,18 @@ public class WECMention extends BaseMention {
     }
 
     public void fillMentionNerPosLemma() {
-        CoreDocument coreDocument = StanfordNlpApi.withPosAnnotate(this.mentionText);
-        if(coreDocument != null) {
-            CoreLabel coreLabel = coreDocument.sentences().get(0).dependencyParse().getFirstRoot().backingLabel();
-            this.mentionNer = coreLabel.ner();
-            this.mentionLemma = coreLabel.lemma();
-            this.mentionPos = coreLabel.get(CoreAnnotations.PartOfSpeechAnnotation.class);
-            this.mentionHead = coreLabel.value();
+        if(this.mentionText != null && !this.mentionText.isEmpty()) {
+            CoreDocument coreDocument = StanfordNlpApi.withPosAnnotate(this.mentionText);
+            if (coreDocument != null) {
+                SemanticGraph semanticGraph = coreDocument.sentences().get(0).dependencyParse();
+                if(semanticGraph != null) {
+                    CoreLabel coreLabel = semanticGraph.getFirstRoot().backingLabel();
+                    this.mentionNer = coreLabel.ner();
+                    this.mentionLemma = coreLabel.lemma();
+                    this.mentionPos = coreLabel.get(CoreAnnotations.PartOfSpeechAnnotation.class);
+                    this.mentionHead = coreLabel.value();
+                }
+            }
         }
     }
 

@@ -2,12 +2,16 @@
 This project is following the research paper: (TBD - ADD PAPER LINK).<br/>
 Here can be found both The WEC-Eng cross document dataset from English Wikipedia and the method for creating WEC for other languages. <br/>
 
-### WEC-Eng
-Datset location is at `WEC` folder
+### WEC-Eng Coreference Dataset
+- Datset location is at `WEC/WEC-Eng.zip` folder, split to dev/test/train 
+- Dev & Test sets were manually validated, while the train set is unvalidated 
 
-## Generating WEC
+## Generating a new WEC Dataset
+Below are the instructions of how-to generate a new version of WEC, whether required from a more recent English Wikipdia dump, 
+or in order to extract it from one of the other supported languages (e.g., French, Spanish, German, Chinese). 
 ### Requisites
-* A Wikipedia ElasticSearch Index created by <a href="https://github.com/AlonEirew/wikipedia-to-elastic">wikipedia-to-elastic</a> project (with infobox relationType).
+* A Wikipedia ElasticSearch Index created by <a href="https://github.com/AlonEirew/wikipedia-to-elastic">wikipedia-to-elastic</a>
+  project (index must contain at least the <a href="https://github.com/AlonEirew/wikipedia-to-elastic#project-configuration-files">Infobox</a> "relationTypes").
 * Java 11
 
 In order to WEC in current supported languages (e.g., English, French, Spanish, German, Chinese), follow the steps needed in *wikipedia-to-elastic* and below in .
@@ -33,9 +37,9 @@ totalAmountToExtract=-1 => if < 0 then read all wikipedia pages, otherwise will 
 
 ### WEC to Json Configuration:
 ```
-main.outputDir=output => the output folder where the WEC json should be created 
-main.outputFile=GenWEC.json => the output file name of WEC json file
 main.lexicalThresh=4 => lexical diversity threshold
+main.outputDir=output => the output folder where WEC json should be created and saved 
+main.outputFile=GenWEC.json => WEC json file name, will contain the final version of the generated dataset 
 ```
 
 ### Language Adaptation
@@ -50,7 +54,8 @@ To generate WEC in one of the supported languages (other than English) follow th
 Report will be generated in `output/InfoboxCount.txt` 
   
 #### Infobox configuration file - `resources/infobox_config/*` <br/>
-A new file will need to be created and replace in with current in `config.json`<br/>
+To support a new language, create a new `src/main/resources/infobox_config/<lang>_infobox_config.json` file. 
+This file should contain all needed infobox language specific configurations. Finally, set it as the `infoboxConfiguration` file in `application.properties`<br/>
 
 #### English infobox example (from - `en_infobox_config.json`)
 ```json
@@ -83,10 +88,8 @@ A new file will need to be created and replace in with current in `config.json`<
 
 ### Extracting WEC-Lang
 Make sure the Wikipedia Elastic engine is running <br/>
-* Running WikiToWECMain in order to generate the H2 dataset:<br/>
+* Running WikiToWECMain in order to generate the H2 database:<br/>
   `#>./gradlew bootRun --args=wecdb`
 * Generate the WEC-Lang Json format file:<br/> 
   `#>./gradlew bootRun --args=wecjson`
-
-[comment]: <> (Running events:)
-[comment]: <> (`java -Xmx90000m -DentityExpansionLimit=2147480000 -DtotalEntitySizeLimit=2147480000 -Djdk.xml.totalEntitySizeLimit=2147480000 -cp "lib/*" scripts.experiments.event.ReadFilteredJsonAndProcess`)
+  
