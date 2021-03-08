@@ -25,4 +25,8 @@ public class StanfordNlpApi {
         }
         return null;
     }
+
+    public static StanfordCoreNLP getPipelineWithPos() {
+        return pipelineWithPos;
+    }
 }

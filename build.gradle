@@ -39,6 +39,7 @@ dependencies {
     implementation group: 'org.xerial', name: 'sqlite-jdbc', version: '3.27.2.1'
     implementation group: 'info.bliki.wiki', name: 'bliki-core', version: '3.1.0'
     implementation group: 'org.jsoup', name: 'jsoup', version: '1.13.1'
+    implementation group: 'me.tongfei', name: 'progressbar', version: '0.9.0'
 
     // Spring.io
     runtimeOnly 'com.h2database:h2'

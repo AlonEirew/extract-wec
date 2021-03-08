@@ -24,6 +24,7 @@ public class Configuration {
     private final int totalAmountToExtract;
     private final String jsonOutputDir;
     private final String jsonOutputFile;
+    private final int lexicalThresh;
     private final InfoboxConfiguration infoboxConfiguration;
 
     private Configuration(Environment environment) {
@@ -37,6 +38,7 @@ public class Configuration {
         this.totalAmountToExtract = Integer.parseInt(Objects.requireNonNull(environment.getProperty("main.totalAmountToExtract", "1000")));
         this.jsonOutputDir = environment.getProperty("main.outputDir", "output");
         this.jsonOutputFile = environment.getProperty("main.outputFile", "GenWEC.json");
+        this.lexicalThresh = Integer.parseInt(Objects.requireNonNull(environment.getProperty("main.lexicalThresh", "4")));
 
         InputStream inputStreamConfigFile = Objects.requireNonNull(Configuration.class.getClassLoader()
                 .getResourceAsStream(this.infoboxConfigurationFile));
@@ -95,5 +97,9 @@ public class Configuration {
 
     public String getJsonOutputFile() {
         return jsonOutputFile;
+    }
+
+    public int getLexicalThresh() {
+        return lexicalThresh;
     }
 }

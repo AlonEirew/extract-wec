@@ -35,6 +35,7 @@ totalAmountToExtract=-1 => if < 0 then read all wikipedia pages, otherwise will 
 ```
 main.outputDir=output => the output folder where the WEC json should be created 
 main.outputFile=GenWEC.json => the output file name of WEC json file
+main.lexicalThresh=4 => lexical diversity threshold
 ```
 
 ### Language Adaptation

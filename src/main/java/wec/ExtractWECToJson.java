@@ -5,31 +5,27 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonWriter;
+import me.tongfei.progressbar.ProgressBar;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import wec.config.Configuration;
+import wec.data.WECContext;
 import wec.data.WECCoref;
 import wec.data.WECMention;
-import wec.persistence.MentionsRepository;
+import wec.persistence.WECResources;
+import wec.utils.StanfordNlpApi;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.IntStream;
 
 @Component
-@Transactional
 public class ExtractWECToJson {
     private final static Logger LOGGER = LogManager.getLogger(ExtractWECToJson.class);
-
-    @Autowired private MentionsRepository mentionsRepository;
 
     public void generateJson() throws IOException {
         String jsonOutputDir = Configuration.getConfiguration().getJsonOutputDir();
@@ -42,43 +38,67 @@ public class ExtractWECToJson {
         }
 
         String jsonOutputFile = jsonOutputDir + File.separator + Configuration.getConfiguration().getJsonOutputFile();
-        try(FileWriter fw = new FileWriter(jsonOutputFile)) {
-            Iterable<WECMention> mergedCorefMentions = mentionsRepository.findAll();
-            JsonArray corefs = CleanAndConvertToJson(mergedCorefMentions);
-            Configuration.GSONPretty.toJson(corefs, fw);
+        StanfordNlpApi.getPipelineWithPos();
+        try(JsonWriter writer = new JsonWriter(new FileWriter(jsonOutputFile))) {
+            Iterable<WECMention> mergedCorefMentions = WECResources.getDbRepository().findAllMentions();
+            CleanAndWriteToJson(mergedCorefMentions, writer);
         }
         LOGGER.info("process complete!");
     }
 
-    private JsonArray CleanAndConvertToJson(Iterable<WECMention> wecMentions) {
+    private void CleanAndWriteToJson(Iterable<WECMention> wecMentions, JsonWriter writer) throws IOException {
         int sizeBefore = Iterables.size(wecMentions);
         Iterator<WECMention> iterator = wecMentions.iterator();
         LOGGER.info("Total Mentions Extracted=" + sizeBefore);
         int contextRemove = 0;
         int nerRemoved = 0;
-        JsonArray root = new JsonArray();
+        int lexicalRemove = 0;
         Map<Long, Map<String, Integer>> lexicalDiversity = new HashMap<>();
-        while(iterator.hasNext()) {
-            WECMention wecMention = iterator.next();
-            if (!isContextValid(wecMention) || !fillAndCheckIsMentionValid(wecMention)) {
-                iterator.remove();
-                contextRemove++;
-                continue;
-            }
+        writer.setIndent("\t");
+        writer.beginArray();
+        try (ProgressBar pb = new ProgressBar("Processing", sizeBefore)) {
+            while (iterator.hasNext()) {
+                pb.step();
+                WECMention wecMention = iterator.next();
+                if(!fillAndCheckIsMentionValid(wecMention)) {
+                    iterator.remove();
+                    nerRemoved++;
+                    continue;
+                }
 
-            if(!lexicalDiversity.containsKey(wecMention.getCorefChain().getCorefId())) {
-                lexicalDiversity.put(wecMention.getCorefChain().getCorefId(), new HashMap<>());
-            }
+                Optional<WECContext> retContext = WECResources.getDbRepository().findContextById(wecMention.getContextId());
+                if (retContext.isEmpty() || !isContextValid(retContext.get())) {
+                    iterator.remove();
+                    contextRemove++;
+                    continue;
+                }
 
-            JsonObject jsonObject = convertMentionToJson(wecMention);
-            root.add(jsonObject);
+                if (!lexicalDiversity.containsKey(wecMention.getCorefChain().getCorefId())) {
+                    lexicalDiversity.put(wecMention.getCorefChain().getCorefId(), new HashMap<>());
+                }
+
+                if(!lexicalDiversity.get(wecMention.getCorefChain().getCorefId()).containsKey(wecMention.getMentionText())) {
+                    lexicalDiversity.get(wecMention.getCorefChain().getCorefId()).put(wecMention.getMentionText(), 0);
+                }
+
+                if(lexicalDiversity.get(wecMention.getCorefChain().getCorefId()).get(wecMention.getMentionText()) >=
+                        Configuration.getConfiguration().getLexicalThresh()) {
+                    iterator.remove();
+                    lexicalRemove++;
+                    continue;
+                }
+
+                Configuration.GSON.toJson(convertMentionToJson(wecMention, retContext.get()), writer);
+            }
         }
+
+        writer.endArray();
+        writer.close();
 
         LOGGER.info("Total of " + contextRemove + " mentions with problematic context");
         LOGGER.info("Total of " + nerRemoved + " mentions with suspicious NER removed");
+        LOGGER.info("Total of " + lexicalRemove + " didn't pass lexical threshold");
         LOGGER.info("Mentions remaining=" + Iterables.size(wecMentions));
-
-        return root;
     }
 
     private boolean fillAndCheckIsMentionValid(WECMention mention) {
@@ -88,14 +108,13 @@ public class ExtractWECToJson {
                 !mentionNer.equals("NATIONALITY");
     }
 
-    private boolean isContextValid(WECMention mention) {
-//        List<String> contextAsList = mention.getContextId().getContextAsArray();
-//        String contextAsString = String.join(" ", contextAsList);
-//        return !contextAsString.contains("colspan") && !contextAsString.contains("http");
-        return true;
+    private boolean isContextValid(WECContext context) {
+        List<String> contextAsArray = context.getContextAsArray();
+        String contextAsString = String.join(" ", contextAsArray);
+        return !contextAsString.contains("colspan") && !contextAsString.contains("http");
     }
 
-    private JsonObject convertMentionToJson(WECMention mention) {
+    private JsonObject convertMentionToJson(WECMention mention, WECContext context) {
         WECCoref coref = mention.getCorefChain();
         JsonObject jo = new JsonObject();
         jo.addProperty("coref_chain", mention.getCorefChain().getCorefId());
@@ -113,9 +132,8 @@ public class ExtractWECToJson {
         IntStream.range(mention.getTokenStart(), mention.getTokenEnd() + 1).forEachOrdered(tokNum::add);
         jo.add("tokens_number", tokNum);
 
-//        JsonElement element = Configuration.GSON.toJsonTree(mention.getContextId().getContextAsArray(),
-//                new TypeToken<List<String>>() {}.getType());
-//        jo.add("mention_context", element.getAsJsonArray());
+        JsonElement element = Configuration.GSON.toJsonTree(context.getContextAsArray(), new TypeToken<List<String>>() {}.getType());
+        jo.add("mention_context", element.getAsJsonArray());
 
         return jo;
     }

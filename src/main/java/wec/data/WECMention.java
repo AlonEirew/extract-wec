@@ -12,7 +12,7 @@ import java.util.Objects;
 @Table(name = "MENTIONS")
 public class WECMention extends BaseMention {
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     private WECCoref corefChain;
     private String mentionText;
 

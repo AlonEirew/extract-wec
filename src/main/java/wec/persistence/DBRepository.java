@@ -12,13 +12,14 @@ import wec.data.WECMention;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @Transactional
 public class DBRepository {
     @Autowired private ContextRepository contextRepository;
     @Autowired private CorefRepository corefRepository;
-    @Autowired private CorefRepository mentionRepository;
+    @Autowired private MentionsRepository mentionRepository;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBRepository.class);
 
@@ -44,5 +45,13 @@ public class DBRepository {
         }
         this.corefRepository.saveAll(toPersist);
         LOGGER.info(toPersist.size() + " corefs committed to database");
+    }
+
+    public Iterable<WECMention> findAllMentions() {
+        return this.mentionRepository.findAll();
+    }
+
+    public Optional<WECContext> findContextById(long contextId) {
+        return this.contextRepository.findById(contextId);
     }
 }
