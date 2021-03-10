@@ -14,8 +14,6 @@ or in order to extract it from one of the other supported languages (e.g., Frenc
   project (index must contain at least the <a href="https://github.com/AlonEirew/wikipedia-to-elastic#project-configuration-files">Infobox</a> "relationTypes").
 * Java 11
 
-In order to WEC in current supported languages (e.g., English, French, Spanish, German, Chinese), follow the steps needed in *wikipedia-to-elastic* and below in .
-
 ### Processes
 This code repo contains two main processes:
 1) Code to generate the initial crude version of WEC-Lang
@@ -47,9 +45,8 @@ We have extracted the relevant infobox configuration for the English Wikipedia. 
 In order to create a newer version of WEC-Eng, use/update the default `infobox_config/en_infobox_config.json` in configuration. <br/>
 
 To generate WEC in one of the supported languages (other than English) follow those steps:
-* Export Wikipedia in the required language using *wikipedia-to-elastic* project
-* Explore for infoboxs categories, and their correlating names in the required language
-* In order to see candidate as well as investigate the amount of pages related to an infobox category. Run:<br/>
+* Export Wikipedia in the required language using <a href="https://github.com/AlonEirew/wikipedia-to-elastic">wikipedia-to-elastic</a> project
+* Explore for infoboxs categories, the script below can help by producing candidate as well as the amount of pages related to an infobox category.<br/>
 `#>java -Xmx90000m -DentityExpansionLimit=2147480000 -DtotalEntitySizeLimit=2147480000 -Djdk.xml.totalEntitySizeLimit=2147480000 -cp "lib/*" scripts.ExtractInfoboxs`<br/>
 Report will be generated in `output/InfoboxCount.txt` 
   
@@ -58,15 +55,15 @@ To support a new language, create a new `src/main/resources/infobox_config/<lang
 This file should contain all needed infobox language specific configurations. Finally, set it as the `infoboxConfiguration` file in `application.properties`<br/>
 
 #### English infobox example (from - `en_infobox_config.json`)
-```json
+```
 {
-  "infoboxLangText" : "Infobox",
+  "infoboxLangText" : "Infobox", // wikipedia markdown element name in the language (e.g., <Infobox sport>)
   "infoboxConfigs": [
     {
-      "corefType": "ACCIDENT_EVENT",
-      "include": true,
-      "infoboxs": [
-        "airlinerincident",
+      "corefType": "ACCIDENT_EVENT", // Type you would like to give the infobox category
+      "include": true, // Should be included when extracting WEC
+      "infoboxs": [ // list of infobox categories that should be included in this type (lowercased and concat)
+        "airlinerincident", 
         "airlineraccident",
         "aircraftcrash",
         "aircraftaccident",
@@ -82,14 +79,16 @@ This file should contain all needed infobox language specific configurations. Fi
 ```
 
 ### Project Output
-* By default a H2 dataset containing the crude extraction of coreference relations from Wikipedia (this resource can be used for experiments when generating the final version of WEC-Lang)
+* By default, an H2 dataset containing the crude extraction of coreference relations from Wikipedia (this resource can be used for experiments before generating the final version of WEC-Lang)
 * A JSON format resource of the WEC-Lang dataset
 
 
 ### Extracting WEC-Lang
 Make sure the Wikipedia Elastic engine is running <br/>
 * Running WikiToWECMain in order to generate the H2 database:<br/>
-  `#>./gradlew bootRun --args=wecdb`
+  `#>./gradlew bootRun --args=wecdb` <br/>
+  **Program output** - an H2 dataset containing the crude extraction of coreference relations from Wikipedia (this resource can be used for experiments before generating the final version of WEC-Lang)
 * Generate the WEC-Lang Json format file:<br/> 
-  `#>./gradlew bootRun --args=wecjson`
+  `#>./gradlew bootRun --args=wecjson` <br/>
+  **Program output** - A JSON format resource of the WEC-Lang dataset
   
