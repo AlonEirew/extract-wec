@@ -1,10 +1,12 @@
 # Extract WEC Dataset
-This project is following the research paper: (TBD - ADD PAPER LINK).<br/>
-Here can be found both The WEC-Eng cross document dataset from English Wikipedia and the method for creating WEC for other languages. <br/>
+This project is following our research paper: (TBD - ADD PAPER LINK).<br/>
+Here can be found both The WEC-Eng cross document dataset from English Wikipedia and the method for creating WEC for other languages. <br/><br/>
+*Note: In our original WEC paper, we used several methods that were all aggregated into one project here. To that end, we replaced some of the original python implementations with corollating Java ones (for examle: SpaCy implementation replaced with StanfordNLP).*<br/>
 
 ### WEC-Eng Coreference Dataset
-- Datset location is at `WEC/WEC-Eng.zip` folder, split to dev/test/train 
-- Dev & Test sets were manually validated, while the train set is unvalidated 
+- Datset location is at `WEC/WEC-Eng.zip` file, split to dev/test/train 
+- Dev & Test sets were manually validated 
+- Also, the unfiltered version of WEC (without lexical control and un-partitioned to train/dev/test) is available in this same folder (`WEC-Unfiltered.zip`)
 
 ## Generating a new WEC Dataset
 Below are the instructions of how-to generate a new version of WEC, whether required from a more recent English Wikipdia dump, 
@@ -47,12 +49,10 @@ In order to create a newer version of WEC-Eng, use/update the default `infobox_c
 To generate WEC in one of the supported languages (other than English) follow those steps:
 * Export Wikipedia in the required language using <a href="https://github.com/AlonEirew/wikipedia-to-elastic">wikipedia-to-elastic</a> project
 * Explore for infoboxs categories, the script below can help by producing candidate as well as the amount of pages related to an infobox category.<br/>
-`#>java -Xmx90000m -DentityExpansionLimit=2147480000 -DtotalEntitySizeLimit=2147480000 -Djdk.xml.totalEntitySizeLimit=2147480000 -cp "lib/*" scripts.ExtractInfoboxs`<br/>
-Report will be generated in `output/InfoboxCount.txt` 
-  
-#### Infobox configuration file - `resources/infobox_config/*` <br/>
-To support a new language, create a new `src/main/resources/infobox_config/<lang>_infobox_config.json` file. 
-This file should contain all needed infobox language specific configurations. Finally, set it as the `infoboxConfiguration` file in `application.properties`<br/>
+`#>java -Xmx90000m -DentityExpansionLimit=2147480000 -DtotalEntitySizeLimit=2147480000 -Djdk.xml.totalEntitySizeLimit=2147480000 -cp "lib/*" scripts.ExtractInfoboxs` Report will be generated to `output/InfoboxCount.txt`
+* Create an infobox configuration (new language) file in `src/main/resources/infobox_config/<lang>_infobox_config.json` <br/> 
+File should contain all needed infobox language specific configurations. 
+* Finally, set it as the `infoboxConfiguration` file in `application.properties`<br/>
 
 #### English infobox example (from - `en_infobox_config.json`)
 ```
@@ -78,11 +78,6 @@ This file should contain all needed infobox language specific configurations. Fi
 }
 ```
 
-### Project Output
-* By default, an H2 dataset containing the crude extraction of coreference relations from Wikipedia (this resource can be used for experiments before generating the final version of WEC-Lang)
-* A JSON format resource of the WEC-Lang dataset
-
-
 ### Extracting WEC-Lang
 Make sure the Wikipedia Elastic engine is running <br/>
 * Running WikiToWECMain in order to generate the H2 database:<br/>
@@ -92,3 +87,7 @@ Make sure the Wikipedia Elastic engine is running <br/>
   `#>./gradlew bootRun --args=wecjson` <br/>
   **Program output** - A JSON format resource of the WEC-Lang dataset
   
+
+#### Visualization And Stats
+In order to produce more statistics and/or create a visualized output of the generated dataset, refer to 
+<a href="https://github.com/AlonEirew/cross-doc-event-coref#additional-scripts-helper_scripts">those scripts</a> for more information.
