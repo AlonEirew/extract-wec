@@ -1,5 +1,5 @@
 # Extract WEC Dataset
-This project is following our research paper: (TBD - ADD PAPER LINK).<br/>
+This project is following our research paper: <a href="https://arxiv.org/abs/2104.05022">״WEC: Deriving a Large-scale Cross-document Event Coreference dataset from Wikipedia״</a><br/>
 Here can be found both The WEC-Eng cross document dataset from English Wikipedia and the method for creating WEC for other languages. <br/><br/>
 *Note: In our original WEC paper, we used several methods that were all aggregated into one project here. To that end, we replaced some of the original python implementations with corollating Java ones (for examle: SpaCy implementation replaced with StanfordNLP).*<br/>
 
