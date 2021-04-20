@@ -4,7 +4,7 @@ Here can be found both The WEC-Eng cross document dataset from English Wikipedia
 *Note: In our original WEC paper, we used several methods that were all aggregated into one project here. To that end, we replaced some of the original python implementations with corollating Java ones (for examle: SpaCy implementation replaced with StanfordNLP).*<br/>
 
 ### WEC-Eng Coreference Dataset
-- Datset location is at `WEC/WEC-Eng.zip` file, split to dev/test/train 
+- Datset located at `/WEC` folder, see WEC [README](WEC/README.md) for further details  
 - Dev & Test sets were manually validated 
 - Also, the unfiltered version of WEC (without lexical control and un-partitioned to train/dev/test) is available in this same folder (`WEC-Unfiltered.zip`)
 
