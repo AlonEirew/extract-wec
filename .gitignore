@@ -7,6 +7,7 @@ build
 out
 logs
 output
+input
 src/service/node_modules
 
 src/main/java/wec.workers/ReadCompanyFactory.java

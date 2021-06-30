@@ -4,6 +4,7 @@ import wec.data.RawElasticResult;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -12,17 +13,12 @@ public class InfoboxWorker extends AWorker {
 
     private static String infoboxLang = "infobox" ;
 
-    private final Map<String, AtomicInteger> infoboxCounts;
+    private static final Map<String, AtomicInteger> infoboxCounts = new ConcurrentHashMap<>();
     private final Pattern pattern = Pattern.compile("\\{\\{" + infoboxLang + "([\\w|]*?)\\n");
-
-    public InfoboxWorker(List<RawElasticResult> rawElasticResults, Map<String, AtomicInteger> infoboxCounts) {
-        super(rawElasticResults);
-        this.infoboxCounts = infoboxCounts;
-    }
 
     @Override
     public void run() {
-        for(RawElasticResult rawResult : this.rawElasticResults) {
+        for(RawElasticResult rawResult : this.getRawElasticResults()) {
             String infoboxRaw = rawResult.getInfobox();
             String infoboxLow = infoboxRaw.toLowerCase().replaceAll(" ", "");
             Matcher matcher = this.pattern.matcher(infoboxLow);
@@ -38,18 +34,24 @@ public class InfoboxWorker extends AWorker {
                 }
             }
         }
+
+        invokeListener();
     }
 
     private void updateInfoboxMap(String infoboxMatch) {
         if (!infoboxMatch.isEmpty()) {
-            if (!this.infoboxCounts.containsKey(infoboxMatch)) {
-                this.infoboxCounts.put(infoboxMatch, new AtomicInteger());
+            if (!infoboxCounts.containsKey(infoboxMatch)) {
+                infoboxCounts.put(infoboxMatch, new AtomicInteger());
             }
-            this.infoboxCounts.get(infoboxMatch).incrementAndGet();
+            infoboxCounts.get(infoboxMatch).incrementAndGet();
         }
     }
 
     public static void setInfoboxLang(String infoboxLang) {
         InfoboxWorker.infoboxLang = infoboxLang;
+    }
+
+    public static Map<String, AtomicInteger> getInfoboxCounts() {
+        return infoboxCounts;
     }
 }

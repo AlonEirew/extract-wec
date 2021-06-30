@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import wec.config.Configuration;
 import wec.data.RawElasticResult;
 import wec.data.WECContext;
 import wec.data.WECCoref;
@@ -19,24 +20,21 @@ import java.util.*;
 public class ParseAndExtractMentionsWorker extends AWorker {
     private static final Logger LOGGER = LoggerFactory.getLogger(ParseAndExtractMentionsWorker.class);
 
-    private final InfoboxFilter filter;
+    private InfoboxFilter filter = new InfoboxFilter(Configuration.getConfiguration().getInfoboxConfiguration());
     private final WikipediaLinkExtractor extractor = new WikipediaLinkExtractor();
 
-    public ParseAndExtractMentionsWorker(List<RawElasticResult> rawElasticResults, InfoboxFilter filter) {
-        super(rawElasticResults);
-        this.filter = filter;
-    }
+    public ParseAndExtractMentionsWorker() { }
 
     // Constructor for testing purposes
     ParseAndExtractMentionsWorker(InfoboxFilter filter) {
-        this(new ArrayList<>(), filter);
+        this.filter = filter;
     }
 
     @Override
     public void run() {
         List<WECContext> finalToCommit = new ArrayList<>();
-        LOGGER.info("Preparing to parse " + this.rawElasticResults.size() + " wikipedia pages and extract mentions");
-        for(RawElasticResult rawResult : this.rawElasticResults) {
+        LOGGER.debug("Preparing to parse " + this.getRawElasticResults().size() + " wikipedia pages and extract mentions");
+        for(RawElasticResult rawResult : this.getRawElasticResults()) {
             if(rawResult.getInfobox() != null && !rawResult.getInfobox().isEmpty()) {
                 List<WECContext> wecMentions = extractor.extract(rawResult);
                 if (!wecMentions.isEmpty()) {
@@ -45,7 +43,7 @@ public class ParseAndExtractMentionsWorker extends AWorker {
             }
         }
 
-        LOGGER.info("Handle " + finalToCommit.size() + " extracted mentions");
+        LOGGER.debug("Handle " + finalToCommit.size() + " extracted mentions");
         final Set<String> corefTitleSet = new HashSet<>();
         for(WECContext context : finalToCommit) {
             for (WECMention mention : context.getMentionList()) {
@@ -57,11 +55,12 @@ public class ParseAndExtractMentionsWorker extends AWorker {
 
         Map<String, RawElasticResult> allWikiPagesTitleAndText = new HashMap<>();
         if(!corefTitleSet.isEmpty()) {
-            LOGGER.info("Sending-" + corefTitleSet.size() + " coref titles to be retrieved from elastic");
+            LOGGER.debug("Sending-" + corefTitleSet.size() + " coref titles to be retrieved from elastic");
             allWikiPagesTitleAndText = WECResources.getElasticApi().getAllWikiCorefPagesFromTitle(corefTitleSet);
         }
 
         onResponse(finalToCommit, allWikiPagesTitleAndText);
+        invokeListener();
     }
 
     private void onResponse(List<WECContext> finalToCommit, Map<String, RawElasticResult> pagesResults) {

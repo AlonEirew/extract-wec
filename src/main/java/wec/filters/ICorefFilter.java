@@ -2,6 +2,6 @@ package wec.filters;
 
 import wec.data.RawElasticResult;
 
-public interface ICorefFilter {
-    boolean isConditionMet(RawElasticResult input);
+public interface ICorefFilter<T> {
+    boolean isConditionMet(T input);
 }

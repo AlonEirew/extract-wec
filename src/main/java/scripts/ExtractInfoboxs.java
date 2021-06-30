@@ -9,7 +9,6 @@ import wec.workers.WorkerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ExtractInfoboxs {
@@ -20,11 +19,10 @@ public class ExtractInfoboxs {
             InfoboxWorker.setInfoboxLang(args[0]);
         }
         WikipediaExperimentUtils wikipediaExperimentUtils = new WikipediaExperimentUtils();
-        Map<String, AtomicInteger> infoboxesCounts = new ConcurrentHashMap<>();
-        WorkerFactory infoboxWorkerFactory = new WorkerFactory(InfoboxWorker.class, Map.class, infoboxesCounts);
+        WorkerFactory infoboxWorkerFactory = new WorkerFactory(InfoboxWorker.class);
         wikipediaExperimentUtils.runWikipediaExperiment(infoboxWorkerFactory);
 
-        List<Map.Entry<String, AtomicInteger>> sortedInfoboxs = new ArrayList<>(infoboxesCounts.entrySet());
+        List<Map.Entry<String, AtomicInteger>> sortedInfoboxs = new ArrayList<>(InfoboxWorker.getInfoboxCounts().entrySet());
         sortedInfoboxs.sort(Comparator.comparingInt(o -> o.getValue().get()));
         Collections.reverse(sortedInfoboxs);
 
