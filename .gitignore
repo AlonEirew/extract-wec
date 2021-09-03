@@ -8,6 +8,7 @@ out
 logs
 output
 input
+WEC/WEC-Eng
 src/service/node_modules
 
 src/main/java/wec.workers/ReadCompanyFactory.java
