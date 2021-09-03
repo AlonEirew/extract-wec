@@ -28,14 +28,15 @@ public class Configuration {
     private final InfoboxConfiguration infoboxConfiguration;
 
     private Configuration(Environment environment) {
-        this.poolSize = Integer.parseInt(Objects.requireNonNull(environment.getProperty("main.poolSize", "-1")));
+        this.poolSize = Integer.parseInt(Objects.requireNonNull(environment.getProperty("main.poolSize",
+                String.valueOf(Runtime.getRuntime().availableProcessors()))));
         this.elasticHost = environment.getProperty("main.elasticHost");
         this.elasticPort = Integer.parseInt(Objects.requireNonNull(environment.getProperty("main.elasticPort")));
         this.elasticWikiIndex = environment.getProperty("main.elasticWikiIndex");
         this.infoboxConfigurationFile = environment.getProperty("main.infoboxConfiguration");
         this.multiRequestInterval = Integer.parseInt(Objects.requireNonNull(environment.getProperty("main.multiRequestInterval", "100")));
         this.elasticSearchInterval = Integer.parseInt(Objects.requireNonNull(environment.getProperty("main.elasticSearchInterval", "100")));
-        this.totalAmountToExtract = Integer.parseInt(Objects.requireNonNull(environment.getProperty("main.totalAmountToExtract", "1000")));
+        this.totalAmountToExtract = Integer.parseInt(Objects.requireNonNull(environment.getProperty("main.totalAmountToExtract", "-1")));
         this.jsonOutputDir = environment.getProperty("main.outputDir", "output");
         this.jsonOutputFile = environment.getProperty("main.outputFile", "GenWEC.json");
         this.lexicalThresh = Integer.parseInt(Objects.requireNonNull(environment.getProperty("main.lexicalThresh", "4")));

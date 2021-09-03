@@ -9,42 +9,18 @@ import java.util.concurrent.locks.ReentrantLock;
 public class ExecutorServiceFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExecutorServiceFactory.class);
 
-    private static ExecutorService elasticSearchPool;
-    private static final ReentrantLock lock = new ReentrantLock();
-
-    public static void initExecutorService() {
-        initExecutorService(Runtime.getRuntime().availableProcessors());
+    public static ExecutorService getExecutorService(int poolSize) {
+        LOGGER.info("Creating new ExecutorService...");
+        return new ThreadPoolExecutor(
+                poolSize,
+                poolSize,
+                0L,
+                TimeUnit.MILLISECONDS,
+                new ArrayBlockingQueue<>(poolSize * 2),
+                new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
-    public static void initExecutorService(int poolSize) {
-        if(poolSize <= 0) {
-            poolSize = Runtime.getRuntime().availableProcessors();
-        }
-
-        lock.lock();
-        if (elasticSearchPool == null) {
-            LOGGER.info("Starting new ExecutorService...");
-            elasticSearchPool = new ThreadPoolExecutor(
-                    poolSize,
-                    poolSize,
-                    0L,
-                    TimeUnit.MILLISECONDS,
-                    new ArrayBlockingQueue<>(poolSize * 2),
-                    new ThreadPoolExecutor.CallerRunsPolicy());
-        }
-        lock.unlock();
-    }
-
-    public static Future<?> submit(Runnable runnable) {
-        return elasticSearchPool.submit(runnable);
-    }
-
-    public static <T> Future<T> submit(Callable<T> callable) {
-        return elasticSearchPool.submit(callable);
-    }
-
-    public static void closeService() {
-        lock.lock();
+    public static void closeService(ExecutorService elasticSearchPool) {
         if(elasticSearchPool != null) {
             LOGGER.info("Closing the ExecutorService...");
             try {
@@ -64,7 +40,6 @@ public class ExecutorServiceFactory {
             }
 
             elasticSearchPool = null;
-            lock.unlock();
         }
     }
 }

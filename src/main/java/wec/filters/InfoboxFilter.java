@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import wec.validators.DefaultInfoboxValidator;
 
-public class InfoboxFilter implements ICorefFilter {
+public class InfoboxFilter implements ICorefFilter<RawElasticResult> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InfoboxFilter.class);
 
@@ -19,6 +19,10 @@ public class InfoboxFilter implements ICorefFilter {
 
     @Override
     public boolean isConditionMet(RawElasticResult result) {
+        if(infoboxConfiguration == null) {
+            throw new IllegalStateException("infoboxConfiguration not initialized!");
+        }
+
         if (result != null && result.getText() != null && !result.getText().isEmpty()) {
             if (result.getInfobox() != null && !result.getInfobox().isEmpty()) {
                 for (DefaultInfoboxValidator validator : this.infoboxConfiguration.getAllIncludedValidators()) {

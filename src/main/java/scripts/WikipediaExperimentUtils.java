@@ -10,20 +10,19 @@ import wec.utils.ExecutorServiceFactory;
 import wec.workers.IWorkerFactory;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
 
 public class WikipediaExperimentUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(WikipediaExperimentUtils.class);
 
     public void runWikipediaExperiment(IWorkerFactory workerFactory) throws IOException {
         long start = System.currentTimeMillis();
-        ExecutorServiceFactory.initExecutorService(Configuration.getConfiguration().getPoolSize());
         WECResources.setElasticApi(new ElasticQueryApi());
 
         try {
             ExtractWECToDB extractWECToDB = new ExtractWECToDB(workerFactory);
-            extractWECToDB.readAllWikiPagesAndProcess(Configuration.getConfiguration().getTotalAmountToExtract());
+            extractWECToDB.readAllWikiPagesAndProcess();
         } finally {
-            ExecutorServiceFactory.closeService();
             WECResources.closeAllResources();
             long end = System.currentTimeMillis();
             LOGGER.info("Process Done, took-" + (end - start) + "ms to run");

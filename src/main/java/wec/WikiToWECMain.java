@@ -9,7 +9,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 import wec.config.Configuration;
-import wec.filters.InfoboxFilter;
 import wec.persistence.DBRepository;
 import wec.persistence.ElasticQueryApi;
 import wec.persistence.WECResources;
@@ -18,6 +17,7 @@ import wec.workers.ParseAndExtractMentionsWorker;
 import wec.workers.WorkerFactory;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
 
 @SpringBootApplication
 public class WikiToWECMain {
@@ -58,25 +58,17 @@ public class WikiToWECMain {
 
     private void runWecDb() {
         WECResources.setElasticApi(new ElasticQueryApi());
-        final int pool_size = Configuration.getConfiguration().getPoolSize();
-        if (pool_size > 0) {
-            ExecutorServiceFactory.initExecutorService(pool_size);
-        } else {
-            ExecutorServiceFactory.initExecutorService();
-        }
-
-        WorkerFactory<InfoboxFilter> workerFactory = new WorkerFactory<>(
-                ParseAndExtractMentionsWorker.class, InfoboxFilter.class, new InfoboxFilter(Configuration.getConfiguration().getInfoboxConfiguration()));
+        WorkerFactory workerFactory = new WorkerFactory(ParseAndExtractMentionsWorker.class);
 
         ExtractWECToDB extractWECToDB = new ExtractWECToDB(workerFactory);
         try {
-            extractWECToDB.readAllWikiPagesAndProcess(Configuration.getConfiguration().getTotalAmountToExtract());
+            extractWECToDB.readAllWikiPagesAndProcess();
         } catch (Exception ex) {
             LOGGER.error("Could not start process", ex);
         } finally {
-            ExecutorServiceFactory.closeService();
             WECResources.closeAllResources();
             extractWECToDB.close();
+            workerFactory.close();
         }
     }
 

@@ -10,18 +10,20 @@ public class ReadDateWorker extends AWorker {
     private final List<String> datesSchemas;
 
     public ReadDateWorker(List<RawElasticResult> rawElasticResults, List<String> datesSchemas) {
-        super(rawElasticResults);
+        this.setRawElasticResults(rawElasticResults);
         this.datesSchemas = datesSchemas;
     }
 
     @Override
     public void run() {
-        for(RawElasticResult rawResult : this.rawElasticResults) {
+        for(RawElasticResult rawResult : this.getRawElasticResults()) {
             String date = extractDate(rawResult);
             if(date != null && !date.isEmpty()) {
                 this.datesSchemas.add(date);
             }
         }
+
+        invokeListener();
     }
 
     private String extractDate(RawElasticResult rawResult) {
