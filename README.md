@@ -6,13 +6,14 @@ Here can be found both The WEC-Eng cross document dataset from English Wikipedia
 *Note: In our original WEC paper, we used several methods that were all aggregated into one project here. To that end, we replaced some of the original python implementations with corollating Java ones (for examle: SpaCy implementation replaced with StanfordNLP).*<br/>
 
 ### WEC-Eng Coreference Dataset
-- Datset located at `/WEC` folder, see WEC [README](WEC/README.md) for further details  
-- Dev & Test sets were manually validated 
-- Also, the unfiltered version of WEC (without lexical control and un-partitioned to train/dev/test) is available in this same folder (`WEC-Unfiltered.zip`)
+WEC-Eng is part of **huggingface_hub** and available at this location: [https://huggingface.co/datasets/Intel/WEC-Eng](https://huggingface.co/datasets/Intel/WEC-Eng)
+
+See the **Dataset card**, for instructions on how to read and use WEC-Eng 
 
 ## Generating a new WEC Dataset
 Below are the instructions of how-to generate a new version of WEC, whether required from a more recent English Wikipdia dump, 
 or in order to extract it from one of the other supported languages (e.g., French, Spanish, German, Chinese). 
+
 ### Requisites
 * A Wikipedia ElasticSearch Index created by <a href="https://github.com/AlonEirew/wikipedia-to-elastic">wikipedia-to-elastic</a>
   project (index must contain at least the <a href="https://github.com/AlonEirew/wikipedia-to-elastic#project-configuration-files">Infobox</a> "relationTypes").
