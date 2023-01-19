@@ -6,7 +6,7 @@ Here can be found both The WEC-Eng cross document dataset from English Wikipedia
 *Note: In our original WEC paper, we used several methods that were all aggregated into one project here. To that end, we replaced some of the original python implementations with corollating Java ones (for examle: SpaCy implementation replaced with StanfordNLP).*<br/>
 
 ### WEC-Eng Coreference Dataset
-WEC-Eng is part of **huggingface_hub** and available at this location: [https://huggingface.co/datasets/Intel/WEC-Eng](https://huggingface.co/datasets/Intel/WEC-Eng)
+WEC-Eng is part of **huggingface_hub** and available at this location: [https://huggingface.co/datasets/biu-nlp/WEC-Eng](https://huggingface.co/datasets/biu-nlp/WEC-Eng)
 
 See the **Dataset card**, for instructions on how to read and use WEC-Eng 
 
