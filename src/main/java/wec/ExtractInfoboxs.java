@@ -1,8 +1,10 @@
-package scripts;
+package wec;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import scripts.WikipediaExperimentUtils;
 import wec.workers.InfoboxWorker;
 import wec.workers.WorkerFactory;
 
@@ -11,12 +13,16 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Component
 public class ExtractInfoboxs {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExtractInfoboxs.class);
 
-    public static void main(String[] args) throws IOException {
-        if (args.length == 1) {
-            InfoboxWorker.setInfoboxLang(args[0]);
+    public void runInfoboxScript(String[] args) throws IOException {
+        if (args.length == 2) {
+            LOGGER.info("Setting default language: infobox " + args[1]);
+            InfoboxWorker.setInfoboxLang(args[1]);
+        } else {
+            LOGGER.info("No language specified, using default: infobox");
         }
         WikipediaExperimentUtils wikipediaExperimentUtils = new WikipediaExperimentUtils();
         WorkerFactory infoboxWorkerFactory = new WorkerFactory(InfoboxWorker.class);

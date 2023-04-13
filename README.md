@@ -52,11 +52,8 @@ In order to create a newer version of WEC-Eng, use/update the default `infobox_c
 To generate WEC in one of the supported languages (other than English) follow those steps:
 * Export Wikipedia in the required language using <a href="https://github.com/AlonEirew/wikipedia-to-elastic">wikipedia-to-elastic</a> project
 * Explore for infoboxs categories, the script below can help by producing candidate as well as the amount of pages related to an infobox category.<br/>
-* First build the project jar file:
-`./gradlew shadowJar` <br/>
-* Verify that a Jar file has been created at `build/libs/extract-wec-1.0.jar` <br/>
-* Run the following command to generate the report: <br/>
-`#>java -Xmx90000m -DentityExpansionLimit=2147480000 -DtotalEntitySizeLimit=2147480000 -Djdk.xml.totalEntitySizeLimit=2147480000 -cp "build/libs/extract-wec-1.0.jar" scripts.ExtractInfoboxs` Report will be generated to `output/InfoboxCount.txt`
+* Run the infobox categories report:<br/>
+`./gradlew bootRun --args=infobox`<br/>
 * Now, you can create a new infobox configuration (for the new language) file in `src/main/resources/infobox_config/<lang>_infobox_config.json` <br/> 
 File should contain all needed infobox language specific configurations (based on the generated infobox categories report). 
 * Finally, set it as the `infoboxConfiguration` file in `application.properties`<br/>

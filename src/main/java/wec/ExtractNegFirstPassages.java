@@ -9,6 +9,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
 import wec.config.Configuration;
 import wec.data.WECJsonObj;
 import wec.filters.ByCorefFilter;
@@ -30,46 +31,34 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@SpringBootApplication
+@Component
 public class ExtractNegFirstPassages {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExtractNegFirstPassages.class);
 
-    public static void main(String[] args) throws IOException {
-        long start = System.currentTimeMillis();
-        LOGGER.info("WikiToWECMain process started!");
-        SpringApplication.run(ExtractNegFirstPassages.class, args).close();
-        long end = System.currentTimeMillis();
-        LOGGER.info("Process Done, took-" + (end - start) + "ms to run");
-    }
+    public void runFirstPassageScript() throws IOException {
+        WECResources.setElasticApi(new ElasticQueryApi());
 
-    @Bean
-    public CommandLineRunner runner(Environment environment) {
-        return (args) -> {
-            Configuration.initConfiguration(environment);
-            WECResources.setElasticApi(new ElasticQueryApi());
+        List<WECJsonObj> allMentions = new ArrayList<>();
+        allMentions.addAll(Objects.requireNonNull(readWECJsonFile(new File("input/Dev_Event_gold_mentions_validated.json"))));
+        allMentions.addAll(Objects.requireNonNull(readWECJsonFile(new File("input/Test_Event_gold_mentions_validated.json"))));
+        Set<String> corefLinks = allMentions.stream().map(WECJsonObj::getCoref_link).collect(Collectors.toSet());
+        ByCorefFilter.setCorefToFilter(corefLinks);
 
-            List<WECJsonObj> allMentions = new ArrayList<>();
-            allMentions.addAll(Objects.requireNonNull(readWECJsonFile(new File("input/Dev_Event_gold_mentions_validated.json"))));
-            allMentions.addAll(Objects.requireNonNull(readWECJsonFile(new File("input/Test_Event_gold_mentions_validated.json"))));
-            Set<String> corefLinks = allMentions.stream().map(WECJsonObj::getCoref_link).collect(Collectors.toSet());
-            ByCorefFilter.setCorefToFilter(corefLinks);
+        Files.deleteIfExists(Path.of("input/Negative_First_Passages.txt"));
+        WorkerFactory workerFactory = new WorkerFactory(ExtractSearchNegativeExamplesWorker.class);
+        ExtractWECToDB extractWECToDB = new ExtractWECToDB(workerFactory);
 
-            Files.deleteIfExists(Path.of("input/Negative_First_Passages.txt"));
-            WorkerFactory workerFactory = new WorkerFactory(ExtractSearchNegativeExamplesWorker.class);
-            ExtractWECToDB extractWECToDB = new ExtractWECToDB(workerFactory);
+        try {
+            extractWECToDB.readAllWikiPagesAndProcess();
+        } catch (Exception ex) {
+            LOGGER.error("Could not start process", ex);
+        } finally {
+            WECResources.closeAllResources();
+            ExtractSearchNegativeExamplesWorker.close();
+        }
 
-            try {
-                extractWECToDB.readAllWikiPagesAndProcess();
-            } catch (Exception ex) {
-                LOGGER.error("Could not start process", ex);
-            } finally {
-                WECResources.closeAllResources();
-                ExtractSearchNegativeExamplesWorker.close();
-            }
-
-            LOGGER.info("Total first passages extracted=" + ExtractSearchNegativeExamplesWorker.getTotalPassages());
-            LOGGER.info("Process Done!");
-        };
+        LOGGER.info("Total first passages extracted=" + ExtractSearchNegativeExamplesWorker.getTotalPassages());
+        LOGGER.info("Process Done!");
     }
 
     public static List<WECJsonObj> readWECJsonFile(File wecInput) {
